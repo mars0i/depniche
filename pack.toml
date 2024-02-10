@@ -1,0 +1,10 @@
+[custom.all.depniche]
+type = "local"
+path = "."
+ipkg = "depniche.ipkg"
+test = "test/test.ipkg"
+
+[custom.all.depniche-test]
+type = "local"
+path = "test"
+ipkg = "test.ipkg"
