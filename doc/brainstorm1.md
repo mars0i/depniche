@@ -6,7 +6,8 @@ brainstorm1.md
 A niche is a type, but it's indexed in one or more dimensions.
 Indexes can be nats or fins.
 
-An organism has one or more niches as its type.
+> This requires programmer to specify in advance what range
+of variation possible.  That differs from the natural world.
 
 Here "organism" could mean an individual, or it could mean e.g. a
 species or a variant within a species.
@@ -14,10 +15,28 @@ species or a variant within a species.
 An organism type could be an indexed type to represent different
 possible phenotypes of the same general kind of organism.
 
+> Is this allowed by Haskell/Idris/Agda/Lean/etc?  Uh, need to have
+> wrappers, I guess.  GADTs maybe.  Something like this? (Idrisey):
+> ```haskell
+> data Organism : (o : OrganismData) -> Organism
+>   Niche0instance : (niche_index : Vect n Integer) -> Organism organism_data
+>   Niche1instance : organism_data -> Organism organism_data
+> ```
+
 If there is no niche for an organism treated as a species or
 variant, it goes extinct.
 
+> So this means that whether a type exists can vary from run to run.
+> Well that's OK if they are indexed types.
+
 If there is no niche for an individual, it does not reproduce.
+
+> OK, but this is weird.  If a niche is its type, how does it exist
+> without a type?  I'm thinking this is more complicated to do with
+> static types than I thought.  Maybe not worth the trouble. (?)
+> Maybe the idea of representing niches by types per se---i.e. types
+> at the language level---is a bad idea.
+
 
 If an organism can satisfy multiple niches, then some niches may
 be more salutary than others for a given organism.
@@ -47,7 +66,7 @@ non-location characteristics are correct for an organism.
 
 ---
 
-The following uses Kaiser and Trappes' NC3 vocabulary.
+The following uses Kaiser and Trappes' NC$^3$ vocabulary.
 
 #### Niche construction
 
