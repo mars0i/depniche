@@ -16,7 +16,10 @@ data Reproducer : Type where
 
 data NicheN :  (Vect n Integer -> Nat) -> Vect n Integer -> Type where
   MkNicheN : (f : Vect n Integer -> Nat) -> (params : Vect n Integer) -> NicheN f params
--- dummy example: MkNiche length [1,2,3]
+
+-- dummy example
+niche : NicheN Data.Vect.length [1,2,3]  -- without this, arg types are indeterminate
+niche = MkNicheN length [1,2,3]
 
 -- The number of offspring for a NReproducer is a function of its niche.
 -- Specifically, the this number is the result of applying the niche's 
@@ -27,4 +30,5 @@ data NReproducer : (noffspring : Nat) -> Type where
                   (niche : NicheN f params) -> 
                   NReproducer (f params)
 
-
+-- dummy example using previous dummy val niche
+reprod = MkNReproducer length niche
