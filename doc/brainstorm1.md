@@ -37,6 +37,46 @@ If there is no niche for an individual, it does not reproduce.
 > Maybe the idea of representing niches by types per se---i.e. types
 > at the language level---is a bad idea.
 
+There may be one niche, or a list of niches, or spatially indexed
+niches--i.e. we can have a 1-D, 2-D, or 3-D structure with
+locations in which one or more niches can be located.  
+
+Since types as such can't be duplicated, the way to do this is to
+use locations as arbitrary type indexes.  Then a niche is any type s.t. the
+non-location characteristics are correct for an organism.
+
+> This doesn't seem to solve the problem with the dependent-types
+  representation of niches, that an organism can fill different
+  niches.  Because if an organism has type `Niche nicheindex
+  nichelocation`, it doesn't have type `Niche nicheindex'
+  nichelocation'`.  Right?
+
+> OK, but this is what Haskell typeclasses or Idris interfaces are
+> for.  They let multiple types be subtypes.  So if you say that an
+> organism has to satisfy an interface, it can do that using different
+> types.  Q: Are interfaces dependent types?  Can they be indexed?
+> (And if not, maybe Haskell is just as good as Idris.)
+> Also note that on a podcast---maybe where Aaron Stump was a
+> guest?---there was talk of a language in which something could be an
+> instance of multiple types.  There was a name for that.
+
+> Here's an answer from TDDI p. 183:
+
+
+>> If you know Haskell, you’ll be familiar with Haskell’s
+concept of type classes. Interfaces in Idris are similar to type
+classes in Haskell and are often used in the same way, though
+there are some differ- ences. The most important are, first, that
+interfaces in Idris *can be parameterized by values of any type,
+and are not limited to types or type constructors*, and, second,
+interfaces in Idris can have multiple implementations, though we
+won’t go into the details in this chapter. [emphasis added]
+
+So maybe treat an organism type as an Idris interface, and then
+it can be an instance of any niche type that satisfies that
+interface.  (Sounds slightly backwards, but kinda makes sense.)
+
+
 
 If an organism can satisfy multiple niches, then some niches may
 be more salutary than others for a given organism.
@@ -55,14 +95,6 @@ holds, in increasing complexity of models:
 Note that if more than one kind of organism can fill a given
 niche, the reproductive result might be a function both of the niche
 and of the organism's type.
-
-There may be one niche, or a list of niches, or spatially indexed
-niches--i.e. we can have a 1-D, 2-D, or 3-D structure with
-locations in which one or more niches can be located.  
-
-Since types as such can't be duplicated, the way to do this is to
-use locations as arbitrary type indexes.  Then a niche is any type s.t. the
-non-location characteristics are correct for an organism.
 
 ---
 
