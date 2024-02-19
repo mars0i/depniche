@@ -2,6 +2,7 @@ module DepNiche1
 
 import Data.Vect
 import Data.List
+import Decidable.Equality
 
 interface HasNiche (nicheid : Nat) where
   noffspring : Nat -- simpler version: constant reproduction
@@ -12,12 +13,16 @@ interface HasNiche (nicheid : Nat) where
 -- probabilities sums to 1.
 
 
-data Organism : (orgid : Nat) -> (niches : List (HasNiche id)) -> Type where
-  MkOrg : (orgid : Nat) -> (niches : List (HasNiche id)) ->
+data Organism : (orgid : Nat) -> (niches : List (HasNiche nicheid)) -> Type where
+  MkOrg : (orgid : Nat) -> (niches : List (HasNiche nicheid)) ->
           Organism orgid niches
 
 -- not right
+-- HasNiche Organism orgid niches where
+--   noffspring ---
+--   offspringdist ---
 
-HasNiche Organism where
-  noffspring ---
-  offspringdist ---
+
+isProb : Foldable ps => (ps : List Double) -> Dec((sum ps) = 1)
+isProb ps = ?aa
+
