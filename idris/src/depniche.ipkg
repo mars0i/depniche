@@ -16,7 +16,7 @@ authors = "mabrams"
 -- depends =
 
 -- modules to install
-modules = DepNiche, Hangman
+-- modules =
 
 -- main file (i.e. file to load at REPL)
 -- main =

@@ -1,4 +1,4 @@
-module DepNiche
+module DepNiche0
 
 import Data.Vect
 
