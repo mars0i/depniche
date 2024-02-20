@@ -43,7 +43,20 @@ structure sharing and all that.)
 cf. Idris2 HashMap:
 https://github.com/Z-snails/idris2-hashmap/tree/main
 
+Oh--no need for maps.  Idris and Haskell have updatable records.
+See `src/IdrisDocRecordEx.idr` in my LearnIdris project.
+
 Note though that whatever the world is---whatever the niche
 container is---you can make it type safe.  It's a list or
 whatever of niches.
 
+---
+
+So going back to my original idea of treating niches as types, I don't
+think you can make a type that's a record (and then updated it to perform
+niche construction), but you can embed a record in a type (because this is
+dependent types), and then presumably create a new type by updating the
+record.
+
+Oh wait.  Records are types.  No but fields are not by default types.  They
+are typed, but the data in them is not usually a type.
