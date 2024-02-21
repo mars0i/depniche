@@ -15,5 +15,18 @@ niche0 = MkNiche 0
 niche1 : Niche 1
 niche1 = MkNiche 1
 
-niches : List (Niche 0)
-niches = [(MkNiche 0)]
+-- ial uses ::, but PLFA uses the character ∷ .
+-- PLFA does this:
+-- nums : List ℕ
+-- nums = 1 ∷ []
+-- ial:
+nums : 𝕃 ℕ
+nums = 1 :: []
+-- or:
+nums2 : list ℕ
+nums2 = 1 :: []
+
+
+
+-- niches : list (Set 0)
+niches = [ (MkNiche 0) ]
