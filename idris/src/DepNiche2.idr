@@ -19,6 +19,22 @@ niches = the (List (Niche 1)) [Apples, Potatoes]
 -- This won't work because (Niche 0) and (Niche 1) are different types.
 -- badniches = [Berries, Potatoes]
 
+-- What can I do with this type?
+Dpair = (n : Nat ** Niche n)
+
+-- Note \n doesn't bind the n in the dep pair, here:
+{-
+DepNiche2> (\n => (n : Nat ** Niche n)) 3
+(n : Nat ** Niche n) : Type
+-}
+
+-- This works:
+{-
+DepNiche2> the Dpair (3 ** (MkNiche 3))
+(3 ** MkNiche 3) : (n : Nat ** Niche n)
+-}
+
+
 
 {-
 -- I don't know why this doesn't work.  The idea is to create 
