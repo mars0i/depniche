@@ -21,43 +21,38 @@ niches = the (List (Niche 1)) [Apples, Potatoes]
 
 -- What can I do with this type?
 DNiche = (n : Nat ** Niche n)
--- note DPair is already in the prelude, so don't use a name like that.
+-- Note DPair is already in the prelude, so don't use a similar name.
 
-{-
 -- THIS WORKS!  This is, sortof, a list of niches that are different.
-
-DepNiche2> the (List DNiche) [(1 ** MkNiche 1), (2 ** MkNiche 2), (3 ** MkNiche 3)]
-[(1 ** MkNiche 1), (2 ** MkNiche 2), (3 ** MkNiche 3)] : List (n : Nat ** Niche n)
-
+deniches = the (List DNiche) [(1 ** MkNiche 1), (2 ** MkNiche 2), (3 ** MkNiche 3)]
 -- IS it a list of Types?   I don't think so.  It's a list of niches in dep pairs.
 -- DNiche is a type.  (n : Nat ** Niche n) is a type.  But since (MkNiche 2) is 
 -- an instance of Niche 2, I think (2 ** MkNiche 2) is an instance of DNiche.
--- Compare:
 
-DepNiche2> the (List Nat) [1, 2, 3]
-[1, 2, 3] : List Nat
+danums = the (List Nat) [1, 2, 3]
 
-(If a list of types isn't possible in Idris, it has to be possible in Agda.)
+-- (If a list of types isn't possible in Idris, it has to be possible in Agda.)
 
--}
+-- But check this out:
+disniche = [DNiche] -- [(n : Nat ** Niche n)] : List Type
 
--- Note \n doesn't bind the n in the dep pair, here:
-{-
-DepNiche2> (\n => (n : Nat ** Niche n)) 3
-(n : Nat ** Niche n) : Type
--}
+datniche = [Niche 5]
+-- [Niche 5] : List Type
 
+datypes = [Nat, Int, Integer, String, Niche 3, (Niche 4)]
+-- [Nat, Int, Integer, String, Niche 3, Niche 4] : List Type
 
+partial -- needed because it doesn't work with all types!
+incType : Type -> Type
+incType (Niche x) = Niche (S x) 
 
-{-
--- I don't know why this doesn't work.  The idea is to create 
--- ("niche construct") a new Niche from an old one by incrementing
--- the index.
-incNiche : Niche i0 -> Niche i1
-incNiche (MkNiche i) = MkNiche (S i)
--}
+daniches : List Type -- needed to make e.g. map work
+daniches = [Niche 1, Niche 2]
 
+-- This works!  But you need partial--not sure why
+partial
+incedniches : List Type
+incedniches = map incType daniches -- [Niche 2, Niche 3] : List Type
 
-record Riche where
-  constructor MkRiche
-  idx : Nat
+-- Call these things List Types seems wrong.  They are more specific.
+-- Surely I can do more in Agda or Lean.
