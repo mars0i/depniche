@@ -20,18 +20,31 @@ niches = the (List (Niche 1)) [Apples, Potatoes]
 -- badniches = [Berries, Potatoes]
 
 -- What can I do with this type?
-Dpair = (n : Nat ** Niche n)
+DNiche = (n : Nat ** Niche n)
+-- note DPair is already in the prelude, so don't use a name like that.
+
+{-
+-- THIS WORKS!  This is, sortof, a list of niches that are different.
+
+DepNiche2> the (List DNiche) [(1 ** MkNiche 1), (2 ** MkNiche 2), (3 ** MkNiche 3)]
+[(1 ** MkNiche 1), (2 ** MkNiche 2), (3 ** MkNiche 3)] : List (n : Nat ** Niche n)
+
+-- IS it a list of Types?   I don't think so.  It's a list of niches in dep pairs.
+-- DNiche is a type.  (n : Nat ** Niche n) is a type.  But since (MkNiche 2) is 
+-- an instance of Niche 2, I think (2 ** MkNiche 2) is an instance of DNiche.
+-- Compare:
+
+DepNiche2> the (List Nat) [1, 2, 3]
+[1, 2, 3] : List Nat
+
+(If a list of types isn't possible in Idris, it has to be possible in Agda.)
+
+-}
 
 -- Note \n doesn't bind the n in the dep pair, here:
 {-
 DepNiche2> (\n => (n : Nat ** Niche n)) 3
 (n : Nat ** Niche n) : Type
--}
-
--- This works:
-{-
-DepNiche2> the Dpair (3 ** (MkNiche 3))
-(3 ** MkNiche 3) : (n : Nat ** Niche n)
 -}
 
 
