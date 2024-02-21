@@ -11,18 +11,14 @@ data Niche : (idx : Nat) -> Type where
 -- These are types
 Berries = MkNiche 0
 Potatoes = MkNiche 1
+Apples = MkNiche 1
 
-{-
--- This errors:
-niches : List Niche
-niches = [Berries, Potatoes]
--- I can't make a list of types?
--- i.e. you can bring non-types into the type world, but not vice versa?
+-- This is a list of types!  However, they are the same type.
+niches = the (List (Niche 1)) [Apples, Potatoes]
 
--- I wonder whether I can do this in Agda, with its universes.
--- i.e. have a type-list at one type level, but the types in it are at a
--- lower level?
--}
+-- This won't work because (Niche 0) and (Niche 1) are different types.
+-- badniches = [Berries, Potatoes]
+
 
 {-
 -- I don't know why this doesn't work.  The idea is to create 
