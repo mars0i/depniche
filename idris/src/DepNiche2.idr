@@ -42,15 +42,14 @@ datniche = [Niche 5]
 datypes = [Nat, Int, Integer, String, Niche 3, (Niche 4)]
 -- [Nat, Int, Integer, String, Niche 3, Niche 4] : List Type
 
-partial -- needed because it doesn't work with all types!
 incType : Type -> Type
 incType (Niche x) = Niche (S x) 
+incType _ = () -- kludge needed because the input type is so broad [or use partial]
+-- incType _ = Void -- this works, too
 
 daniches : List Type -- needed to make e.g. map work
 daniches = [Niche 1, Niche 2]
 
--- This works!  But you need partial--not sure why
-partial
 incedniches : List Type
 incedniches = map incType daniches -- [Niche 2, Niche 3] : List Type
 
