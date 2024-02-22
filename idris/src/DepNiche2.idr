@@ -42,16 +42,28 @@ datniche = [Niche 5]
 datypes = [Nat, Int, Integer, String, Niche 3, (Niche 4)]
 -- [Nat, Int, Integer, String, Niche 3, Niche 4] : List Type
 
-incType : Type -> Type
-incType (Niche x) = Niche (S x) 
-incType _ = () -- kludge needed because the input type is so broad [or use partial]
--- incType _ = Void -- this works, too
+incNiche : Type -> Type
+incNiche (Niche x) = Niche (S x) 
+incNiche _ = () -- kludge needed because the input type is so broad [or use partial]
+-- incNiche _ = Void -- this works, too
 
 daniches : List Type -- needed to make e.g. map work
 daniches = [Niche 1, Niche 2]
 
 incedniches : List Type
-incedniches = map incType daniches -- [Niche 2, Niche 3] : List Type
+incedniches = map incNiche daniches -- [Niche 2, Niche 3] : List Type
+
+
+{-
+Interestingly, this doesn't work:
+niche2 : (head incedniches)
+niche2 = MkNiche 2
+
+This doesn't work either:
+niche2 : {ty = (head incedniches)} -> ty
+
+Wasn't there something like what I'm attempting in the little format routine (in chapter 8?)
+-}
 
 -- Call these things List Types seems wrong.  They are more specific.
 -- Surely I can do more in Agda or Lean.
