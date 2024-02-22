@@ -5,3 +5,6 @@ interface NicheUser (organism : Integer -> Type) where
 
 data Org : (orgid : Nat) -> (nicheid : Integer) -> Type where
   MkOrg : (orgid : Nat) -> (nicheid : Integer) -> Org orgid nicheid
+
+
+interface Niche (nicheid : Integer -> (organism : Type) -> Type) where
