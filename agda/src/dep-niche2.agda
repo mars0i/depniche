@@ -1,4 +1,4 @@
-module dep-niche2 where
+
 
 open import nat
 open import integer
@@ -6,7 +6,7 @@ open import string
 open import vector
 open import list
 
-data Niche : (idx : ℕ) -> Set where
+data Niche : (idx : ℕ) -> Set₁ where
   MkNiche : (idx : ℕ) -> Niche idx
 
 niche0 : Niche 0
@@ -24,9 +24,14 @@ nums : 𝕃 ℕ
 nums = 1 :: []
 -- or:
 nums2 : list ℕ
-nums2 = 1 :: []
+nums2 = 2 :: 1 :: []
 
 
 
--- niches : list (Set 0)
-niches = [ (MkNiche 0) ]
+niches : 𝕃 Set₁
+niches = Niche 0 :: Niche 1 :: Niche 2 :: []
+
+-- not working:
+-- inctype : ∀ {x : ℕ} -> Niche x -> Niche (suc x)
+-- inctype : ∀ {x : ℕ} → Set₁ → Set₁
+-- inctype {x} (Niche x) = Niche (suc x)
