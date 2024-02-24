@@ -53,7 +53,7 @@ newniches : List Type
 newniches = [incNiche (Niche 0) @{ItIsNiche}, incNiche @{ItIsNiche} (Niche 1)] -- Note the proof argument can go in either order
 
 newniches' : List Type
-newniches' = map (incNiche @{ItIsNiche}) oldniches
+-- newniches' = map (incNiche @{ItIsNiche}) oldniches
 -- newniches = map incNiche [Niche 0, Niche 1]
 -- = [Niche 1, Niche 2] : List Type
 
