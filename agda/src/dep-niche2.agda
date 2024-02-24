@@ -6,8 +6,13 @@ open import string
 open import vector
 open import list
 
-data Niche : (idx : ℕ) -> Set₁ where
-  MkNiche : (idx : ℕ) -> Niche idx
+-- Is this the right syntax? This is Idris syntax.  Seems to work.
+data Niche : (idx : ℕ) → Set₁ where
+  MkNiche : (idx : ℕ) → Niche idx
+
+-- Doesn't work:
+-- data Niche (idx : ℕ) : Set where
+--   MkNiche : idx → Niche idx
 
 niche0 : Niche 0
 niche0 = MkNiche 0
@@ -31,7 +36,6 @@ nums2 = 2 :: 1 :: []
 niches : 𝕃 Set₁
 niches = Niche 0 :: Niche 1 :: Niche 2 :: []
 
--- not working:
--- inctype : ∀ {x : ℕ} -> Niche x -> Niche (suc x)
--- inctype : ∀ {x : ℕ} → Set₁ → Set₁
--- inctype {x} (Niche x) = Niche (suc x)
+-- doesn't work
+-- incniche : {x : ℕ} → Set₁ → Set₁
+-- incniche (Niche x) = Niche (suc x)
