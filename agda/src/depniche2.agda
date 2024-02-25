@@ -1,4 +1,4 @@
-
+module depniche2
 
 open import nat
 open import integer
@@ -7,7 +7,7 @@ open import vector
 open import list
 
 -- Is this the right syntax? This is Idris syntax.  Seems to work.
-data Niche : (idx : ℕ) → Set₁ where
+data Niche : (idx : ℕ) → Set₂ where
   MkNiche : (idx : ℕ) → Niche idx
 
 -- Doesn't work:
