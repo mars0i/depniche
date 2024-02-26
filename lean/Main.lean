@@ -6,35 +6,21 @@ def f (x : Nat) : Nat := x + 1
 
 def f5 : Nat := f 5
 
-#eval yo
-#eval f5
-#check f
+-- inductive Niche (k : Nat) where
+--   | user : Nat → Niche k
 
-#check Type
-#check Type 1
+inductive Niche (k : Nat) where
+  | user : Nat → Niche k
 
--- inductive Niche (i : Nat) : Type 1 where
---   | niche : Niche i
+def org1 : Niche 5 := Niche.user 5
 
-inductive Niche : (i : Nat) -> Type 1 where
-  | niche : Niche i
-deriving Repr
 
-#check Niche
-#check Niche 5
-#check Niche.niche
+-- organism-level niche incrementation:
+def incniche (n: Niche k) : Niche (1 + k) :=
+  match n with
+  | Niche.user k => Niche.user (1 + k)
 
-def aniche : Niche 5 := Niche.niche
-#check aniche
-#eval aniche
-
-def nutherniche : Niche 2 := Niche.niche
-#check nutherniche
-#eval nutherniche
-
--- def incniche (n: Niche i) : Niche (1 + i) :=
---   match n with
---   | (Niche i) => niche (1 + i)
+-- niche-level niche incrementation:
 
 def main : IO Unit :=
   IO.println s!"Hello, {hello}!"
