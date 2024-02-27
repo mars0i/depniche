@@ -9,6 +9,7 @@ def f5 : Nat := f 5
 -- inductive Niche (k : Nat) where
 --   | user : Nat → Niche k
 
+@[match_pattern] -- ??
 inductive Niche (k : Nat) where
   | user : Nat → Niche k
 deriving Repr
@@ -26,13 +27,18 @@ def incOrganism (o : Niche k) : Niche (1 + k) :=
 #eval organism
 #eval incOrganism organism
 
-#check fun x => x
+#check Niche
+#check (Niche 4)
+
+-- cf. https://proofassistants.stackexchange.com/questions/2438/why-can-addition-be-used-in-pattern-matching-nats-but-not-multiplication
+-- attribute [match_pattern] Niche 
+-- attribute [match_pattern] Niche k
 
 -- Generate a new niche from an old niche, incrementing the index.
 -- Doesn't work.
-def incNiche {k : Nat} (n : Type 1) : Type 1 :=
+def incNiche {k : Nat} (n : Type) : Type :=
   match n with
-  | Niche k => Niche (1 + k)
+  | (Niche k) => Niche (1 + k)
 
 
 
