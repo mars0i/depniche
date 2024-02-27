@@ -1,4 +1,4 @@
-module dep-niche0 where
+module depniche0 where
 
 open import nat
 open import integer
