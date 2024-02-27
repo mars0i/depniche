@@ -1,2 +1,2 @@
 # depniche
-Exploratory: dependent types. niche models.
+*Very* exploratory, learn-as-you-go: dependent types. niche models.
