@@ -1,4 +1,4 @@
-import «Depniche»
+-- import «Depniche»
 
 def yo : String := " this"
 
@@ -16,7 +16,6 @@ deriving Repr
 
 def organism : Niche 5 := Niche.user 5
 def niche : Type := Niche 5
--- def niche2 : Type 1 := Niche 5
 
 
 -- organism-level niche incrementation: increment an organism's niche
