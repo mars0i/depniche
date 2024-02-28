@@ -1,32 +1,33 @@
 module depniche3 where
 
-open import nat
-open import Agda.Primitive
+-- open import Agda.Primitive
+open import Data.Nat -- standard library
+-- open import nat -- ial
 
-data Niche : ∀ (k : ℕ) → Set where
-  MkOrg : (k : ℕ) → Niche k
+data Niche : (k : ℕ) → Set where
+  NicheUser : (k : ℕ) → Niche k
 
--- increment the index of an organism (an instance of Niche k)
-incorganism : ∀ {k : ℕ} → Niche k → Niche (suc k)
-incorganism (MkOrg k) = MkOrg (suc k)
+-- Increment the index of an organism; new organism has a different niche.
+incorganism : {k : ℕ} → Niche k → Niche (suc k)
+incorganism (NicheUser k) = NicheUser (suc k)
+
+{-
+-- Increment index of a niche; new niche is different.
+incNiche : {k : ℕ} → Set → Set
+incNiche (Niche k) = ?  -- parse error on (Niche k)
+incNiche _ = ?
+-}
+
+-- simple tests:
 
 org : Niche 7
-org = MkOrg 7
+org = NicheUser 7
 
 niche : Set
 niche = Niche 8
 
 org2 : niche
 org2 = incorganism org
-
-
-{-
--- Doesn't check
-incNiche : ∀ {k : ℕ} → Set → Set
-incNiche (Niche k) = ?  -- parse error on (Niche k)
--- incNiche .(Niche k) = ?  -- Seems to parse but k is not in scope
--- incNiche {k} .(Niche k) = ?  -- Seems to say Niche k does not have type Set
--}
 
 
 data Niche2 : ∀ (k : ℕ) → Set₁ where
@@ -44,3 +45,6 @@ incNiche1 (Niche1 k) = Niche1 (suc k)
 
 nicheyest : Niche2 6
 nicheyest = incNiche1 nichey
+
+-- incNiche .(Niche k) = ?  -- Seems to parse but k is not in scope
+-- incNiche {k} .(Niche k) = ?  -- Seems to say Niche k does not have type Set
