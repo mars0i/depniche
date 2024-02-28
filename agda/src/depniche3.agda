@@ -20,7 +20,7 @@ org2 = incorganism org
 {-
 -- Doesn't check
 incNiche : ∀ {k : ℕ} → Set → Set
-incNiche (Niche k) = ?
+incNiche {k} .(Niche k) = ?  -- Seems to say Niche k does not have type Set
+-- incNiche .(Niche k) = ?  -- Seems to parse but k is not in scope
+-- incNiche (Niche k) = ?  -- parse error on (Niche k)
 -}
-
-
