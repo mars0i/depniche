@@ -8,14 +8,19 @@ Inductive foo : Set :=
    of the whole datatype. *)
 
 Inductive niche (k : nat) : Set :=
-  | mkniche : niche k.
+  | nicheuser : niche k.
 
 (* Increment the index of a niche user. *)
-Definition incorg {k : nat} (o : niche k) :=
+Definition incuser {k : nat} (o : niche k) :=
 match o with
-  (mkniche _) => mkniche (S k)   (* weird syntax that error messages forced *)
+  (nicheuser _) => nicheuser (S k)   (* weird syntax that error messages forced *)
 end.
 
 Check (niche 5).
-Check (mkniche 5).
-Check incorg (mkniche 5).
+Check (nicheuser 5).
+Check incuser (nicheuser 5).
+
+Definition incniche {k : nat} (n : Set) :=
+  match n with
+    (niche _) => niche (S k)  (* error on first "niche": "Unknown constructor: niche." *)
+end.
