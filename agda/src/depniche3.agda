@@ -12,6 +12,10 @@ incorganism : {k : ℕ} → Niche k → Niche (suc k)
 incorganism (NicheUser k) = NicheUser (suc k)
 
 {-
+This won't work.  See
+https://agda.zulipchat.com/#narrow/stream/259644-newcomers/topic/Pattern.20match.20on.20a.20type.20itself.3F/near/423871572
+which also suggests a different strategy.
+
 -- Increment index of a niche; new niche is different.
 incNiche : {k : ℕ} → Set → Set
 incNiche (Niche k) = ?  -- parse error on (Niche k)
