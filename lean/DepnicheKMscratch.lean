@@ -26,6 +26,7 @@ def Niche.j (n : Niche) : Nat := n.k
 
 #check Niche.type
 #check Niche.type (Niche.mk 5)
+#check Niche.type
 
 #check CoeSort
 
@@ -37,7 +38,6 @@ def incOrganism {k : Nat} (o : Organism k) : Organism (k + 1) :=
   -- Syntax to reuse the fields for the new type:
   {o with}
 
--- Doesn't work.
 /-- Generate a new niche from an old niche, incrementing the index. -/
 def incNiche (n : Niche) : Niche  :=
   {k := n.k + 1}
