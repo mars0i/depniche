@@ -12,6 +12,8 @@ structure Organism (k : Nat) where
 
 #check Organism
 #check Organism 5
+-- Why doesn't this work:
+-- #eval Organism 5
 
 def Niche.type (n : Niche) : Type := Organism n.k
 
