@@ -1,15 +1,17 @@
-inductive Niche (k : Nat) where
-  | user : Nat -> Niche k
+inductive Vect (α  : Type u) : Nat → Type u where
+  | nil : Vect α 0
+  | cons : α → Vect α n → Vect α (n + 1)
 deriving Repr
 
-#check Niche
-#check Niche 5
+-- note example is a keyword
+example : (Vect String 0)  := Vect.nil
 
-def nu1 : Niche 5 := Niche.user 5
-#check nu1
-#eval nu1
+example : Vect String 2 := Vect.cons "a" (Vect.cons "b" Vect.nil)
 
--- Shows I don't understand inductive--I don't want this to work:
-def nu2 : Niche 3 := Niche.user 5
-#check nu2
-#eval nu2
+def vs : Vect String 2 := Vect.cons "a" (Vect.cons "b" Vect.nil)
+#check vs
+#eval vs
+
+inductive Niche (α : Nat) : Type where
+  | user : k → Niche k
+deriving Repr
