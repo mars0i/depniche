@@ -34,7 +34,30 @@ incNiche .(Niche k) @{ItIsNiche k} = Niche (S k)
 someNiches : List Type
 someNiches = [Niche 3, Niche 4]
 
--- map won't work here because of the complexity of incNiche.
--- Need to define a specialized functor.
+-- map won't work here because of the complexity of incNiche; need to define a specialized functor.
 otherNiches : List Type
 otherNiches = [incNiche (Niche 3), incNiche (Niche 4)]
+
+-- But map works with the simple version:
+otherNiches0 : List Type
+otherNiches0 = map incNiche0 someNiches
+
+---------
+-- variations
+
+data IsNiche1 : Type -> Type where
+  ItIsNiche1 : {k : Nat} -> IsNiche1 (Niche k)
+
+incNiche1 : (a : Type) -> IsNiche1 a => Type
+incNiche1 .(Niche k) @{ItIsNiche1} = Niche (S k)
+
+
+{-
+-- non-working attempt
+data IsNiche2 : Type -> Type where
+  ItIsNiche2 : {k : Nat} -> IsNiche2 (Niche k)
+
+incNiche2 : {auto 0 prf : IsNiche2 a} -> (a : Type) -> Type
+incNiche2 @{ItIsNiche2} (Niche k) = Niche (S k)
+-}
+
