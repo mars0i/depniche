@@ -1,3 +1,7 @@
+-- btw I never got this syntax working:
+-- inductive Niche (k : Nat) : Type where
+-- It turns out that copying Idris and Agda as closely as possible
+-- makes it work as I intend.
 
 -- @[match_pattern] -- added because of error message on inNiche, but don't understand
 
@@ -39,23 +43,17 @@ def incNiche {k : Nat} (n : Type) : Type :=
   | (Niche k) => Niche k.succ
 --/
 
--- Though this works.  But note that it doesn't depend directly
+-- Though the following works.  But note that it doesn't depend directly
 -- on the existence of a Niche k. Otoh, if the niche user exists,
--- then the Niche must exist.  (Note use of alternate syntax see above.)
+-- then the Niche exists.  (Note use of alternate syntax see above.)
 def org2niche : (o : Niche k) → Type
   | Niche.user k => Niche k.succ
 
 #check org2niche
 #check (org2niche)
 
-def osNewNiche := org2niche o
+def osNewNiche : Type := org2niche o
 #check osNewNiche
 -- #eval osNewNiche
 
 
-
-
--- btw I never got this syntax working:
--- inductive Niche (k : Nat) : Type where
--- It turns out that copying Idris and Agda as closely as possible
--- makes it work as I intend.
