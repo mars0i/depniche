@@ -42,7 +42,7 @@ otherNiches = [incNiche (Niche 3), incNiche (Niche 4)]
 otherNiches0 : List Type
 otherNiches0 = map incNiche0 someNiches
 
----------
+---------------
 -- variations
 
 data IsNiche1 : Type -> Type where
@@ -50,7 +50,6 @@ data IsNiche1 : Type -> Type where
 
 incNiche1 : (a : Type) -> IsNiche1 a => Type
 incNiche1 .(Niche k) @{ItIsNiche1} = Niche (S k)
-
 
 {-
 -- non-working attempt
@@ -61,3 +60,5 @@ incNiche2 : {auto 0 prf : IsNiche2 a} -> (a : Type) -> Type
 incNiche2 @{ItIsNiche2} (Niche k) = Niche (S k)
 -}
 
+
+---------------
