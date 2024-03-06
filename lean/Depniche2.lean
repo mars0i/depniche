@@ -60,5 +60,32 @@ def osNewNiche : Type := org2niche o
 -- What's needed to modify a Niche is to get access to its parameter(s),
 -- i.e. index(es).  What if we use dependent pairs?
 -- No, Lean doesn't like this:
--- def nichepair (k : Nat) : ⟨k, Type⟩ := Sigma.mk k (Niche k)
+
+-- def nichepair (k : Nat) : ⟨Nat, fun n => Type⟩ := Sigma.mk k (fun k => Niche k)
+
+-- Note a dep pair *type* can be rep'ed either with the cross product
+-- syntax in the next line, or as something like (Σ k : Nat, Type).
+
+-- Got it!
+def mkNichePair (k : Nat) : (k : Nat) × Type := ⟨k, Niche k⟩
+#check mkNichePair
+#check (mkNichePair)
+
+-- These s/b equivalent--just different syntax.
+def np0 : (Σ k : Nat, Type)  := mkNichePair 0
+-- def np0 : (k : Nat) × Type := mkNichePair 0
+
+#check np0
+-- #eval np0
+-- I think the error on this last line just says that it doesn't know how to display
+-- it.  Adding "deriving Repr" doesn't help--it doesn't know how to do that
+-- automatically with Repr.
+
+#check np0.1
+#eval np0.1
+#check np0.2
+-- #eval np0.2  -- doesn't know how to display this
+
+-- NOW I could maybe do one of those CoeSort aliases to
+-- use the dep pair as if it was a Niche.  Which would be cool.
   
