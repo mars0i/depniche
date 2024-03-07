@@ -1,11 +1,11 @@
-
+-- import Std.Data.List
 
 inductive Niche : (k : Nat) → Type where
   | user : (k : Nat) → Niche k
 deriving Repr
 
 -- For this alternative syntax, see https://lean-lang.org/functional_programming_in_lean/getting-to-know/conveniences.html
-def incOrganism : (o : Niche k) → (Niche k.succ)
+def incUser : (o : Niche k) → (Niche k.succ)
   | (Niche.user k) => Niche.user k.succ
 
 -- Though the following works.  But note that it doesn't depend directly
@@ -25,7 +25,7 @@ def mkNichePairAlt (k : Nat) : (Σ k : Nat, Type) := Sigma.mk k (Niche k)
 #check mkNichePair
 #check (mkNichePair)
 
-def np0 : (k : Nat) × Type := mkNichePair 0
+def np0 : (_ : Nat) × Type := mkNichePair 0
 
 #check np0
 -- #eval np0
@@ -55,7 +55,7 @@ def np0 : (k : Nat) × Type := mkNichePair 0
 -- This def is too general.  It's not constrained to Niches.  But Type is the
 -- type of (Niche k), so if you want to return a Niche k, the type is Type.
 -- I suppose it could be constrained with a proof.
-instance : CoeSort (Σ k : Nat, Type) Type where
+instance : CoeSort (Σ _ : Nat, Type) Type where
   coe p := p.snd
 -- alt syntax: instance : CoeSort (k : Nat) × Type Type
   
@@ -75,7 +75,7 @@ def u3 : (mkNichePair 3) := Niche.user 3
 #eval u3
 
 -- Predefining a niche pair type (Is it bad or good form to initial-cap it?:
-def Niche4 : (Σ k : Nat, Type) := mkNichePair 4
+def Niche4 : (Σ _ : Nat, Type) := mkNichePair 4
 def u4 : Niche4 := Niche.user 4
 #check u4
 #eval u4
@@ -83,3 +83,41 @@ def u4 : Niche4 := Niche.user 4
 -- So now the dependent pair containing the Niche can function
 -- as a type of an organism.  But it also contains the information
 -- that allows us to extract its parameter (index).
+
+-- Version using .fst:
+def incNicheOK (p : (Σ _ : Nat, Type)) : (Σ _ : Nat, Type) :=
+  let k := p.fst
+  Sigma.mk k.succ (Niche k.succ)
+
+-- Version using pattern matching on the dependent pair:
+def incNiche : (p : (Σ _ : Nat, Type)) → (Σ _ : Nat, Type)
+  | ⟨k, _⟩ => ⟨k.succ, Niche k.succ⟩  -- Those are angle brackets.
+
+#eval Niche4.fst
+#eval (incNiche Niche4).fst
+#check incNiche Niche4
+#eval (incNiche (incNiche Niche4)).fst
+
+def Niche6 : (Σ _ : Nat, Type) := (incNiche (incNiche Niche4))
+def u6 : Niche6 := Niche.user 6
+#check u6
+#eval u6
+
+def niches := [Niche4, Niche6]
+#check niches
+
+-- Taking stock:
+--
+-- Given a niche user (an organism), incUser creates a user with parameter that
+-- is one greater than the original user's parameter.
+-- 
+-- The type of a niche user is, strictly speaking, a Niche k, but via
+-- coercion, a dependent pair of a parameter k and Niche k can function
+-- as the type of a user.  
+--
+-- Moreover, that kind of pair type can be used by incNiche to
+-- create a new niche pair that has parameter that is one larger.
+--
+-- I can make a list of such "niches".
+--
+-- I don't yet know how to map over a collection of niches in Lean.
