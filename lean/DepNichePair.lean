@@ -1,4 +1,11 @@
--- import Std.Data.List
+-- import Mathlib.Data.Vector
+
+-- find an import to replace this:
+inductive Vect (α  : Type u) : Nat → Type u where
+  | nil : Vect α 0
+  | cons : α → Vect α n → Vect α (n + 1)
+deriving Repr
+
 
 inductive Niche : (k : Nat) → Type where
   | user : (k : Nat) → Niche k
@@ -105,6 +112,17 @@ def u6 : Niche6 := Niche.user 6
 
 def niches := [Niche4, Niche6]
 #check niches
+
+#check List.map incNiche niches
+
+-- What these are returning is not a list, but a function
+-- from a proof the list is not empty, to the head.
+#check (List.map incNiche niches).head
+#check List.head (List.map incNiche niches)
+-- #eval List.head (List.map incNiche niches)
+
+def nichevect := Vect.cons Niche4 <| Vect.cons Niche6 Vect.nil
+#check nichevect
 
 -- Taking stock:
 --

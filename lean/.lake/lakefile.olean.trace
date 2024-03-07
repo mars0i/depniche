@@ -1,4 +1,4 @@
-{"platform": "macOS-64",
- "options": {},
- "leanHash": "1a3021f98e55a274217b3bbf92b2d449bae843c3",
- "configHash": "13261779112960857719"}
+{"platform": "x86_64-apple-darwin21.6.0",
+ "options": {"doc": "on"},
+ "leanHash": "8bde8b9d87eef1eaf5f90a2116b6ebca0d69c6f0",
+ "configHash": "18427759936144294172"}

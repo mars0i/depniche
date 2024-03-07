@@ -5,8 +5,9 @@ package «depniche» where
   -- add package configuration options here
 
 lean_lib «Depniche» where
-  -- add library configuration options here
+require std from git "https://github.com/leanprover/std4" @ "main"
 
 @[default_target]
 lean_exe «depniche» where
   root := `Main
+
