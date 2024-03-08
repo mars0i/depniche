@@ -5,4 +5,7 @@ build/
 */.lake
 */.lake/*
 .*.swp
-lean/.lake/lakefile.olean*
+lean/.lake/lakefile.olean
+lean/.lake/lakefile.olean.trace
+lean/lake-manifest.json
+lean/lean-toolchain
