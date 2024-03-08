@@ -6,70 +6,60 @@ structure Niche where
   deriving Repr
 
 #check Niche
-def n1 : Niche := Niche.mk 44
-#check n1
-#eval n1
+#check Niche.k
 
+-- I guess Organism has both a type index k, and a field n.
+-- As noted below, this allows these two values to diverge, which
+-- is not what I want.  I think I might need a proof to keep them
+-- in sync.  (Dependent pairs does that for me.)
 structure Organism (k : Nat) where
   n : Nat
   deriving Repr
 
 #check Organism
-#check Organism 5
-#check Organism.mk
-#check Organism.mk 5
-#check (Organism.mk 5).n = 17
-def o1 : (Organism 5) := Organism.mk 17
-#check o1
-#eval o1
+#check Organism.n
+-- #check Organism.k  -- fails
 
+-- This doesn't exactly add a field to Niche (?); it creates a new 
+-- variable type in the Niche "namespace".  The value of this variable
+-- is a function from a Niche n to a type which is an Organism. 
+-- i.e. In the Niche namespace, there is a function named "type" such
+-- that given a Niche, extracts the k field in the Niche, and creates
+-- an organism with that same k as its index.
+-- I think Kyle misunderstood, and this is backwards.  
+-- Niche and Organism should be swapped.
 def Niche.type (n : Niche) : Type := Organism n.k
 
--- This shows that the previous line just adds an arbitrary field to the
--- structure Niche. [I think.]
-def Niche.j (n : Niche) : Nat := n.k
-#check Niche.j
-
--- def Niche.yo (j : Nat) : Type := {yo.k := j}
-
 #check Niche.type
-#check Niche.type (Niche.mk 5)
-#check Niche.type
+#check (Niche.type)
+#check Organism.mk 
+#check (Organism.mk) 
+def o : Organism 3 := Organism.mk 5
+#check o
+#eval o
+#check o.n
+#eval o.n
+-- So Kyle's scheme allows the organism index and the field to diverge,
+-- which is not what I want.  The field is just supposed to make it easy
+-- (or rather possible) to get at the index.
+-- I need this in Niche as well--that's what will emulate typecase.
 
 #check CoeSort
 
 -- Make it automatic; turn a `Niche` into a type wherever it's used in a place expecting a type:
 instance : CoeSort Niche Type := ⟨Niche.type⟩
 
-#check Niche
-def n2 : Niche := Niche.mk 44
-#check n2
-#eval n2
 
-#check Organism
-#check Organism 5
-#check Organism.mk
-#check Organism.mk 5
-#check (Organism.mk 5).n = 17
-def o2 : (Organism 5) := Organism.mk 17
-#check o2
-#eval o2
+---------------------------------------------
 
 -- organism-level niche incrementation: increment an organism's niche
 def incOrganism {k : Nat} (o : Organism k) : Organism (k + 1) :=
   -- Syntax to reuse the fields for the new type:
   {o with}
 
-#check incOrganism o2
-#eval incOrganism o2
-
 /-- Generate a new niche from an old niche, incrementing the index. -/
 def incNiche (n : Niche) : Niche  :=
   {k := n.k + 1}
 
-#check incNiche n2
-#eval incNiche n2
-
 def incOrganism' (n : Niche) (o : n) : incNiche n :=
   incOrganism o
-
