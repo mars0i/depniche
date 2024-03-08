@@ -5,3 +5,4 @@ build/
 */.lake
 */.lake/*
 .*.swp
+lean/.lake/lakefile.olean*
