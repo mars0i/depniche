@@ -1,12 +1,13 @@
--- import Std.Data.Vector
--- import Mathlib.Data.Vector
+import Mathlib.Data.Vector
 -- import Mathlib.Data.Vector.Basic
 
+/-
 -- find an import to replace this:
 inductive Vect (α  : Type u) : Nat → Type u where
   | nil : Vect α 0
   | cons : α → Vect α n → Vect α (n + 1)
 deriving Repr
+-/
 
 
 inductive Niche : (k : Nat) → Type where
@@ -123,9 +124,13 @@ def niches := [Niche4, Niche6]
 #check List.head (List.map incNiche niches)
 -- #eval List.head (List.map incNiche niches)
 
-def nichevect := Vect.cons Niche4 <| Vect.cons Niche6 Vect.nil
+def nichevect := Vector.cons Niche4 <| Vector.cons Niche6 Vector.nil
 #check nichevect
 -- #eval nichevect
+
+def yo := Vector.cons 2 <| Vector.cons 4 Vector.nil
+#check yo
+#eval yo
 
 
 
