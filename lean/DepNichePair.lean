@@ -3,15 +3,15 @@ import Mathlib.Data.Vector
 
 /-
 -- find an import to replace this:
-inductive Vect (α  : Type u) : Nat → Type u where
+inductive Vect (α  : Type u) : ℕ → Type u where
   | nil : Vect α 0
   | cons : α → Vect α n → Vect α (n + 1)
 deriving Repr
 -/
 
 
-inductive Niche : (k : Nat) → Type where
-  | user : (k : Nat) → Niche k
+inductive Niche : (k : ℕ) → Type where
+  | user : (k : ℕ) → Niche k
 deriving Repr
 
 -- For this alternative syntax, see https://lean-lang.org/functional_programming_in_lean/getting-to-know/conveniences.html
@@ -29,13 +29,16 @@ def org2niche : (o : Niche k) → Type
 --https://lean-lang.org/theorem_proving_in_lean4/dependent_type_theory.html?highlight=Sigma#what-makes-dependent-type-theory-dependent 
 
 -- Note alternate syntaxes at the type and instance level:
-def mkNichePair    (k : Nat) : (_ : Nat) × Type  := ⟨k, Niche k⟩  -- Those are angle brackets made with \langle or \< , etc.
-def mkNichePairAlt (k : Nat) : (Σ _ : Nat, Type) := Sigma.mk k (Niche k)
+def mkNichePair    (k : ℕ) : (_ : ℕ) × Type  := ⟨k, Niche k⟩
+def mkNichePairAlt (k : ℕ) : (Σ _ : ℕ, Type) := Sigma.mk k (Niche k)
 
 #check mkNichePair
 #check (mkNichePair)
 
-def np0 : (_ : Nat) × Type := mkNichePair 0
+def np0 : (_ : ℕ) × Type := mkNichePair 0
+
+#check np0
+-- #eval np0
 
 #check np0
 -- #eval np0
@@ -65,9 +68,9 @@ def np0 : (_ : Nat) × Type := mkNichePair 0
 -- This def is too general.  It's not constrained to Niches.  But Type is the
 -- type of (Niche k), so if you want to return a Niche k, the type is Type.
 -- I suppose it could be constrained with a proof.
-instance : CoeSort (Σ _ : Nat, Type) Type where
+instance : CoeSort (Σ _ : ℕ, Type) Type where
   coe p := p.snd
--- alt syntax: instance : CoeSort (k : Nat) × Type Type
+-- alt syntax: instance : CoeSort (k : ℕ) × Type Type
   
 -- Regular version of defining a niche user:
 def u1 : Niche 1 := Niche.user 1
@@ -85,22 +88,24 @@ def u3 : (mkNichePair 3) := Niche.user 3
 #eval u3
 
 -- Predefining a niche pair type (Is it bad or good form to initial-cap it?:
-def Niche4 : (Σ _ : Nat, Type) := mkNichePair 4
+def Niche4 : (Σ _ : ℕ, Type) := mkNichePair 4
 def u4 : Niche4 := Niche.user 4
 #check u4
 #eval u4
+
+#check Niche4
 
 -- So now the dependent pair containing the Niche can function
 -- as a type of an organism.  But it also contains the information
 -- that allows us to extract its parameter (index).
 
 -- Version using .fst:
-def incNicheOK (p : (Σ _ : Nat, Type)) : (Σ _ : Nat, Type) :=
+def incNicheOK (p : (Σ _ : ℕ, Type)) : (Σ _ : ℕ, Type) :=
   let k := p.fst
   Sigma.mk k.succ (Niche k.succ)
 
 -- Version using pattern matching on the dependent pair:
-def incNiche : (p : (Σ _ : Nat, Type)) → (Σ _ : Nat, Type)
+def incNiche : (p : (Σ _ : ℕ, Type)) → (Σ _ : ℕ, Type)
   | ⟨k, _⟩ => ⟨k.succ, Niche k.succ⟩  -- Those are angle brackets.
 
 #eval Niche4.fst
@@ -108,7 +113,7 @@ def incNiche : (p : (Σ _ : Nat, Type)) → (Σ _ : Nat, Type)
 #check incNiche Niche4
 #eval (incNiche (incNiche Niche4)).fst
 
-def Niche6 : (Σ _ : Nat, Type) := (incNiche (incNiche Niche4))
+def Niche6 : (Σ _ : ℕ, Type) := (incNiche (incNiche Niche4))
 def u6 : Niche6 := Niche.user 6
 #check u6
 #eval u6
@@ -122,15 +127,17 @@ def niches := [Niche4, Niche6]
 -- from a proof the list is not empty, to the head.
 #check (List.map incNiche niches).head
 #check List.head (List.map incNiche niches)
--- #eval List.head (List.map incNiche niches)
-
-def nichevect := Vector.cons Niche4 <| Vector.cons Niche6 Vector.nil
-#check nichevect
 -- #eval nichevect
 
 def yo := Vector.cons 2 <| Vector.cons 4 Vector.nil
 #check yo
 #eval yo
+#eval Vector.map (. + 1) yo
+
+def nichevect := Vector.cons Niche4 <| Vector.cons Niche6 Vector.nil
+#check nichevect
+#check Vector.map incNiche nichevect
+-- #eval Vector.map incNiche nichevect
 
 
 
