@@ -1,4 +1,6 @@
+-- import Std.Data.Vector
 -- import Mathlib.Data.Vector
+-- import Mathlib.Data.Vector.Basic
 
 -- find an import to replace this:
 inductive Vect (α  : Type u) : Nat → Type u where
@@ -26,8 +28,8 @@ def org2niche : (o : Niche k) → Type
 --https://lean-lang.org/theorem_proving_in_lean4/dependent_type_theory.html?highlight=Sigma#what-makes-dependent-type-theory-dependent 
 
 -- Note alternate syntaxes at the type and instance level:
-def mkNichePair    (k : Nat) : (k : Nat) × Type  := ⟨k, Niche k⟩  -- Those are angle brackets made with \langle or \< , etc.
-def mkNichePairAlt (k : Nat) : (Σ k : Nat, Type) := Sigma.mk k (Niche k)
+def mkNichePair    (k : Nat) : (_ : Nat) × Type  := ⟨k, Niche k⟩  -- Those are angle brackets made with \langle or \< , etc.
+def mkNichePairAlt (k : Nat) : (Σ _ : Nat, Type) := Sigma.mk k (Niche k)
 
 #check mkNichePair
 #check (mkNichePair)
@@ -123,6 +125,9 @@ def niches := [Niche4, Niche6]
 
 def nichevect := Vect.cons Niche4 <| Vect.cons Niche6 Vect.nil
 #check nichevect
+-- #eval nichevect
+
+
 
 -- Taking stock:
 --
