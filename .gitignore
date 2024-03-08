@@ -2,3 +2,6 @@ build/
 *.*~
 .stack-work/
 *.agdai
+*/.lake
+*/.lake/*
+.*.swp
