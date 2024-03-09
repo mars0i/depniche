@@ -38,6 +38,12 @@ def noiDiffParams : NicheImplicitPlusField 3 := NicheImplicitPlusField.mk 4
 #check noiDiffParams
 #eval noiDiffParams
 
+-- This shows an advantage of using dependent pair instead, since
+-- the accessible (left) parameter is required to be in sync with the
+-- (right) type.  Of course it's possible to build in the constraint,
+-- but this is already built in to the dependent pair.  (Of course
+-- dependent pairs feel more raw and low-level.)
+
 ----------------------------------------------
 -- If there is no type parameter, you can get away with not adding
 -- a type signature; Lean will guess it.
