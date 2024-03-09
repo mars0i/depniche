@@ -9,6 +9,7 @@ inductive Vect (α  : Type u) : ℕ → Type u where
 deriving Repr
 -/
 
+-- Note the natural number type can be rep'ed either by Nat or ℕ.
 
 inductive Niche : (k : ℕ) → Type where
   | user : (k : ℕ) → Niche k
