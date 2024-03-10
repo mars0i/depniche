@@ -1,30 +1,109 @@
-import Mathlib.Data.Vector
--- import Mathlib.Data.Vector.Basic
+import Mathlib.Data.Vector  -- used in examples near end
 
--- Note the natural number type can be rep'ed either by Nat or ℕ.
+/-! 
+
+Niches as types, niche users as organisms or aspects of organisms
+that have those types.
+
+Indexed types allow niche construction, i.e. modification of a
+niche by an organism (as well as environmental change -- for
+other reasons).
+
+For the sake of illustration, the indexes/parameters of Niches
+(and their users) are Nats, and the only kind of niche
+construction is incrementing a Nat.
+
+Lean doesn't have "type-case": If you define an "inductive type"
+in Lean, you can pattern match on the contructors, but you can't
+pattern match on the type itself (like Agda and Coq, but unlike
+Idris).  That means that you can't read the index of an indexed
+type from a type in order to create a new type with a different
+index based on the old one.  If you want the index, you have to
+get it somewhere else.
+
+One place you can get the index is from an instance of the type
+(since you can pattern match on constructors).  This is illustrated
+by incOrgToNiche below.
+
+The code below defines a dependent pairs/Sigma types as wrappers
+for Niche types, so that the type index can be stored outside of the
+type.  Then we use Lean's CoeSort to coerce the dependent pairs to
+be Niche types, so that they can be used that way.  It should also
+be possible to do something like this using Lean structures.
+
+(Perhaps its silly to create a data structure to hold an index because
+you are unable to access it from the type itself, and then call
+the data structure the type.  But this shows one way that it can be done.
+-/
+
+/- Tips:
+Note the natural number type can be rep'ed either by Nat or ℕ (ℕ).
+And you can use either → (→) or -> for function definitions.
+
+For the less common, more Haskell-ey function type syntax used
+sometimes below, see
+https://lean-lang.org/functional_programming_in_lean/getting-to-know/conveniences.html
+
+Dependent pairs/Sigma types:
+https://leanprover-community.github.io/mathematics_in_lean/C06_Structures.html
+https://lean-lang.org/theorem_proving_in_lean4/dependent_type_theory.html?highlight=Sigma#what-makes-dependent-type-theory-dependent 
+
+On CoeSort see:
+https://lean-lang.org/functional_programming_in_lean/type-classes/coercion.html?highlight=CoeSort#coercing-to-types
+https://lean-lang.org/theorem_proving_in_lean4/type_classes.html?highlight=CoeSort#coercions-using-type-classes
+https://leanprover.zulipchat.com/#narrow/stream/113489-new-members/topic/Construct.20type.20from.20index.20in.20another.20type/near/423694347
+-/
 
 inductive Niche : (k : ℕ) → Type where
   | user : (k : ℕ) → Niche k
 deriving Repr
 
-/-
--- For this alternative syntax, see https://lean-lang.org/functional_programming_in_lean/getting-to-know/conveniences.html
+/-- Create a new niche user. -/
 def incUser : (o : Niche k) → (Niche k.succ)
   | (Niche.user k) => Niche.user k.succ
 
--- Though the following works.  But note that it doesn't depend directly
--- on the existence of a Niche k. Otoh, if the niche user exists,
--- then the Niche exists.  (Note use of alternate syntax see above.)
-def incOrg2niche : (o : Niche k) → Type
+/-- Create a new niche type by incrementing the index of a niche user. -/
+def incOrgToniche : (o : Niche k) → Type
   | Niche.user k => Niche k.succ
 
--- dep pairs/Sigma types
--- https://leanprover-community.github.io/mathematics_in_lean/C06_Structures.html
---https://lean-lang.org/theorem_proving_in_lean4/dependent_type_theory.html?highlight=Sigma#what-makes-dependent-type-theory-dependent 
--/
--- Note alternate syntaxes at the type and instance level:
-def mkNichePair    (k : ℕ) : (_ : ℕ) × Type  := ⟨k, Niche k⟩
-def mkNichePairAlt (k : ℕ) : (Σ _ : ℕ, Type) := Sigma.mk k (Niche k)
+/- Functions to create Sigma type wrappers of niche types.  These are the
+  same but I wanted to illustrate the different syntaxes for Sigma types. 
+You can mix and match the different syntaxes.  The Nat really is used, but it
+creates something whose type is Type, so it seems to be ignored at the type
+level.  Underscore gets rid of unused-variable warnings. -/
+def mkNichePairCrossAngle    (k : ℕ) : (_ : ℕ) × Type  := ⟨k, Niche k⟩
+def mkNichePairSigmaMk (k : ℕ) : (Σ _ : ℕ, Type) := Sigma.mk k (Niche k)
+def mkNichePairNoUnicode (k : Nat) : (Sigma (fun _ : Nat => Type)) := Sigma.mk k (Niche k)
+def mkNichePair := mkNichePairNoUnicode -- chose one of the functions
+
+-- We can define an abbreviation for that Sigma type, though it doesn't
+-- work to use it with CoeSort, apparently.
+def NicheWrapper := (Σ _ : ℕ, Type)
+
+/-- Define a coercion so that the Sigma type wrapper of a niche type can
+    function as a niche type. -/
+instance : CoeSort (Σ _ : ℕ, Type) Type where
+  coe p := p.snd
+
+-- So now the dependent pair containing the Niche can function
+-- as a type of an organism.  But it also contains the information
+-- that allows us to extract its parameter/index.
+
+-- Version using .fst:
+def incNicheOK (p : (Σ _ : ℕ, Type)) : (Σ _ : ℕ, Type) :=
+  let k := p.fst
+  Sigma.mk k.succ (Niche k.succ)
+
+/-- Increment a niche type itself (actually a Sigma type wrapper). 
+    This version uses pattern matching on the dependent pair, but you could
+    also extract the index using the fst function -/
+def incNiche : (p : (Σ _ : ℕ, Type)) → (Σ _ : ℕ, Type)
+  | ⟨k, _⟩ => ⟨k.succ, Niche k.succ⟩  -- Those are angle brackets.
+
+---------------------------------------------------
+-- Tests and illustrations
+
+-- Basic illustrations of the niche and user data structures:
 
 #check mkNichePair
 #check (mkNichePair)
@@ -48,67 +127,41 @@ def np0 : (_ : ℕ) × Type := mkNichePair 0
 #check np0.snd
 -- #eval np0.2  -- doesn't know how to display this.
 -- But Niche derives Repr.  So the problem is that it doesn't know it's a Niche k.
--- As specied in the sig of np0, snd has type Type, so there's no further
+-- As specified in the sig of np0, snd has type Type, so there's no further
 -- information about how to display it.
-  
-
--- Now let's define a coercion so that a dep niche pair can function as a niche.
-
--- On CoeSort see:
--- https://lean-lang.org/functional_programming_in_lean/type-classes/coercion.html?highlight=CoeSort#coercing-to-types
--- https://lean-lang.org/theorem_proving_in_lean4/type_classes.html?highlight=CoeSort#coercions-using-type-classes
--- https://leanprover.zulipchat.com/#narrow/stream/113489-new-members/topic/Construct.20type.20from.20index.20in.20another.20type/near/423694347
-
--- This def is too general.  It's not constrained to Niches.  But Type is the
--- type of (Niche k), so if you want to return a Niche k, the type is Type.
--- I suppose it could be constrained with a proof.
-instance : CoeSort (Σ _ : ℕ, Type) Type where
-  coe p := p.snd
--- alt syntax: instance : CoeSort (k : ℕ) × Type Type
   
 -- Regular version of defining a niche user:
 def u1 : Niche 1 := Niche.user 1
 #check u1
 #eval u1
 
--- We can define a type sig using the dep pair:
+-- We can define a type signature by extracting it from the wrapper:
 def u2 : (mkNichePair 2).snd := Niche.user 2
 #check u2
 #eval u2
 
--- And the CoeSort statement allows us to do it without using .snd.
--- The stru
+-- And the CoeSort statement allows us to do the same thing without using .snd.
 def u3 : (mkNichePair 3) := Niche.user 3
 #check u3
 #eval u3
 
--- Predefining a niche pair type (Is it bad or good form to initial-cap it?:
+-- Predefining a niche pair type, and then using that in a type signature:
 def Niche4 : (Σ _ : ℕ, Type) := mkNichePair 4
 def u4 : Niche4 := Niche.user 4
 #check u4
 #eval u4
 
 #check Niche4
-
--- So now the dependent pair containing the Niche can function
--- as a type of an organism.  But it also contains the information
--- that allows us to extract its parameter (index).
-
--- Version using .fst:
-def incNicheOK (p : (Σ _ : ℕ, Type)) : (Σ _ : ℕ, Type) :=
-  let k := p.fst
-  Sigma.mk k.succ (Niche k.succ)
-
--- Version using pattern matching on the dependent pair:
-def incNiche : (p : (Σ _ : ℕ, Type)) → (Σ _ : ℕ, Type)
-  | ⟨k, _⟩ => ⟨k.succ, Niche k.succ⟩  -- Those are angle brackets.
-
 #eval Niche4.fst
+
+-- Try out the incNiche function:
+
 #eval (incNiche Niche4).fst
 #check incNiche Niche4
 #eval (incNiche (incNiche Niche4)).fst
 
 def Niche6 : (Σ _ : ℕ, Type) := (incNiche (incNiche Niche4))
+
 def u6 : Niche6 := Niche.user 6
 #check u6
 #eval u6
@@ -118,36 +171,11 @@ def niches := [Niche4, Niche6]
 
 #check List.map incNiche niches
 
--- What these are returning is not a list, but a function
--- from a proof the list is not empty, to the head.
-#check (List.map incNiche niches).head
-#check List.head (List.map incNiche niches)
--- #eval nichevect
+-- Using Vectors:
 
-def yo := Vector.cons 2 <| Vector.cons 4 Vector.nil
-#check yo
-#eval yo
-#eval Vector.map (. + 1) yo
-
-def nichevect := Vector.cons Niche4 <| Vector.cons Niche6 Vector.nil
+def nichevect := Vector.cons Niche4 $ Vector.cons Niche6 Vector.nil  -- It's better style to use <| rather than $ .
 #check nichevect
 #check Vector.map incNiche nichevect
--- #eval Vector.map incNiche nichevect
+-- #eval Vector.map incNiche nichevect -- Lean doesn't know how to display this.
+#eval Vector.map (fun p => p.fst) $ Vector.map incNiche nichevect
 
-
-
--- Taking stock:
---
--- Given a niche user (an organism), incUser creates a user with parameter that
--- is one greater than the original user's parameter.
--- 
--- The type of a niche user is, strictly speaking, a Niche k, but via
--- coercion, a dependent pair of a parameter k and Niche k can function
--- as the type of a user.  
---
--- Moreover, that kind of pair type can be used by incNiche to
--- create a new niche pair that has parameter that is one larger.
---
--- I can make a list of such "niches".
---
--- I don't yet know how to map over a collection of niches in Lean.
