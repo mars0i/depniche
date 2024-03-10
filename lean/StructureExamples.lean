@@ -4,15 +4,15 @@
 -- Type parameters can only be added via a type signature, and
 -- it is required.
 
-structure NicheOnlyImplicit (k : Nat) where
+structure OnlyImplicit (k : Nat) where
   deriving Repr
 
-#check NicheOnlyImplicit.mk
-#check (NicheOnlyImplicit.mk)
--- def noi3no := NicheOnlyImplicit.mk -- "don't know how to synthesize implicit argument"
-def noi3 : NicheOnlyImplicit 3 := NicheOnlyImplicit.mk
-#check noi3
-#eval noi3
+#check OnlyImplicit.mk
+#check (OnlyImplicit.mk)
+-- def oi3no := OnlyImplicit.mk -- "don't know how to synthesize implicit argument"
+def oi3 : OnlyImplicit 3 := OnlyImplicit.mk
+#check oi3
+#eval oi3
 
 
 ----------------------------------------------
@@ -20,23 +20,23 @@ def noi3 : NicheOnlyImplicit 3 := NicheOnlyImplicit.mk
 -- type parameters can only be added via a type signature
 -- and it is required.
 
-structure NicheImplicitPlusField (k : Nat) where
+structure ImplicitPlusField (k : Nat) where
   k : Nat
   deriving Repr
 
-#check NicheImplicitPlusField.mk
-#check (NicheImplicitPlusField.mk)
--- def nipf3no := NicheImplicitPlusField.mk 3 -- "don't know how to synthesize implicit argument"
-def nipf3 : NicheImplicitPlusField 3 := NicheImplicitPlusField.mk 3
-#check nipf3
-#eval nipf3
+#check ImplicitPlusField.mk
+#check (ImplicitPlusField.mk)
+-- def ipf3no := ImplicitPlusField.mk 3 -- "don't know how to synthesize implicit argument"
+def ipf3 : ImplicitPlusField 3 := ImplicitPlusField.mk 3
+#check ipf3
+#eval ipf3
 
 -- Note that there is nothing above that keeps the field and the type param
 -- in sync:
 
-def noiDiffParams : NicheImplicitPlusField 3 := NicheImplicitPlusField.mk 4
-#check noiDiffParams
-#eval noiDiffParams
+def oiDiffParams : ImplicitPlusField 3 := ImplicitPlusField.mk 4
+#check oiDiffParams
+#eval oiDiffParams
 
 -- This shows an advantage of using dependent pair instead, since
 -- the accessible (left) parameter is required to be in sync with the
@@ -48,32 +48,32 @@ def noiDiffParams : NicheImplicitPlusField 3 := NicheImplicitPlusField.mk 4
 -- If there is no type parameter, you can get away with not adding
 -- a type signature; Lean will guess it.
 
-structure NicheOnlyField where
+structure OnlyField where
   k : Nat
   deriving Repr
 
-#check NicheOnlyField.mk
-#check (NicheOnlyField.mk)
-def nof3ok := NicheOnlyField.mk 3
-#check nof3ok
-#eval nof3ok
-def nof3 : NicheOnlyField := NicheOnlyField.mk 3
-#check nof3
-#eval nof3
+#check OnlyField.mk
+#check (OnlyField.mk)
+def of3ok := OnlyField.mk 3
+#check of3ok
+#eval of3ok
+def of3 : OnlyField := OnlyField.mk 3
+#check of3
+#eval of3
 
 ----------------------------------------------
 
 -- If you create more fields, then the .mk constructor expects more
 -- aguments.
 
-structure NicheMoreFields where
+structure MoreFields where
   k : Nat
   s: String
   deriving Repr
 
-#check NicheMoreFields.mk
-#check (NicheMoreFields.mk)
+#check MoreFields.mk
+#check (MoreFields.mk)
 
-def nmf3 := NicheMoreFields.mk 3 "three"
-#check nmf3
-#eval nmf3
+def mf3 := MoreFields.mk 3 "three"
+#check mf3
+#eval mf3
