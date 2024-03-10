@@ -22,7 +22,7 @@ def incUser : (o : Niche k) → (Niche k.succ)
 -- Though the following works.  But note that it doesn't depend directly
 -- on the existence of a Niche k. Otoh, if the niche user exists,
 -- then the Niche exists.  (Note use of alternate syntax see above.)
-def org2niche : (o : Niche k) → Type
+def incOrg2niche : (o : Niche k) → Type
   | Niche.user k => Niche k.succ
 
 -- dep pairs/Sigma types
@@ -84,6 +84,7 @@ def u2 : (mkNichePair 2).snd := Niche.user 2
 #eval u2
 
 -- And the CoeSort statement allows us to do it without using .snd.
+-- WAIT IS THIS WHAT I WANTED TO DO?  DON'T I WANT THE ST TO BE AN INSTANCE OF ITS SECOND ELEMENT?
 def u3 : (mkNichePair 3) := Niche.user 3
 #check u3
 #eval u3
