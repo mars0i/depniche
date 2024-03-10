@@ -7,6 +7,7 @@ inductive Niche : (k : ℕ) → Type where
   | user : (k : ℕ) → Niche k
 deriving Repr
 
+/-
 -- For this alternative syntax, see https://lean-lang.org/functional_programming_in_lean/getting-to-know/conveniences.html
 def incUser : (o : Niche k) → (Niche k.succ)
   | (Niche.user k) => Niche.user k.succ
@@ -20,7 +21,7 @@ def incOrg2niche : (o : Niche k) → Type
 -- dep pairs/Sigma types
 -- https://leanprover-community.github.io/mathematics_in_lean/C06_Structures.html
 --https://lean-lang.org/theorem_proving_in_lean4/dependent_type_theory.html?highlight=Sigma#what-makes-dependent-type-theory-dependent 
-
+-/
 -- Note alternate syntaxes at the type and instance level:
 def mkNichePair    (k : ℕ) : (_ : ℕ) × Type  := ⟨k, Niche k⟩
 def mkNichePairAlt (k : ℕ) : (Σ _ : ℕ, Type) := Sigma.mk k (Niche k)
@@ -76,7 +77,7 @@ def u2 : (mkNichePair 2).snd := Niche.user 2
 #eval u2
 
 -- And the CoeSort statement allows us to do it without using .snd.
--- WAIT IS THIS WHAT I WANTED TO DO?  DON'T I WANT THE ST TO BE AN INSTANCE OF ITS SECOND ELEMENT?
+-- The stru
 def u3 : (mkNichePair 3) := Niche.user 3
 #check u3
 #eval u3
