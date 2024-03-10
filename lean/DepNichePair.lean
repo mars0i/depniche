@@ -1,14 +1,6 @@
 import Mathlib.Data.Vector
 -- import Mathlib.Data.Vector.Basic
 
-/-
--- find an import to replace this:
-inductive Vect (α  : Type u) : ℕ → Type u where
-  | nil : Vect α 0
-  | cons : α → Vect α n → Vect α (n + 1)
-deriving Repr
--/
-
 -- Note the natural number type can be rep'ed either by Nat or ℕ.
 
 inductive Niche : (k : ℕ) → Type where
