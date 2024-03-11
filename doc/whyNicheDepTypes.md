@@ -27,10 +27,31 @@ enough.
   that might be the reality) and rather than just vagueness and
   case-by-case applications (which also might be more realistic).
 
-* It's not necessary to use dependent types to do this.
+* An organism is able to survive and maybe reproduce in
+  environmental conditon (or niche) $1$, but might do so more
+  successfully in a different one. In order for niche constructon
+  to occur, the organism must be alive!  So if niches are types,
+  an organism can have multiple types.  This isn't allowed in any
+  simple way in a strictly typed language.  I thought about
+  treating niches as typeclasses or interfaces, but it was
+  complicated to think through, and it probably would cause
+  problems because this kind of thing is not what these things
+  are designed for.  So more recently I've been thinking about
+  identifying an organism with abilities to use any member of a
+  collection of niches.  In my very simple explorations of
+  capabilities of dependently typed languages, started referring
+  to the thing that the niche is a type of a "niche user" rather
+  thabn an organism.  So then an organism is a collection of
+  niche users.  (There's probably better terminology.)  (Here
+  "organism" is intentionally ambiguous between a kind or set of
+  organisms---maybe all members of a species---and an individual,
+  token organism.)
+
+* It's not necessary to use dependent types to do this kind of thing.
   You can do it in any language.  But the suggestive properties
-  of dependent types is a plus.  It conveys an idea clearly.  How
-  valuable is that, though?
+  of dependent types is a plus.  It conveys an idea clearly.  (How
+  valuable is that, though?  Choosing a language and a style of
+  coding for that purpose?)
 
 * We might want to implement an agent-based model and explore
   different configurations, look for interesting patterns, etc.
