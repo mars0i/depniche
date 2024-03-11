@@ -39,7 +39,7 @@ enough.
   options are limited to popular languages such as Java, C++,
   Python.  There's one Javascript ABM library, but last I checked
   it wasn't very full-featured.  We can get a long way without
-  an ABM library, but it's a nice thing.  There is a list of
+  an ABM library, but it's a nice thing.  There's a list of
   options here:
   https://en.wikipedia.org/wiki/Comparison_of_agent-based_modeling_software
 
@@ -71,15 +71,14 @@ enough.
   "proven" something that is represented by the type system, and
   how it's applied in the functions representing biological
   relationships.  What is that?  What has been "proven"?  Maybe
-  it won't be interesting to describe, but if it is, maybe that
-  is writing about.  Or maybe it will be no more interesting than
-  a proof that 3 is a natural number:
+  it won't be interesting to describe, but if it is, it might be worth
+  writing about.  Maybe it will be no more interesting than
+  a proof that there's a natural number, namely 42:
 
     ```haskell
     n : Nat
-    n = 3
+    n = 42
     ```
-
 * *Very* unlikely, but: if it turned out that the patterns we're
   modeling had parallels in some pre-existing other domain, maybe
   something more central to the dependent types world--that would
