@@ -18,7 +18,6 @@ def incNiche {k : Nat} (o : Niche k) : Niche (k + 1) :=
   -- Syntax to reuse the fields for the new type:
   {o with}
 
--- Doesn't work.
 /-- Generate a new niche from an old niche, incrementing the index. -/
 def incUser (n : User) : User  :=
   {k := n.k + 1}
