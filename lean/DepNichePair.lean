@@ -1,6 +1,7 @@
 import Mathlib.Data.Vector  -- used in examples near end
 
 /-! 
+What is in this file?
 
 Niches as types, niche users as organisms or aspects of organisms
 that have those types.
@@ -13,42 +14,54 @@ For the sake of illustration, the indexes/parameters of Niches
 (and their users) are Nats, and the only kind of niche
 construction is incrementing a Nat.
 
-Lean doesn't have "type-case": If you define an "inductive type"
-in Lean, you can pattern match on the contructors, but you can't
-pattern match on the type itself (like Agda and Coq, but unlike
-Idris).  That means that you can't read the index of an indexed
-type from a type in order to create a new type with a different
-index based on the old one.  If you want the index, you have to
-get it somewhere else.
+Lean doesn't have "typecase": If you define an "inductive" type
+(the `inductive` keyword does more or less what `data` does in
+Idris or Agda, i.e. a dependent type extension of Haskell's
+`data`) in Lean, you can pattern match on the contructors, but
+you can't pattern match on the type itself. (Agda [and Coq?] have
+the same restriction this, while Idris allows matching on the
+type itself.)  That means that you can't read the index of an
+indexed type from a type in order to create a new type with a
+different index based on the old one.  If you want the index, you
+have to get it somewhere else.
 
 One place you can get the index is from an instance of the type
 (since you can pattern match on constructors).  This is illustrated
-by incOrgToNiche below.
+by incOrgToNiche below.  However, a niche user should not have the power to
+create a niche from scratch, so getting a niche parameter from a niche user
+only makes sense if the niche user only exists if its niche type exists.
+(I guess I need to think about what existence means here.)
 
 The code below defines a dependent pairs/Sigma types as wrappers
-for Niche types, so that the type index can be stored outside of the
-type.  Then we use Lean's CoeSort to coerce the dependent pairs to
-be Niche types, so that they can be used that way.  It should also
-be possible to do something like this using Lean structures.
+for Niche types, so that the type index can be stored outside of
+the type.  Then we use Lean's CoeSort to coerce the dependent
+pairs to be Niche types, so that they can be used as if they were
+the types of niche users.  (It should also be possible to do
+something like this using Lean structures.  See
+DepnicheKyleMiller.lean and other exploratory files here.)
 
-(Perhaps its silly to create a data structure to hold an index because
+(Perhaps it's silly to create a data structure to hold an index because
 you are unable to access it from the type itself, and then call
-the data structure the type.  But this shows one way that it can be done.
+the data structure the type.  But this file shows one way that it can be
+done.)
+
 -/
 
-/- Tips:
+/- Tips to myself:
+
 Note the natural number type can be rep'ed either by Nat or ℕ (ℕ).
 And you can use either → (→) or -> for function definitions.
 
 For the less common, more Haskell-ey function type syntax used
-sometimes below, see
+sometimes below (which is not what you usually see in introductory
+examples), see
 https://lean-lang.org/functional_programming_in_lean/getting-to-know/conveniences.html
 
-Dependent pairs/Sigma types:
+Information about dependent pairs/Sigma types:
 https://leanprover-community.github.io/mathematics_in_lean/C06_Structures.html
 https://lean-lang.org/theorem_proving_in_lean4/dependent_type_theory.html?highlight=Sigma#what-makes-dependent-type-theory-dependent 
 
-On CoeSort see:
+Information CoeSort:
 https://lean-lang.org/functional_programming_in_lean/type-classes/coercion.html?highlight=CoeSort#coercing-to-types
 https://lean-lang.org/theorem_proving_in_lean4/type_classes.html?highlight=CoeSort#coercions-using-type-classes
 https://leanprover.zulipchat.com/#narrow/stream/113489-new-members/topic/Construct.20type.20from.20index.20in.20another.20type/near/423694347
@@ -66,11 +79,17 @@ def incUser : (o : Niche k) → (Niche k.succ)
 def incOrgToniche : (o : Niche k) → Type
   | Niche.user k => Niche k.succ
 
-/- Functions to create Sigma type wrappers of niche types.  These are the
-  same but I wanted to illustrate the different syntaxes for Sigma types. 
-You can mix and match the different syntaxes.  The Nat really is used, but it
-creates something whose type is Type, so it seems to be ignored at the type
-level.  Underscore gets rid of unused-variable warnings. -/
+/- Functions to create Sigma type wrappers of niche types.  
+
+The functions immediately below are the same but illustrate the
+different syntaxes for Sigma types. I may use all or most of
+these syntaxes, unsystematically, below. You can mix and match
+the different syntaxes.  The underscore Nat really is used, to
+creates something whose type is Type, so it seems to be ignored
+at the type level.  Using underscore rather than a properly named
+variable gets rid of unused-variable warnings.
+
+-/
 def mkNichePairCrossAngle    (k : ℕ) : (_ : ℕ) × Type  := ⟨k, Niche k⟩
 def mkNichePairSigmaMk (k : ℕ) : (Σ _ : ℕ, Type) := Sigma.mk k (Niche k)
 def mkNichePairNoUnicode (k : Nat) : (Sigma (fun _ : Nat => Type)) := Sigma.mk k (Niche k)
@@ -88,11 +107,6 @@ instance : CoeSort (Σ _ : ℕ, Type) Type where
 -- So now the dependent pair containing the Niche can function
 -- as a type of an organism.  But it also contains the information
 -- that allows us to extract its parameter/index.
-
--- Version using .fst:
-def incNicheOK (p : (Σ _ : ℕ, Type)) : (Σ _ : ℕ, Type) :=
-  let k := p.fst
-  Sigma.mk k.succ (Niche k.succ)
 
 /-- Increment a niche type itself (actually a Sigma type wrapper). 
     This version uses pattern matching on the dependent pair, but you could
