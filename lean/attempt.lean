@@ -24,7 +24,8 @@ instance : CoeSort User Type := ⟨User.type⟩
 -- organism-level niche incrementation: increment an organism's niche
 def incNiche {k : Nat} (o : Niche k) : Niche (k + 1) :=
   -- Syntax to reuse the fields for the new type:
-  {o with}
+  {o with}   -- i.e. copies all vals of fields, without replacing any
+
 
 /-- Generate a new niche from an old niche, incrementing the index. -/
 def incUser (n : User) : User  :=
@@ -58,3 +59,15 @@ def n34 : Niche 3 := Niche.mk 4  -- this is poss but not what I want
 def User.irrelevant (u : User) : String := s!"Onomotopeia {u.k}"
 #eval u3.irrelevant
 #eval u4.irrelevant
+
+
+#check incUser u3
+#eval incUser u3 -- works--increments user's k field
+
+#check incNiche
+#check (incNiche)
+
+-- This shows that incNiche generate *an instance of the type (Niche 4):
+#check incNiche n3
+-- This shows that it is an instance. The n field is copied, not inc'ed:
+#eval incNiche n3
