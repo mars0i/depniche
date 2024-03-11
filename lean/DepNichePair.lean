@@ -76,7 +76,7 @@ def incUser : (o : Niche k) → (Niche k.succ)
   | (Niche.user k) => Niche.user k.succ
 
 /-- Create a new niche type by incrementing the index of a niche user. -/
-def incOrgToniche : (o : Niche k) → Type
+def incOrgToNiche : (o : Niche k) → Type
   | Niche.user k => Niche k.succ
 
 /- Functions to create Sigma type wrappers of niche types.  
