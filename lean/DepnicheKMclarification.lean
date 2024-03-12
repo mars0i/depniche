@@ -1,4 +1,9 @@
--- Playing with Kyle Miller's suggestion
+-- Notes, experiments with 
+-- Kyle Miller's suggestion about how to do what I'm trying to do.
+-- from https://leanprover.zulipchat.com/#narrow/stream/113489-new-members/topic/Construct.20type.20from.20index.20in.20another.20type/near/423694347
+-- DepnicheKyleMiller.lean contains Kyle's original code.
+-- This is pretty much the same but with minor changes, new comments
+-- and test/illustration code.
 
 structure User where
   k : Nat
@@ -54,11 +59,22 @@ def u4 := User.mk 4
 -- #eval u3.type
 
 def n3 : Niche 3 := Niche.mk 3  -- need type sig to grab index
-def n34 : Niche 3 := Niche.mk 4  -- this is poss but not what I want
+def n34 : Niche 3 := Niche.mk 4  -- this is allowed but not what I want
 
+-- Experimenting with post-structure-def "fields".  This shows that
+-- are instance-specific, but automatically initialized.  otoh, they are
+-- not treated as part of the instance in the sense of being subject to
+-- functional update using `with`.
 def User.irrelevant (u : User) : String := s!"Onomotopeia {u.k}"
 #eval u3.irrelevant
 #eval u4.irrelevant
+#eval u3.irrelevant
+#eval u3 -- the .type and .irrelevant fields are not displayed
+#eval {u3 with k := 42}  -- functional update
+-- #eval {u3 with irrelevant := "Omonopotiea 47"} -- update doesn't work with post-def "fields"
+-- I couldn't figure out a syntax for that that worked; tried various options.
+-- And as you'd expect, you can't redefine the "field":
+-- def User.irrelevant (u : User) := "Omonopotiea 47" -- update doesn't work with post-def "fields"
 
 
 #check incUser u3
