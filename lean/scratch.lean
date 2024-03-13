@@ -1,23 +1,26 @@
 
--- We can create ordered pairs either using parentheses or angle brackets:
-def pair1 : Nat × String := (1, "2")
-def pair2 : Nat × String := ⟨1, "2"⟩ 
-#check pair1
-#check pair2
-#eval pair1
-#eval pair2
 
--- def badpair1 : Nat × String := Sigma.mk 1 "2"
+inductive Niche : (k : ℕ) → Type where
+  | user : (k : ℕ) → Niche k
+deriving Repr
 
-def pair3 : (Σ n : Nat, String) := ⟨1, "2"⟩
-#check pair3
-#eval pair3
--- def pair4 : (Σ n : Nat, String) := (1, "2") -- but you can't use parentheses for Sigma types.
+def Niche.type (_ : Niche k) : Type := Niche k
+def Niche.alsotype : (Niche k) → Type := Niche
+def Niche.fourtytwo : Nat := 42
 
--- Merely adding/removing a name for the instance of the first type changes the type.
-def pair4 : (k : Nat) × String := ⟨1, "2"⟩
-#check pair4
-#eval pair4
--- That's a potential source of bugs, and is a reason to avoid using angle brackets rather than Sigma.mk.
--- Otoh the subtle differences in notation are built into how these types and values are reported,
--- and using the cross and angle brackets vs. parens reflects those representations.
+def n := Niche 4
+#check n
+
+def u := Niche.user 4
+#check u
+#eval u
+
+#check u.type
+#check u.alsotype
+-- #check u.fourtytwo -- error. Why? Maybe only if it's a fn is it attached to the instance.
+
+#check Niche.fourtytwo
+#eval Niche.fourtytwo
+-- sigs are same except for one var name:
+#check Niche.type
+#check Niche.alsotype
