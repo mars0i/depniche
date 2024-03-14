@@ -32,13 +32,14 @@ pair does.
 Another way is to use universe pattern codes that store the
 parameters that are currently in the collection of niches.
 
-When I asked about type-case in the Agda Zulip chat, Naïm
-Camille Favier and Jacques Carette suggested something like the
-universe pattern.  Naïm remarked that since Niche only had one
-constructor, one might as well use the parameters (Nats, in my
-example) as the codes representing Niches.  More generally, one could
-use a product of numbers (or other things?) as universe codes, and
-keep a collection of those that can be updated due to niche
-construction by organisms.  One could still require that there only be
-organisms that include instances of Niche types that are coded for by
-elements in the collection of parameters.
+When I asked about type-case for Zulip in the Agda Zulip chat,
+Naïm Camille Favier and Jacques Carette suggested something like
+the universe pattern, but I didn't understand at the time.  Naïm
+remarked that since Niche only had one constructor, one might as
+well use the parameters (Nats, in my example) as the codes
+representing Niches.  (Now I understand.)  More generally, one
+could use a product of numbers (or other things?) as universe
+codes, and keep a collection of those that can be updated due to
+niche construction by organisms.  One could still require that
+there only be organisms that include instances of Niche types
+that are coded for by elements in the collection of parameters.
