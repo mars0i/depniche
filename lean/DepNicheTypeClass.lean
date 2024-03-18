@@ -6,9 +6,20 @@ inductive Organism : (k : Nat) → Type where
   | mk (k : Nat) : Organism k
 deriving Repr
 
+-- Define an organism
+def o1 := Organism.mk 5
+#check o1
+#eval o1
+
 structure Organism2 where
   k : Nat
 deriving Repr
+
+def o3 := Organism2.mk 5
+#check o3
+#eval o3
+
+#eval (Organism2.mk 14).k
 
 
 -- inspired by ofNat,  https://lean-lang.org/functional_programming_in_lean/type-classes/pos.html
@@ -21,13 +32,6 @@ class Niche (_ : Nat) (a : Type) where
 instance : Niche m (Organism n) where  -- m is the Niche parameter
   fitness := m * n  -- Silly fitness fn, but shows can be function of both types
 
-#eval (Organism2.mk 14).k
-
-
--- Define an organism
-def o1 := Organism.mk 5
-#check o1
-#eval o1
 
 -- Calculate an organism's fitness in a given niche
 def o1fit := Niche.fitness 3 (Organism 5)
@@ -84,11 +88,11 @@ instance : Niche2 4 (o2 : Organism 11) where
 -- But now it works:
 #eval Niche2.fitness 4 o2
 
--- Can I do this?  No, not like this.  Why?
-instance : Niche2 5 o2 where
+-- Can I do this?  No, not like this.  Why not?
+instance : Niche2 m o2 where
    fitness := 
      match o2 with
-     | (Organism.mk n) => 5 + n
+     | (Organism.mk n) => m + n
 
 -- Well this works:
 def getParam2 (o : Organism z) :=
@@ -102,3 +106,20 @@ def getParam2 (o : Organism z) :=
 def getParam (o : Organism z) := z
 #check getParam o2
 #eval getParam o2
+
+
+-----------------------------------------
+-- Using organism as structure not inductive
+
+-- This is for an organism, not a type, as its second argument:
+class Niche3 (_ : Nat) (o : Organism2) where
+  fitness : Nat
+
+#check o3
+#eval o3
+
+instance : Niche3 m (o : Organism2) where
+  fitness := m + o.k
+
+#eval Niche3.fitness 4 o3
+
