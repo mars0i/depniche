@@ -3,18 +3,25 @@
 -/
 
 inductive Organism : (k : Nat) → Type where
-  | mk : (k : Nat) → Organism k
+  | mk (k : Nat) : Organism k
 deriving Repr
+
+structure Organism2 where
+  k : Nat
+deriving Repr
+
 
 -- inspired by ofNat,  https://lean-lang.org/functional_programming_in_lean/type-classes/pos.html
 class Niche (_ : Nat) (a : Type) where
   fitness : Nat
 
+#check (Niche.fitness)
+
 -- This doesn't make instances of Organism k have type Niche j, for any j.
 instance : Niche m (Organism n) where  -- m is the Niche parameter
   fitness := m * n  -- Silly fitness fn, but shows can be function of both types
 
-#check (Niche.fitness)
+#eval (Organism2.mk 14).k
 
 
 -- Define an organism
@@ -52,6 +59,11 @@ def ofit (_ : Organism n) (m : Nat) : Nat := Niche.fitness m (Organism n)
 class Niche2 (_ : Nat) (a : Organism n) where
   fitness : Nat
 
+#check Niche2.fitness
+#check (Niche2.fitness)
+#check @Niche2.fitness
+#check (@Niche2.fitness)
+
 def o2 := Organism.mk 11
 #check o2
 
@@ -72,8 +84,21 @@ instance : Niche2 4 (o2 : Organism 11) where
 -- But now it works:
 #eval Niche2.fitness 4 o2
 
--- Can I do this?  No, not like this.  Maybe syntax error?
--- instance : Niche2 5 (o2 : Organism 11) where
---   fitness := 
---     match o2 with
---     | (Organism.mk k) => 5 + k
+-- Can I do this?  No, not like this.  Why?
+instance : Niche2 5 o2 where
+   fitness := 
+     match o2 with
+     | (Organism.mk n) => 5 + n
+
+-- Well this works:
+def getParam2 (o : Organism z) :=
+  match o with
+  | (Organism.mk z) => z
+
+#check getParam2 o2
+#eval getParam2 o2
+
+-- And also this:
+def getParam (o : Organism z) := z
+#check getParam o2
+#eval getParam o2
