@@ -57,7 +57,7 @@ def o2 := Organism.mk 11
 
 -- individual-organism-specific fitness function
 instance : Niche2 3 (o2 : Organism 11) where
-  fitness := 3 + 11 -- can't do this properly without type-case
+  fitness := 3 + 11 
 
 -- Then this works:
 #eval Niche2.fitness 3 o2
@@ -65,8 +65,15 @@ instance : Niche2 3 (o2 : Organism 11) where
 -- But this fails, because we haven't defined an instance for Niche2 3 for o2:
 -- #eval Niche2.fitness 4 o2
 
+-- individual-organism-specific fitness function
 instance : Niche2 4 (o2 : Organism 11) where
-  fitness := 4 + 11 -- can't do this properly without type-case
+  fitness := 4 + 11 
 
 -- But now it works:
 #eval Niche2.fitness 4 o2
+
+-- Can I do this?  No, not like this.  Maybe syntax error?
+-- instance : Niche2 5 (o2 : Organism 11) where
+--   fitness := 
+--     match o2 with
+--     | (Organism.mk k) => 5 + k
