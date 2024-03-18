@@ -62,7 +62,7 @@ instance : Niche2 3 (o2 : Organism 11) where
 -- Then this works:
 #eval Niche2.fitness 3 o2
 
--- But this fails, because we haven't defined an instance for Niche2 3 for o2:
+-- But this fails, because we haven't defined an instance for Niche2 4 for o2:
 -- #eval Niche2.fitness 4 o2
 
 -- individual-organism-specific fitness function
