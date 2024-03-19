@@ -99,6 +99,20 @@ instance : Niche2 m (o : Organism n) where
 
 #eval Niche2.fitness 4 o2
 
+class N (a : Organism n) (m : Nat) where
+  fitness : Nat
+instance : N (o : Organism n) m where
+  fitness := m * n
+def o := Organism.mk 10
+#eval N.fitness o 5
+#check N.fitness
+#check (N.fitness)
+def osfit := N.fitness o
+#check osfit
+#check (osfit)
+#check N.fitness o 4
+-- #eval List.map osfit [2, 2, 3]
+
 -- ??
 def fitness10 := Niche.fitness 10
 #check fitness10
