@@ -21,6 +21,8 @@ def o3 := Organism2.mk 5
 
 #eval (Organism2.mk 14).k
 
+----------------------------------------------------
+-- INTERESTING, BUT NOT REALLY RIGHT: the arg is the organism type
 
 -- inspired by ofNat,  https://lean-lang.org/functional_programming_in_lean/type-classes/pos.html
 class Niche (_ : Nat) (a : Type) where
@@ -58,6 +60,7 @@ def ofit (_ : Organism n) (m : Nat) : Nat := Niche.fitness m (Organism n)
 -- But fits with Naïm's suggestion to use niche parameters as universe codes.
 
 ----------------------------------------------------
+-- BETTER: the arg is the organism
 
 -- This is for an organism, not a type, as its second argument:
 class Niche2 (_ : Nat) (a : Organism n) where
@@ -72,6 +75,7 @@ def o2 := Organism.mk 11
 #check o2
 
 -- individual-organism-specific fitness function
+-- but it's hard-coded
 instance : Niche2 3 (o2 : Organism 11) where
   fitness := 3 + 11 
 
@@ -82,12 +86,29 @@ instance : Niche2 3 (o2 : Organism 11) where
 -- #eval Niche2.fitness 4 o2
 
 -- individual-organism-specific fitness function
+-- but it's hard-coded
 instance : Niche2 4 (o2 : Organism 11) where
   fitness := 4 + 11 
 
 -- But now it works:
 #eval Niche2.fitness 4 o2
 
+-- No need to hard-code it:
+instance : Niche2 m (o : Organism n) where
+  fitness := m * n
+
+#eval Niche2.fitness 4 o2
+
+-- ??
+def fitness10 := Niche.fitness 10
+#check fitness10
+#check (fitness10)
+-- #check fitness10 o2
+
+-------------
+
+-- THIS DOESN'T WORK, but is it needed?
+-- i.e. trying to say that o2 is a particular kind of Niche user.
 -- Can I do this?  No, not like this.  Why not?
 instance : Niche2 m o2 where
    fitness := 
@@ -109,7 +130,7 @@ def getParam (o : Organism z) := z
 
 
 -----------------------------------------
--- Using organism as structure not inductive
+-- NOT SURE: using organism as structure not inductive
 
 -- This is for an organism, not a type, as its second argument:
 class Niche3 (_ : Nat) (o : Organism2) where
