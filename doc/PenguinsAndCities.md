@@ -10,5 +10,3 @@ those that are facts about the world. Theorem provers like Lean
 are concerned with the former category, and have nothing to say
 about the flight capabilities of penguins or the legal status of
 cities.
-
-Or do they?
