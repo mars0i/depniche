@@ -1,4 +1,4 @@
-
+import Mathlib
 
 inductive Niche : (k : ℕ) → Type where
   | user : (k : ℕ) → Niche k
