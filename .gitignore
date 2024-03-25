@@ -9,3 +9,4 @@ lean/.lake/lakefile.olean
 lean/.lake/lakefile.olean.trace
 lean/lake-manifest.json
 lean/lean-toolchain
+doc/*.log
