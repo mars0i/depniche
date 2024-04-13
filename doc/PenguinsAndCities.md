@@ -10,3 +10,11 @@ cities.
 
 David Christiansen, _Functional Programming in Lean_, January 2024 edition   
 (https://lean-lang.org/functional_programming_in_lean/props-proofs-indexing.html)
+
+<br/>
+
+> Our logic has only to do with mathematical propositions; the
+question whether it admits any applications outside mathematics
+does not concern us here.
+
+Arend Heyting, _Intuitionism: An Introduction_, 3rd ed. p. 101
