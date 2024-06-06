@@ -25,7 +25,7 @@ is-in dec a (b ∷ as) with dec a b
 
 -- 𝕋, intended to represent discrete time
 𝕋 : Set
-𝕋 = ℕ
+
 
 -- passage of time
 tick : 𝕋 → 𝕋
@@ -42,9 +42,9 @@ module System (DunlinNames : Set) (EnvNames : Set) where
 
   record History : Set₁ where
     field
---      Params : Set
       Env    : (t : 𝕋) → List EnvNames
       Dunlin : (t : 𝕋) → List DunlinNames
+--      Params : Set
 
 
   mkSys :
@@ -103,19 +103,21 @@ module Example where
   open System D E
   
   d-evolve :  ∀ (t : 𝕋) → (Eₜ : List E) → (Dₜ : List D) → List D
-  d-evolve t (no-nest ∷ [])  Dₜ  = [ brown ]
+  d-evolve t (no-nest ∷ []) Dₜ  = [ brown ]
   d-evolve t (nest ∷ []) Dₜ  =  [ grey ]
+  d-evolve t (no-nest ∷ nest ∷ []) Dₜ  =  grey ∷ brown ∷ []
   d-evolve t Eₜ Dₜ  =  Dₜ
 
   e-evolve :  ∀ (t : 𝕋) → (Eₜ : List E) → (Dₜ : List D) → List E
   e-evolve t Dₜ [] = [ no-nest ]
-  e-evolve t Dₜ (d ∷ ds) = {! !}
+  e-evolve t Dₜ (grey ∷ ds) = {!!}
+  e-evolve t Dₜ (brown ∷ ds) = {! !}
 
   example-mk : SysMaker
   example-mk = 
     record { 
       E₀ = [ nest ]  ; 
       D₀ = [ grey ] ; 
-      Estep = {!!} ; 
-      Dstep = {!!} 
+      Estep = e-evolve ; 
+      Dstep = d-evolve 
     }
