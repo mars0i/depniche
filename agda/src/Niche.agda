@@ -25,6 +25,7 @@ is-in dec a (b ∷ as) with dec a b
 
 -- 𝕋, intended to represent discrete time
 𝕋 : Set
+𝕋 = ℕ
 
 
 -- passage of time
