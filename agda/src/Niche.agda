@@ -10,6 +10,10 @@ open import Relation.Binary.PropositionalEquality using (_≡_; refl)
 open import Relation.Nullary using (Dec; yes; no)
 open import Relation.Nullary.Decidable
 
+-- Key to Marshall's comments:
+--    --?  Means general question about what code is doing, etc.
+--    ---? Means possibly ignorant novice Agda question about syntax, semantics, etc.
+--    --   Means what it always does, but may include clarifications of what's obvious :-)
 
 -- helpers (probably in std-lib _somewhere_)
 
@@ -41,6 +45,7 @@ module System (DunlinNames : Set) (EnvNames : Set) where
       Dstep : ∀ (t : 𝕋) → (Eₜ : List EnvNames) → (Oₜ : List DunlinNames) → List DunlinNames
     
 
+  --? a History is/was the state of the system at t
   record History : Set₁ where
     field
       Env    : (t : 𝕋) → List EnvNames
@@ -56,17 +61,25 @@ module System (DunlinNames : Set) (EnvNames : Set) where
     Env    = E-fam ;
     Dunlin = D-fam
     }
-    where
-      open SysMaker Sys
+    where  
+      ---? I guess a where clause can define a number of values, in this case
+      ---? two functions D-fam and E-fam, which made values of Env and Dunlin
+      ---? in record def above.
 
+      open SysMaker Sys  ---? I assume makes unqualified record fields available
+
+      ---? These must be type signatures for defs below. I didn't know you could
+      ---? intersperse signatures before definitions in this way.
       D-fam : (t : 𝕋) → List DunlinNames
       E-fam : (t : 𝕋) → List EnvNames
 
-      D-fam zero = D₀
+      D-fam zero = D₀   -- at t₀ return initial list of dunlins from SysMaker
       D-fam (suc t) = Dstep t (E-fam t) (D-fam t)
+      -- at other t's make new dunlins using step fn from SysMaker
 
-      E-fam zero = E₀
+      E-fam zero = E₀   -- at t₀ return initial list of subenvs from SysMaker
       E-fam (suc t) = Estep t (E-fam t) (D-fam t)
+      -- at other t's make new subenvs using step fn from SysMaker
 
 
 module Example where
