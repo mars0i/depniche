@@ -83,7 +83,7 @@ module System (DunlinNames : Set) (EnvNames : Set) where
 
 
 module Example where
-  `_ : String → Set
+  `_ : String → Set  -- note the prefix operators
   `_ str = Σ[ a ∈ String ] a ≡ str
 
   ↑_ : (s : String) → ` s
