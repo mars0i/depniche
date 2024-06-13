@@ -13,7 +13,8 @@ open import Relation.Nullary.Decidable
 -- Key to Marshall's comments:
 --    --?  Means general question about what code is doing, etc.
 --    ---? Means possibly ignorant novice Agda question about syntax, semantics, etc.
---    --   Means what it always does, but may include clarifications of what's obvious :-)
+--    --   Means what it always means, but may include clarifications for someone
+--         first learning Agda of what's otherwise obvious. :-)
 
 -- helpers (probably in std-lib _somewhere_)
 
@@ -36,22 +37,28 @@ is-in dec a (b ∷ as) with dec a b
 tick : 𝕋 → 𝕋
 tick = suc
 
+-- module parameterized by dunlins and envs
 module System (DunlinNames : Set) (EnvNames : Set) where
-  record SysMaker : Set₁ where
+  record SysMaker : Set₁ where  -- 
     field
-      E₀ : List EnvNames
+      E₀ : List EnvNames      -- E₀ because these are the envs at t0, i.e. the initial time
       D₀ : List DunlinNames
       Estep : ∀ (t : 𝕋) → (Eₜ : List EnvNames) → (Oₜ : List DunlinNames) → List EnvNames
       Dstep : ∀ (t : 𝕋) → (Eₜ : List EnvNames) → (Oₜ : List DunlinNames) → List DunlinNames
     
 
-  --? a History is/was the state of the system at t
+  --? a History is/was the state of the system at t?
+  --? Is this correct? To make a history, we write something like
+  --?    History f1 f2
+  --? where f1 is a function from times to lists of envs
+  --?   and f2 is a function from times to lists of dunlins
+  --? Is there a reason to do this with functions rather than some
+  --  sort of vector/array structure?  Or are vectors functions?
   record History : Set₁ where
     field
       Env    : (t : 𝕋) → List EnvNames
       Dunlin : (t : 𝕋) → List DunlinNames
 --      Params : Set
-
 
   mkSys :
     (Params : Set) →
@@ -135,3 +142,11 @@ module Example where
       Estep = e-evolve ; 
       Dstep = d-evolve 
     }
+
+  
+----------------------------------------------
+-- More basic experiment code
+envs : List String
+envs = "pond" ∷ "forest" ∷ "field" ∷ []
+dunlins : List String
+ dunlins = "Marie" ∷ "Ulrich" ∷ "Sonia" ∷ []
