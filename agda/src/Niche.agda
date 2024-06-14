@@ -1,8 +1,9 @@
 module Niche where
 
-open import Data.Nat
+open import Data.Nat using (ℕ; zero; suc; _+_; _*_; _∸_; _^_)
+-- open import Data.Nat
 open import Data.Product
-open import Data.Fin
+-- open import Data.Fin
 open import Data.String
 open import Data.List
 open import Data.Bool
@@ -89,6 +90,10 @@ module System (DunlinNames : Set) (EnvNames : Set) where
       -- at other t's make new subenvs using step fn from SysMaker
 
 
+-- List syntax: `[]` works, `[ "an element" ]` works.  After that, one has to
+-- use Unicode double-colons via \:: .
+-- Note that the brackets after Σ below are special sigma-pair syntax.
+
 module Example where
   `_ : String → Set  -- note the prefix operators
   `_ str = Σ[ a ∈ String ] a ≡ str
@@ -146,7 +151,17 @@ module Example where
   
 ----------------------------------------------
 -- More basic experiment code
-envs : List String
-envs = "pond" ∷ "forest" ∷ "field" ∷ []
-dunlins : List String
- dunlins = "Marie" ∷ "Ulrich" ∷ "Sonia" ∷ []
+
+-- Note I don't need a type sigs here:
+
+s-envs = "pond" ∷ "forest" ∷ "field" ∷ []
+s-dunlins = "Marie" ∷ "Ulrich" ∷ "Sonia" ∷ []
+
+envs = Example.nest ∷ Example.no-nest ∷ []
+dunlins = Example.grey ∷ Example.brown ∷ []
+
+
+---? Trying to understand sigma-type syntax
+-- foo : Σ ℕ (ℕ → ℕ)
+-- foo = 2 , (_+ 1)
+-- foo = Σ[ 22 ] 23
