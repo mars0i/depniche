@@ -15,12 +15,25 @@ open import Relation.Nullary.Decidable
 --    --?  Means general question about what code is doing, etc.
 --    ---? Means possibly ignorant novice Agda question about syntax, semantics, etc.
 --    --   Means what it always means, but may include clarifications for someone
---         first learning Agda of what's otherwise obvious. :-)
+--         first (re)learning Agda of what's otherwise obvious. :-)    Ditto for {- -}.
+
 
 -- helpers (probably in std-lib _somewhere_)
 
+-- This function of a type returns a type.
 Dec≡ : (A : Set) → Set
 Dec≡ A = (a b : A) → Dec (a ≡ b)
+
+{- I find the stdlib definition of Dec to be difficult to understand,
+   but PLFA gives this simpler one:
+       data Dec (A : Set) : Set where
+         yes :   A → Dec A
+         no  : ¬ A → Dec A
+Where ¬ is:
+       ¬_ : ∀ {ℓ} → Set ℓ → Set ℓ
+       ¬ P = P → ⊥
+-MA
+-}
 
 is-in : {A : Set} → (Dec≡ A) → (a : A) → List A → Bool
 is-in dec a [] = false
@@ -28,20 +41,6 @@ is-in dec a (b ∷ as) with dec a b
 ... | yes _ = true
 ... | no _ = false
 
-
-{- The stdlib definition of Dec is difficult to understand.
-   PLFA gives this simpler one:
-
-data Dec (A : Set) : Set where
-  yes :   A → Dec A
-  no  : ¬ A → Dec A
-
-Where ¬ is:
-
-¬_ : ∀ {ℓ} → Set ℓ → Set ℓ
-¬ P = P → ⊥
-
--}
 
 -- 𝕋, intended to represent discrete time
 𝕋 : Set
