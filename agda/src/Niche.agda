@@ -29,6 +29,20 @@ is-in dec a (b ∷ as) with dec a b
 ... | no _ = false
 
 
+{- The stdlib definition of Dec is difficult to understand.
+   PLFA gives this simpler one:
+
+data Dec (A : Set) : Set where
+  yes :   A → Dec A
+  no  : ¬ A → Dec A
+
+Where ¬ is:
+
+¬_ : ∀ {ℓ} → Set ℓ → Set ℓ
+¬ P = P → ⊥
+
+-}
+
 -- 𝕋, intended to represent discrete time
 𝕋 : Set
 𝕋 = ℕ
@@ -95,12 +109,15 @@ module System (DunlinNames : Set) (EnvNames : Set) where
 -- Note that the brackets after Σ below are special sigma-pair syntax.
 
 module Example where
-  ---? I don't understand the Σ[ ∈ ] syntax.  What's it doing?  It's some kind of
-  ---? dependent pair type, I think, but the source code didn't help me, and I'm
-  ---? not sure where to find out more.
-  `_ : String → Set  -- note the prefix operators
+
+  ---? I don't understand the Σ[ ∈ ] syntax.  Some kind of dependent pair type, I think.
+  ---? Source code didn't help enough.  Not sure where to find out more.
+
+  `_ : String → Set  -- note prefix operators
   `_ str = Σ[ a ∈ String ] a ≡ str
 
+  --? This lets us input a string, and get back a dep pair with a proof
+  --? that it's a string, with a type that requires that proof?
   ↑_ : (s : String) → ` s
   ↑ s = s , refl
 
@@ -108,10 +125,19 @@ module Example where
     grey brown : D
 
   D-dec≡ : Dec≡ D
-  D-dec≡ grey grey = yes refl
-  D-dec≡ grey brown = no (λ ())
+  D-dec≡ grey grey = yes refl 
+  D-dec≡ grey brown = no (λ ()) -- () is the absurd pattern
   D-dec≡ brown grey = no (λ ())
   D-dec≡ brown brown = yes refl
+  ---? Why (λ ()) ?  Is that a function of no arguments that then returns
+  ---? the absurd pattern, or that short-circuits at () once it's invoked?
+  ---? This is instead of () because Σ expects a function?
+  ---? I thought (λ _ → ⊥) would work there, but it doesn't type check even if
+  ---? I add `open import Data.Empty with (⊥)`:
+  ---?    Set !=< ⊥
+  ---?    when checking that the expression ⊥ has type ⊥
+  ---? I think that means my function is returning a value where a type
+  ---? is needed?
 
   D-is-in : (d : D) → List D → Bool
   D-is-in = is-in D-dec≡
@@ -161,3 +187,5 @@ s-dunlins = "Marie" ∷ "Ulrich" ∷ "Sonia" ∷ []
 
 envs = Example.nest ∷ Example.no-nest ∷ []
 dunlins = Example.grey ∷ Example.brown ∷ []
+
+
