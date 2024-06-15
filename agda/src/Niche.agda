@@ -95,12 +95,14 @@ module System (DunlinNames : Set) (EnvNames : Set) where
 -- Note that the brackets after Σ below are special sigma-pair syntax.
 
 module Example where
+  ---? I don't understand the Σ[ ∈ ] syntax.  What's it doing?  It's some kind of
+  ---? dependent pair type, I think, but the source code didn't help me, and I'm
+  ---? not sure where to find out more.
   `_ : String → Set  -- note the prefix operators
   `_ str = Σ[ a ∈ String ] a ≡ str
 
   ↑_ : (s : String) → ` s
   ↑ s = s , refl
-
 
   data D : Set where
     grey brown : D
@@ -159,9 +161,3 @@ s-dunlins = "Marie" ∷ "Ulrich" ∷ "Sonia" ∷ []
 
 envs = Example.nest ∷ Example.no-nest ∷ []
 dunlins = Example.grey ∷ Example.brown ∷ []
-
-
----? Trying to understand sigma-type syntax
--- foo : Σ ℕ (ℕ → ℕ)
--- foo = 2 , (_+ 1)
--- foo = Σ[ 22 ] 23
