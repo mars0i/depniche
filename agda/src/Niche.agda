@@ -24,8 +24,8 @@ open import Relation.Nullary.Decidable
 Dec≡ : (A : Set) → Set
 Dec≡ A = (a b : A) → Dec (a ≡ b)
 
-{- I find the stdlib definition of Dec to be difficult to understand,
-   but PLFA gives this simpler one:
+{- I find the stdlib definition of Dec difficult to understand.
+   PLFA gives this simpler def:
        data Dec (A : Set) : Set where
          yes :   A → Dec A
          no  : ¬ A → Dec A
@@ -51,7 +51,7 @@ is-in dec a (b ∷ as) with dec a b
 tick : 𝕋 → 𝕋
 tick = suc
 
--- module parameterized by dunlins and envs
+-- Module parameterized by dunlins and envs
 module System (DunlinNames : Set) (EnvNames : Set) where
   record SysMaker : Set₁ where  -- 
     field
@@ -59,6 +59,47 @@ module System (DunlinNames : Set) (EnvNames : Set) where
       D₀ : List DunlinNames
       Estep : ∀ (t : 𝕋) → (Eₜ : List EnvNames) → (Oₜ : List DunlinNames) → List EnvNames
       Dstep : ∀ (t : 𝕋) → (Eₜ : List EnvNames) → (Oₜ : List DunlinNames) → List DunlinNames
+      {- Estep and Dstep both take both envs and dunlins as args,
+         because dunlins can modify (i.e. remove, create) the envs
+         through niche construction, and envs can modify the dunlins by
+         (a) death, (b) birth, and (c) modifying a dunlin's phenotype.
+         The latter would be like a death and a birth in functional
+         code, except that there are properties specific to that dunlin
+         that should be carried over to the "new" bird, and it will
+         probably be useful to give every dunlin a unique identifier
+         that can be transferred to its new instance.  That facilitates
+         transfer of properties, tracking history of a dunlin, and
+         dynamic visualization if that's desired.
+      -}
+
+      {- We'll need to track relationships between dunlins and envs,
+         and envs and envs:
+
+         What env is a dunlin in?
+         (Maybe it would be useful at some point to represent a dunlin
+         as in multiple envs that capture different aspects of its
+         location.)
+
+         What dunlins are in this env?
+         (This matters because if one dunlin modifies the env its in,
+         that can affect the fitness of other dunlins in the same
+         env.)
+
+         So I guess we could maintain mutual pointers stored in envs
+         and dunlins, with a collection of points from an env to
+         dunlins, and a pointer from a dunlin to an env.  Or we could
+         add a third collection of structures to maintain the
+         relationships, relational-database-style.
+
+         (Another issue: Are env 1 and env 2 next to each other?
+         Do we need a map of the 2-D or 3-D space? This might matter
+         because changes in an env can spread to adjacent envs.  I
+         don't think we should try to implement this initially.
+         Simpler to ignore it. But maybe we should keep this in
+         mind to avoid making it difficult to implement later.)
+      -}
+
+      
     
 
   --? a History is/was the state of the system at t?
@@ -67,7 +108,8 @@ module System (DunlinNames : Set) (EnvNames : Set) where
   --? where f1 is a function from times to lists of envs
   --?   and f2 is a function from times to lists of dunlins
   --? Is there a reason to do this with functions rather than some
-  --  sort of vector/array structure?  Or are vectors functions?
+  --?  sort of vector/array structure?
+
   record History : Set₁ where
     field
       Env    : (t : 𝕋) → List EnvNames
@@ -79,18 +121,13 @@ module System (DunlinNames : Set) (EnvNames : Set) where
     SysMaker →
     History
   mkSys P Sys = record {
-    Env    = E-fam ;
-    Dunlin = D-fam
+    Env    = E-fam ;  -- a function from time t to the next envs; calls Estep on the envs, dunlins at t.
+    Dunlin = D-fam    -- ditto for dunlins
     }
     where  
-      ---? I guess a where clause can define a number of values, in this case
-      ---? two functions D-fam and E-fam, which made values of Env and Dunlin
-      ---? in record def above.
+      open SysMaker Sys
 
-      open SysMaker Sys  ---? I assume makes unqualified record fields available
-
-      ---? These must be type signatures for defs below. I didn't know you could
-      ---? intersperse signatures before definitions in this way.
+      ---? Didn't know you could intersperse type signatures like this.
       D-fam : (t : 𝕋) → List DunlinNames
       E-fam : (t : 𝕋) → List EnvNames
 
@@ -103,14 +140,15 @@ module System (DunlinNames : Set) (EnvNames : Set) where
       -- at other t's make new subenvs using step fn from SysMaker
 
 
--- List syntax: `[]` works, `[ "an element" ]` works.  After that, one has to
--- use Unicode double-colons via \:: .
+-- List syntax: `[]` works, `[ 5 ]` works.  After that, have to use
+-- Unicode double-colon \:: .
 -- Note that the brackets after Σ below are special sigma-pair syntax.
 
 module Example where
 
   ---? I don't understand the Σ[ ∈ ] syntax.  Some kind of dependent pair type, I think.
-  ---? Source code didn't help enough.  Not sure where to find out more.
+  ---? Source code didn't help enough.  Not sure where to find out more.   (This is left
+  ---? from treating envs and dunlins as strings, but they no longer are?)
 
   `_ : String → Set  -- note prefix operators
   `_ str = Σ[ a ∈ String ] a ≡ str
@@ -139,7 +177,7 @@ module Example where
   ---? is needed?
 
   D-is-in : (d : D) → List D → Bool
-  D-is-in = is-in D-dec≡
+  D-is-in = is-in D-dec≡    -- D-dec≡ = (Dec≡ D)
 
   data E : Set where
     nest  no-nest : E
