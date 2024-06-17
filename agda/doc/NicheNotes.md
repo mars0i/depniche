@@ -10,14 +10,14 @@ The stdlib definition of `Dec` is somewhat difficult to
 understand. PLFA gives this simpler one:
 
 ```agda
-       data Dec (A : Set) : Set where
-yes :   A → Dec A
-no  : ¬ A → Dec A
+data Dec (A : Set) : Set where
+  yes :   A → Dec A
+  no  : ¬ A → Dec A
 ```
-Where ¬ is:
+Where `¬` is:
 ```
-       ¬_ : ∀ {ℓ} → Set ℓ → Set ℓ
-       ¬ P = P → ⊥
+¬_ : ∀ {ℓ} → Set ℓ → Set ℓ
+¬ P = P → ⊥
 ```
 
 ---
