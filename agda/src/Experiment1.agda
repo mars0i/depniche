@@ -6,41 +6,62 @@ open import Niche
 open import Data.List
 open import Data.Nat using (ℕ; zero; suc; _+_; _*_; _∸_; _^_)
 
--- Dunlins and environments are indexed by id numbers:
+{- 
+  A speculative story I'm making up based on a couple of articles
+  about dunlins or related birds: Depending on shape of beak,
+  dunlins disturb mud more or less, which affects growth of small organisms
+  that dunlins feed on or that become part of their gut microbiome.
 
--- These correspond to the D and E defs in Niche.Example:
+  Is the following compatible with the structure in Callan's code in
+  Niche.agda?  I think so.
 
-data Dun : ℕ → Set where
-  dun : (i : ℕ) → Dun i
+  Every dunlin has an environment, identified by an environment id number.
 
-data Env : ℕ → Set where
-  env : (i : ℕ) → Env i
+  Every environment contains zero or more dunlins.
 
-----------
+  Think of environment id numbers as simplified locations. At a given
+  location, only one environment type is possible.  However, the type
+  at that location can change.
+
+  By contrast, dunlins have id numbers because every organism is unique.
+
+  (Another environment difference that could be included is near-forest
+  vs. far-from-forest.  Or maybe near-foliage, etc.  A dunlin can "construct"
+  such an environment by choosing to build its nest there.  These differences
+  can effect the probability of predation and protection from wind.)
+
+  -MA
+
+-}
+
+-- These correspond to the D and E defs in Niche.Example.
+
+-- Note that the env and dunlins parameters are not Env or Dun;
+-- they are id numbers.
+
+data Dun : ℕ → ℕ → Set where
+  thin-beak   : (id : ℕ) → (env : ℕ) → Dun id env
+  thick-beak  : (id : ℕ) → (env : ℕ) → Dun id env
+
+data Env : ℕ → List ℕ → Set where
+  undisturbed      : (i : ℕ) → (dunlins : List ℕ) → Env i dunlins
+  mildly-disturbed : (i : ℕ) → (dunlins : List ℕ) → Env i dunlins
+  well-disturbed   : (i : ℕ) → (dunlins : List ℕ) → Env i dunlins
+
+
+------------------------------------------------------------
 -- Define data structure for initial set of relationships between dunlins and their environments
 
--- FIXME: What I did below is backwards.  I assigned possibly multiple envs to a dunlin, but I want to
--- have multiple envs per dunlin, and at this point not necessarily multiple envs per dunlin.
+---------------------------
+-- Simplistic:
 
--- But there can be empty envs, i.e. with no dunlins.  So add a Maybe in the next definition?
-DunIdx : Set
-DunIdx = ℕ
+record DunEnvsPair : Set where
+  field
+    dunidx : ℕ
+    envidxs : List ℕ
 
--- There can't be environment-less dunlins, so no need to add Maybe:
-EnvIdxs : Set
-EnvIdxs = List ℕ
+DunEnvsAssocs : Set
+DunEnvsAssocs = List DunEnvsPair
 
--- a "record" that records a bidirectional mapping between dunlins and envs
-data DunEnvsPair : DunIdx → EnvIdxs → Set where
-  dun-in-envs : (dun-idx : DunIdx) → (env-idxs : EnvIdxs) → DunEnvsPair dun-idx env-idxs
-
--- Now we need a bunch of these to store configuration of a model:
-
-
----? Not sure how to write this type.  This version checks, but I don't think it's right.
----? The implict vars are just placeholders for the contents of dun-idxes and env-idxs-list, respectively).
-dun-env-pairs : {dun-idx : DunIdx} → {env-idxs : EnvIdxs} → (dun-idxs : List DunIdx) → (env-idxs-list : List EnvIdxs) → List (DunEnvsPair dun-idx env-idxs)
-dun-env-pairs dun-idxs [] = [] -- If there are no environments, there can't be any dunlins.
-dun-env-pairs [] (js ∷ env-idxs-list) = {!!}
-dun-env-pairs (i ∷ dun-idxs) (js ∷ env-idxs-list) = {!!}
-
+-- That's supposed to be used to initialize a system, but
+-- I haven't thought through the next steps.
