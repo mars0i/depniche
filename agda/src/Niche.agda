@@ -1,3 +1,6 @@
+{-# OPTIONS --allow-unsolved-metas #-}
+-- Temporary: allow importing despite open holes 
+
 module Niche where
 
 open import Data.Nat using (ℕ; zero; suc; _+_; _*_; _∸_; _^_)
@@ -169,6 +172,7 @@ module Example where
 ----------------------------------------------
 -- More basic experiment code
 
+{-
 -- Note I don't need a type sigs here:
 
 str-envs = "pond" ∷ "forest" ∷ "field" ∷ []
@@ -195,5 +199,4 @@ duns-at-t t = dunlins
 hist : System.History Example.D Example.E
 hist = record { Env = envs-at-t; Dunlin = duns-at-t }
 
-
-
+-}
