@@ -88,7 +88,10 @@ DunEnvsAssocs = List DunEnvsPair
 
 
 -- There has to be a way to do this. I don't know the right incantation.
-dunlins : {i j : ℕ} → List (Dun i j)
+-- dunlins : List (Dun ℕ ℕ)  -- Set !=< ℕ
+-- dunlins : List (Dun _ _) -- checks but only for the first element in list
+-- dunlins : List (Dun i j) -- i is not in scope
+dunlins : {i j : ℕ} → List (Dun i j) -- checks but then first element fails: zero != i of type ℕ
 dunlins = (thin-beak  0 0) ∷
           (thin-beak  1 0) ∷
           (thin-beak  2 1) ∷
