@@ -49,12 +49,32 @@ data Env : ℕ → List ℕ → Set where
   well-disturbed   : (i : ℕ) → (dunlins : List ℕ) → Env i dunlins
 
 
+--------------------------
+-- basic tests:
+
+-- Can skip the type sig here:
+sara = thin-beak 3 4
+
+-- Or like this:
+elsbeth : Dun _ _
+elsbeth = thick-beak 6 6
+
+-- Or use the type sig to fill in the indexes:
+bill : Dun 5 6
+bill = thick-beak _ _
+
+north-sand = undisturbed 1 (5 ∷ 6 ∷ [])
+
+
 ------------------------------------------------------------
 -- Define data structure for initial set of relationships between dunlins and their environments
 
 ---------------------------
 -- Simplistic:
 
+
+-- This is supposed to be used to initialize a system, but
+-- I haven't thought through the next steps.
 record DunEnvsPair : Set where
   field
     dunidx : ℕ
@@ -63,5 +83,23 @@ record DunEnvsPair : Set where
 DunEnvsAssocs : Set
 DunEnvsAssocs = List DunEnvsPair
 
--- That's supposed to be used to initialize a system, but
--- I haven't thought through the next steps.
+---------------------------
+-- Doing it by hand, without DunEnvsAssocs:
+
+
+-- There has to be a way to do this. I don't know the right incantation.
+dunlins : {i j : ℕ} → List (Dun i j)
+dunlins = (thin-beak  0 0) ∷
+          (thin-beak  1 0) ∷
+          (thin-beak  2 1) ∷
+          (thick-beak 3 1) ∷ []
+
+environments : {i j : ℕ} → List (Env i (List j))
+environments = (undisturbed 0 (0 ∷ 1 ∷ [])) ∷
+               (undisturbed 1 (2 ∷ 3 ∷ [])) ∷ []
+
+-- Note that the indexes in these two lists are supposed to be
+-- carefully kept in sync.  This is why I wanted to initialize using
+-- DunEnvsAssocs.  Dstep and Estep have to keep them in sync, too, though.
+-- Or store the indexes wholly in a DunEnvsAssocs.
+
