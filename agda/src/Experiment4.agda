@@ -5,6 +5,9 @@ module Experiment4 where
 open import Niche
 open import Data.List
 open import Data.Nat using (ℕ; zero; suc; _+_; _*_; _∸_; _^_)
+open import Relation.Binary.PropositionalEquality using (_≡_; refl)
+open import Relation.Nullary using (Dec; yes; no)
+open import Relation.Nullary.Decidable
 
 {- 
   A speculative story I'm making up based on a couple of articles
@@ -74,3 +77,14 @@ dex     = record {id = 2; beak = thin; env-id = 1}
 
 west = record {id = 0; mud = mildly-disturbed; dunlin-ids = [ 0 ]}
 east = record {id = 1; mud = undisturbed; dunlin-ids = 1 ∷ 2 ∷ []}
+
+dunlins = elsbeth ∷ emma ∷ dex ∷ []
+envs = west ∷ east ∷ []
+
+----------------------
+
+{-
+Dun-dec≡ : Dec≡ Dun
+Dun-dec≡ record { id = id₁ ; beak = beak₁ ; env-id = env-id₁ }
+         record { id = id ; beak = beak ; env-id = env-id } = {!!}
+-}
