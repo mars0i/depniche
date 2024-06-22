@@ -70,6 +70,27 @@ record Env where
     mud : Mud
     dunlins : List Dun
 
+elsbeth : Dun
+emma : Dun
+dex : Dun
+
+west : Env
+east : Env
+
+
+elsbeth = record {id = 0; beak = thin; env = west}
+emma    = record {id = 1; beak = thick; env = east}
+dex     = record {id = 2; beak = thin; env = east}
+
+west = record {id = 0; mud = mildly-disturbed; dunlins = [ elsbeth ]}
+east = {!!}
+
+
+{-
+duns : List Dun
+envs : List Env
+-}
+
 
 {-
 --------------------------
