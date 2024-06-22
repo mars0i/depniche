@@ -34,6 +34,8 @@ open import Data.Nat using (ℕ; zero; suc; _+_; _*_; _∸_; _^_)
 
 -}
 
+----------------------------------------------------------
+-- Dun and Env types
 -- These correspond to the D and E defs in Niche.Example.
 
 -- Note that the env and dunlins parameters are not Env or Dun;
