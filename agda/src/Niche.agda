@@ -77,7 +77,7 @@ module System (DunlinNames : Set) (EnvNames : Set) where
     where  
       open SysMaker Sys
 
-      ---? Didn't know you could intersperse type signatures like this.
+      -- Interspersed type signatures for mutual recursion:
       D-fam : (t : 𝕋) → List DunlinNames
       E-fam : (t : 𝕋) → List EnvNames
 
