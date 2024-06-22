@@ -66,6 +66,7 @@ bill = thick-beak _ _
 north-sand = undisturbed 1 (5 ∷ 6 ∷ [])
 
 
+
 ------------------------------------------------------------
 -- Define data structure for initial set of relationships between dunlins and their environments
 
@@ -86,8 +87,10 @@ DunEnvsAssocs = List DunEnvsPair
 ---------------------------
 -- Doing it by hand, without DunEnvsAssocs:
 
+---? There has to be a way to do the following. I don't know the right incantation.
+---? NO: It can't work.  Not with regular lists.  (?)
+---? Example: dunlin-friends = sara ∷ elsbeth ∷ bill ∷ []  -- 6 != 3 of type ℕ (because elsbeth doesn't have sara's type Dun 3 4)
 
--- There has to be a way to do this. I don't know the right incantation.
 -- dunlins : List (Dun ℕ ℕ)  -- Set !=< ℕ
 -- dunlins : List (Dun _ _) -- checks but only for the first element in list
 -- dunlins : List (Dun i j) -- i is not in scope
