@@ -5,6 +5,7 @@ module Experiment1 where
 open import Niche
 open import Data.List
 open import Data.Nat using (ℕ; zero; suc; _+_; _*_; _∸_; _^_)
+open import Agda.Builtin.Sigma
 
 -- See docs/DunlinStory1.md for the rationale for the names and type constructors
 -- or record fields below.
@@ -71,7 +72,15 @@ DunEnvsAssocs = List DunEnvsPair
 -- dunlins : List (Dun ℕ ℕ)  -- Set !=< ℕ
 -- dunlins : List (Dun _ _) -- checks but only for the first element in list
 -- dunlins : List (Dun i j) -- i is not in scope
-dunlins : {i j : ℕ} → List (Dun i j) -- checks but then first element fails: zero != i of type ℕ
+-- dunlins : {i j : ℕ} → List (Dun i j) -- checks but then first element fails: zero != i of type ℕ
+
+-- Trying to apply this
+-- https://agda.zulipchat.com/#narrow/stream/259644-newcomers/topic/Collection.20of.20indexed.20type.20with.20different.20indexes.3F/near/446454518:
+-- to multiple indexes:
+dunlins : List (Σ ℕ (λ i → (Σ ℕ (λ e → Dun i e))))
+dunlins = (0 , (λ i → (0 , (λ e → thin-beak i e)))) ∷ []
+
+{-
 dunlins = (thin-beak  0 0) ∷
           (thin-beak  1 0) ∷
           (thin-beak  2 1) ∷
@@ -80,7 +89,7 @@ dunlins = (thin-beak  0 0) ∷
 environments : {i j : ℕ} → List (Env i (List j))
 environments = (undisturbed 0 (0 ∷ 1 ∷ [])) ∷
                (undisturbed 1 (2 ∷ 3 ∷ [])) ∷ []
-
+-}
 -- Note that the indexes in these two lists are supposed to be
 -- carefully kept in sync.  This is why I wanted to initialize using
 -- DunEnvsAssocs.  Dstep and Estep have to keep them in sync, too, though.
