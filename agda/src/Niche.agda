@@ -110,6 +110,8 @@ module Example where
   data D : Set where
     grey brown : D
 
+  -- Without this, is there no sense of equality between constructors?
+  -- Or is it just that it's better to be able to prove it?
   D-dec≡ : Dec≡ D
   D-dec≡ grey grey = yes refl 
   D-dec≡ grey brown = no (λ ()) -- () is the absurd pattern
