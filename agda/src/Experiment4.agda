@@ -17,7 +17,7 @@ open import Relation.Nullary.Decidable
 -- These sort of correspond to the D and E defs in Niche.Example.
 
 -- Note that the env and dunlins parameters are not Env or Dun;
--- they are id numbers.
+-- they are id numbers.  (Disappointing to have to resort to this.)
 
 data Beak : Set where
   thin : Beak
@@ -28,19 +28,13 @@ data Mud : Set where
   mildly-disturbed : Mud
   well-disturbed : Mud
 
--- See
--- https://agda.readthedocs.io/en/latest/language/mutual-recursion.html#mutual-recursion-forward-declaration
-
-record Dun : Set
-record Env : Set
-
-record Dun where
+record Dun : Set where
   field
     id : ℕ
     beak : Beak
     env-id : ℕ
 
-record Env where
+record Env : Set where
   field
     id : ℕ
     mud : Mud
@@ -64,11 +58,10 @@ envs = west ∷ east ∷ []
 
 ----------------------
 
-{-
 Dun-dec≡ : Dec≡ Dun
 Dun-dec≡ record { id = id₁ ; beak = beak₁ ; env-id = env-id₁ }
-         record { id = id ; beak = beak ; env-id = env-id } = {!!}
--}
+         record { id = id₂ ; beak = beak₂ ; env-id = env-id₂ } = {!!}
+-- I think I need an And operator here, and then And three Dec≡'s together?
 
 
 -- ISSUE TO BE ADDRESSED: When there are multiple dunlins in an env

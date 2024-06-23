@@ -28,6 +28,8 @@ data Mud : Set where
 -- See
 -- https://agda.readthedocs.io/en/latest/language/mutual-recursion.html#mutual-recursion-forward-declaration
 
+-- This works:
+
 record Dun : Set
 record Env : Set
 
@@ -45,20 +47,25 @@ record Env where
     mud : Mud
     dunlins : List Dun
 
-elsbeth : Dun
-emma : Dun
-dex : Dun
+-- Why doesn't this works?
 
-west : Env
-east : Env
+-- Adding
+interleaved mutual
+-- doesn't help.
 
-
-elsbeth = record {id = 0; beak = thin; env = west}
-emma    = record {id = 1; beak = thick; env = east}
-dex     = record {id = 2; beak = thin; env = east}
-
-west = record {id = 0; mud = mildly-disturbed; dunlins = [ elsbeth ]}
-east = {!!}
+  elsbeth : Dun
+  emma : Dun
+  dex : Dun
+  
+  west : Env
+  east : Env
+  
+  elsbeth = record {id = 0; beak = thin; env = west}
+  emma    = record {id = 1; beak = thick; env = east}
+  dex     = record {id = 2; beak = thin; env = east}
+  
+  west = record {id = 0; mud = mildly-disturbed; dunlins = [ elsbeth ]}
+  east = record {id = 1; mud = undisturbed ; dunlins = emma ∷ dex ∷ []}
 
 
 {-
