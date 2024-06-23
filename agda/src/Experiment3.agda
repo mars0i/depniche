@@ -52,6 +52,7 @@ record Env where
 -- Adding
 interleaved mutual
 -- doesn't help.
+-- Neither does `mutual`.
 
   elsbeth : Dun
   emma : Dun
