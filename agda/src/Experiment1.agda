@@ -65,51 +65,34 @@ record DunEnvsPair : Set where
 DunEnvsAssocs : Set
 DunEnvsAssocs = List DunEnvsPair
 
--- Doing it by hand, without DunEnvsAssocs:
+-----------------------------------------------------------
+-- How to make collections of dunlins or envs, given that
+-- each has a different type?  Answer #1: Sigma pairs.
 
--- See Fish in CatHeard.agda for an overview of what's happening next.
+--------------
+-- Version 1:
+-- Represent dependence on two parameters by Sigma pair containing Sigma pair
 
--- Simpler: non-dependent pair as element of dependent pair:
-pair-to-dun : (pr : Σ ℕ (λ v → ℕ)) → Set  -- had to read this off of C-c C-d
-pair-to-dun = (λ pr → Dun (fst pr) (snd pr))
-DunDuple : Set
-DunDuple = Σ (ℕ × ℕ) pair-to-dun
-
-beak-duple : ((id env : ℕ) → Dun id env) → ℕ → ℕ → DunDuple
-beak-duple dun-structor id env = (id ,′ env) , dun-structor id env
-
-
-
-------
-
--- Type abbrev: dependent pair embedded in a dependent pair.  We'll make a list of these.
+-- Type abbrev: dependent pair whose second element contains a dependent pair.
 DunTriple : Set
 DunTriple = (Σ ℕ (λ i → Σ ℕ (λ e → Dun i e)))
-
--- duple : ℕ → ℕ → DunDuple
--- duple i e = (i ,′ e) , 
 
 -- DunTriple makers
 -- Note sure how to avoid defining multiple functions, one for each constructor.
 -- I don't seem to be able to use a constructor as an argument to a function.
 
-thin-beak-triple : ℕ → ℕ → DunTriple
-thin-beak-triple id env = id , env , thin-beak id env
+-- First arg is a Dun constructor.  Next two are its parameters.
+beak-triple : ((id env : ℕ) → Dun id env) → ℕ → ℕ → DunTriple
+beak-triple dun-structor id env = id , env , dun-structor id env
 -- comma is right-associative, so that's = (id , (env , (thin-beak id env)))
-
-thick-beak-triple : ℕ → ℕ → DunTriple
-thick-beak-triple id env = id , env , thick-beak id env
-
-blah = thick-beak ∷ thin-beak ∷ []
 
 
 -- Collection of dunlins (embeded in "Σ triples):
-
 dunlins : List DunTriple
-dunlins = thin-beak-triple  0 0 ∷
-          thin-beak-triple  1 0 ∷
-          thin-beak-triple  2 1 ∷
-          thick-beak-triple 3 1 ∷ []
+dunlins = beak-triple thin-beak  0 0 ∷
+          beak-triple thin-beak  1 0 ∷
+          beak-triple thin-beak  2 1 ∷
+          beak-triple thick-beak 3 1 ∷ []
 
 -- Let's try to pull one out of the list:
 
@@ -118,7 +101,7 @@ dunlins = thin-beak-triple  0 0 ∷
 just-dunlin-triple : Maybe DunTriple
 just-dunlin-triple = head dunlins 
 
--- Well this is a kludge. Error-prone.
+-- Well this is a KLUDGE.
 extract-duntriple : Maybe DunTriple → DunTriple
 extract-duntriple (just x) = x
 extract-duntriple Nothing = 42 , 42 , thin-beak 42 42
@@ -139,6 +122,20 @@ triple-to-dunlin dt = snd (snd dt)
 --     Dun (fst dunlin-triple) (fst (snd dunlin-triple))
 -- although the value from C-c C-n is
 --     thin-beak 0 0
+
+
+--------------
+-- Version 2:
+-- Represent dependence on two parameters by dependence on a (non-dependent) pair
+
+pair-to-dun : (pr : Σ ℕ (λ v → ℕ)) → Set  -- had to read this off of C-c C-d
+pair-to-dun = (λ pr → Dun (fst pr) (snd pr))
+
+DunDuple : Set
+DunDuple = Σ (ℕ × ℕ) pair-to-dun
+
+beak-duple : ((id env : ℕ) → Dun id env) → ℕ → ℕ → DunDuple
+beak-duple dun-structor id env = (id ,′ env) , dun-structor id env
 
 
 ---------------------------
