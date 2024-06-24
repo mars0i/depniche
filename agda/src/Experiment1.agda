@@ -6,6 +6,7 @@ open import Niche
 open import Function.Base
 open import Data.List
 open import Data.Nat using (ℕ; zero; suc; _+_; _*_; _∸_; _^_)
+open import Data.Product.Base using (_×_; _,′_) -- Needs stdlib 2.0
 open import Agda.Builtin.Sigma
 open import Agda.Builtin.Maybe
 
@@ -68,10 +69,25 @@ DunEnvsAssocs = List DunEnvsPair
 
 -- See Fish in CatHeard.agda for an overview of what's happening next.
 
--- A dependent pair embedded in a dependent pair.  We'll make a list of these.
-DunTriple : Set
-DunTriple = (Σ ℕ (λ i → (Σ ℕ (λ e → Dun i e))))
+-- Simpler: non-dependent pair as element of dependent pair:
+pair-to-dun : (pr : Σ ℕ (λ v → ℕ)) → Set  -- had to read this off of C-c C-d
+pair-to-dun = (λ pr → Dun (fst pr) (snd pr))
+DunDuple : Set
+DunDuple = Σ (ℕ × ℕ) pair-to-dun
 
+beak-duple : ((id env : ℕ) → Dun id env) → ℕ → ℕ → DunDuple
+beak-duple dun-structor id env = (id ,′ env) , dun-structor id env
+
+
+
+------
+
+-- Type abbrev: dependent pair embedded in a dependent pair.  We'll make a list of these.
+DunTriple : Set
+DunTriple = (Σ ℕ (λ i → Σ ℕ (λ e → Dun i e)))
+
+-- duple : ℕ → ℕ → DunDuple
+-- duple i e = (i ,′ e) , 
 
 -- DunTriple makers
 -- Note sure how to avoid defining multiple functions, one for each constructor.
@@ -79,9 +95,13 @@ DunTriple = (Σ ℕ (λ i → (Σ ℕ (λ e → Dun i e))))
 
 thin-beak-triple : ℕ → ℕ → DunTriple
 thin-beak-triple id env = id , env , thin-beak id env
+-- comma is right-associative, so that's = (id , (env , (thin-beak id env)))
 
 thick-beak-triple : ℕ → ℕ → DunTriple
 thick-beak-triple id env = id , env , thick-beak id env
+
+blah = thick-beak ∷ thin-beak ∷ []
+
 
 -- Collection of dunlins (embeded in "Σ triples):
 
