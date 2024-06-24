@@ -47,7 +47,7 @@ data Fish : ℕ → ℕ → Set where
   fish : (id : ℕ) → (color : ℕ) → Fish id color
 
 fishpairer : ℕ  → ℕ  → Σ ℕ (λ id → (Σ ℕ (λ color → Fish id color)))
-fishpairer id color = id , (color , fish id color)
+fishpairer id color = id , color , fish id color
 
 school : List (Σ ℕ (λ id → (Σ ℕ (λ color → Fish id color))))
 school = (fishpairer 0 1) ∷ (fishpairer 1 5) ∷ []

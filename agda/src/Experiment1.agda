@@ -3,9 +3,11 @@
 module Experiment1 where
 
 open import Niche
+open import Function.Base
 open import Data.List
 open import Data.Nat using (ℕ; zero; suc; _+_; _*_; _∸_; _^_)
 open import Agda.Builtin.Sigma
+open import Agda.Builtin.Maybe
 
 -- See docs/DunlinStory1.md for the rationale for the names and type constructors
 -- or record fields below.
@@ -62,8 +64,65 @@ record DunEnvsPair : Set where
 DunEnvsAssocs : Set
 DunEnvsAssocs = List DunEnvsPair
 
----------------------------
 -- Doing it by hand, without DunEnvsAssocs:
+
+-- See Fish in CatHeard.agda for an overview of what's happening next.
+
+-- A dependent pair embedded in a dependent pair.  We'll make a list of these.
+DunTriple : Set
+DunTriple = (Σ ℕ (λ i → (Σ ℕ (λ e → Dun i e))))
+
+
+-- DunTriple makers
+-- Note sure how to avoid defining multiple functions, one for each constructor.
+-- I don't seem to be able to use a constructor as an argument to a function.
+
+thin-beak-triple : ℕ → ℕ → DunTriple
+thin-beak-triple id env = id , env , thin-beak id env
+
+thick-beak-triple : ℕ → ℕ → DunTriple
+thick-beak-triple id env = id , env , thick-beak id env
+
+-- Collection of dunlins (embeded in "Σ triples):
+
+dunlins : List DunTriple
+dunlins = thin-beak-triple  0 0 ∷
+          thin-beak-triple  1 0 ∷
+          thin-beak-triple  2 1 ∷
+          thick-beak-triple 3 1 ∷ []
+
+-- Let's try to pull one out of the list:
+
+-- The fact head returns a Maybe is kindof a pita for the moment.
+
+just-dunlin-triple : Maybe DunTriple
+just-dunlin-triple = head dunlins 
+
+-- Well this is a kludge. Error-prone.
+extract-duntriple : Maybe DunTriple → DunTriple
+extract-duntriple (just x) = x
+extract-duntriple Nothing = 42 , 42 , thin-beak 42 42
+
+dunlin-triple = extract-duntriple just-dunlin-triple
+
+-- Here, finally, is the dunlin at beginning of the list of triples:
+dunlin = snd (snd dunlin-triple)
+
+{-
+triple-to-dunlin : {i e : ℕ} → DunTriple → (Dun i e)
+triple-to-dunlin dt = snd (snd dt)
+-}
+-- This doesn't work.  I think because just applying snd loses i and e
+-- which were embedded in the triple.  Or maybe my signature is wrong--
+-- I shouldn't bind i and e implicitly, since they're in the DunTriple.
+-- Run C-c C-d and look at the type of dunlin.  It's
+--     Dun (fst dunlin-triple) (fst (snd dunlin-triple))
+-- although the value from C-c C-n is
+--     thin-beak 0 0
+
+
+---------------------------
+-- Things that didn't work:
 
 ---? There has to be a way to do the following. I don't know the right incantation.
 ---? NO: It can't work.  Not with regular lists.  (?)
@@ -77,8 +136,7 @@ DunEnvsAssocs = List DunEnvsPair
 -- Trying to apply this
 -- https://agda.zulipchat.com/#narrow/stream/259644-newcomers/topic/Collection.20of.20indexed.20type.20with.20different.20indexes.3F/near/446454518:
 -- to multiple indexes:
-dunlins : List (Σ ℕ (λ i → (Σ ℕ (λ e → Dun i e))))
-dunlins = (0 , (λ i → (0 , (λ e → thin-beak i e)))) ∷ []
+-- dunlins = (0 , (λ i → (0 , (λ e → thin-beak i e)))) ∷ []
 
 {-
 dunlins = (thin-beak  0 0) ∷
