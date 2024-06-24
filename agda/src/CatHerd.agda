@@ -35,21 +35,30 @@ herd = (0 , carly) ∷ (1 , carl) ∷ []
 f : (x : ℕ) → (y : ℕ) → ℕ
 f x y = x * y
 
+-- The following type checks. Second line is what the holes guided me to.  wtf?
+fpairs : Σ ℕ (λ x → (Σ ℕ (λ y → ℕ)))
+fpairs = 2 , (3 , 2 * 3) -- where are the functions?  If you η-abstract, it's an erro.
+
+----------------------
+-- Here's a way to use dependent pairs to make a list of double-index datatypes.
+-- Lots of other things didn't work.
+
 data Fish : ℕ → ℕ → Set where
   fish : (id : ℕ) → (color : ℕ) → Fish id color
 
-fishpairs : Σ ℕ (λ id → (Σ ℕ (λ color → Fish id color)))
-fishpairs {id = 0} {color = 1} = id , (color , fish id color)
-
--- The following type checks. Second line is what the holes guided me to.  wtf?
-fpair² : Σ ℕ (λ x →  (Σ ℕ (λ y → ℕ)))
-fpair² = 2 , (3 , 2 * 3)
+fishpairer : ℕ  → ℕ  → Σ ℕ (λ id → (Σ ℕ (λ color → Fish id color)))
+fishpairer id color = id , (color , fish id color)
 
 school : List (Σ ℕ (λ id → (Σ ℕ (λ color → Fish id color))))
-school = {!!} -- (0 , (λ id → (1 , (λ color → fish id color)))) ∷ []
+school = (fishpairer 0 1) ∷ (fishpairer 1 5) ∷ []
 
--- triple : Σ ℕ (λ x → (Σ ℕ (λ y → (f x y))))
--- triple = (2 , (λ x → (3 , (λ x y → x + y))))
+-- Explanation:
+-- I was thinking that the second element of a dep pair is supposed
+-- to be a function.  But it's not; it's a function application.
+-- Aparently a pair is already that.  And 
+-- You need to do something like defining fishpairer so that you can
+-- bind the parameters of the function to the earlier pair elements.
+-- Something like that.
 
 ----------------------
 data Dog {id : ℕ} : Set where
