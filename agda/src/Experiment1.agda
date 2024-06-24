@@ -69,6 +69,24 @@ DunEnvsAssocs = List DunEnvsPair
 -- How to make collections of dunlins or envs, given that
 -- each has a different type?  Answer #1: Sigma pairs.
 
+{-
+Which versiono below is better?
+
+The signature of the element type DunDuple is easier to read than that of
+DunTriple, but the signature of the function that constructs the triples
+is simpler -- than the one that constructs pairs. More importantly, if
+there are more than two parameters, then one just has to iteratively
+extend the signature of the element type, whereas with the Duple version
+it just gets more complicated.  So despite the nasty signature of
+DunTriple, I think it's better.  (One could of course make a function
+that constructed such a type for any n parameters (that have their own
+types).  But I don't think that's worth the trouble for this application.)
+
+On the other hand, extracting the actual dunlin (or env) from the Sigma structure
+might be easier if there's just a single Sigma pair with an embedded
+regular ntuple.
+-}
+
 --------------
 -- Version 1:
 -- Represent dependence on two parameters by Sigma pair containing Sigma pair
