@@ -4,6 +4,7 @@ module CatHerd where
 open import Data.List
 open import Data.Nat using (ℕ; zero; suc; _+_; _*_; _∸_; _^_)
 open import Agda.Builtin.Sigma
+open import Data.Product.Base using (_×_; _,′_) -- Needs stdlib 2.0
 
 data Cat : ℕ → Set where
   cat : (id : ℕ) → Cat id
@@ -38,6 +39,11 @@ f x y = x * y
 -- The following type checks. Second line is what the holes guided me to.  wtf?
 fpairs : Σ ℕ (λ x → (Σ ℕ (λ y → ℕ)))
 fpairs = 2 , (3 , 2 * 3) -- where are the functions?  If you η-abstract, it's an erro.
+
+-- This pair type is the analogue of simple pair tuples in Haskell or Idris.
+-- It's defined in terms of Σ pairs, so fst and snd work on it.
+foo : (Cat 3) × ℕ
+foo = cat 3 ,′ 42
 
 ----------------------
 -- Here's a way to use dependent pairs to make a list of double-index datatypes.
