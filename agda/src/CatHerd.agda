@@ -2,19 +2,11 @@
 module CatHerd where
 
 open import Data.List
-open import Data.Nat
+open import Data.Nat using (ℕ; zero; suc; _+_; _*_; _∸_; _^_)
 open import Agda.Builtin.Sigma
 
 data Cat : ℕ → Set where
   cat : (id : ℕ) → Cat id
-
-----------------------------------------
--- Just making sure I understand syntax options.
-f : (x : ℕ) → (y : ℕ) → ℕ
-f = λ x y → x * y
-
--- triple : Σ ℕ (λ x → (Σ ℕ (λ y → (f x y))))
--- triple = (2 , (λ x → (3 , (λ x y → x + y))))
 
 ----------------------------------------
 
@@ -40,6 +32,26 @@ herd = (0 , carly) ∷ (1 , carl) ∷ []
 
 ----------------------
 
+f : (x : ℕ) → (y : ℕ) → ℕ
+f x y = x * y
+
+data Fish : ℕ → ℕ → Set where
+  fish : (id : ℕ) → (color : ℕ) → Fish id color
+
+fishpairs : Σ ℕ (λ id → (Σ ℕ (λ color → Fish id color)))
+fishpairs {id = 0} {color = 1} = id , (color , fish id color)
+
+-- The following type checks. Second line is what the holes guided me to.  wtf?
+fpair² : Σ ℕ (λ x →  (Σ ℕ (λ y → ℕ)))
+fpair² = 2 , (3 , 2 * 3)
+
+school : List (Σ ℕ (λ id → (Σ ℕ (λ color → Fish id color))))
+school = {!!} -- (0 , (λ id → (1 , (λ color → fish id color)))) ∷ []
+
+-- triple : Σ ℕ (λ x → (Σ ℕ (λ y → (f x y))))
+-- triple = (2 , (λ x → (3 , (λ x y → x + y))))
+
+----------------------
 data Dog {id : ℕ} : Set where
   dog : Dog
 
@@ -71,4 +83,5 @@ dogs = dog ∷ dog ∷ []
 -- And this works, again per Favier's suggestion:
 pack : List (Σ ℕ (λ i → (Dog {id = i}))) -- η-abstraction for the implicit index
 pack = (0 , donna) ∷ (1 , dan) ∷ []
+
 
