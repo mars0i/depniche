@@ -99,4 +99,26 @@ dogs = dog ∷ dog ∷ []
 pack : List (Σ ℕ (λ i → (Dog {id = i}))) -- η-abstraction for the implicit index
 pack = (0 , donna) ∷ (1 , dan) ∷ []
 
+---------------------------
 
+data Turtle : ℕ → ℕ → ℕ → Set where
+  turtle : (id : ℕ) → (env : ℕ) → (speed : ℕ) → Turtle id env speed
+
+tuple-to-turtle : (tuple : Σ ℕ (λ _ → (Σ ℕ (λ _ → ℕ)))) → Set
+tuple-to-turtle = λ tuple → Turtle (fst tuple) (fst (snd tuple)) (snd (snd tuple))
+
+TurtleTuple : Set
+TurtleTuple = Σ (ℕ × ℕ × ℕ) tuple-to-turtle
+
+tuple-turtle : ℕ → ℕ → ℕ → TurtleTuple
+tuple-turtle id env speed = (id ,′ env ,′ speed) , turtle id env speed
+
+{-
+(λ tuple → let id : ℕ
+                                 id = fst tuple
+                                 env : ℕ
+                                 env = fst (snd tuple)
+                                 speed : ℕ
+                                 speed = snd (snd tuple)
+                             in (Turtle id env speed))
+-}
