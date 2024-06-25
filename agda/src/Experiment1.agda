@@ -70,7 +70,7 @@ DunEnvsAssocs = List DunEnvsPair
 -- each has a different type?  Answer #1: Sigma pairs.
 
 {-
-Which versiono below is better?
+Which version below is better?
 
 The signature of the element type DunDuple is easier to read than that of
 DunTriple, but the signature of the function that constructs the triples
@@ -154,37 +154,3 @@ DunDuple = Σ (ℕ × ℕ) pair-to-dun
 
 beak-duple : ((id env : ℕ) → Dun id env) → ℕ → ℕ → DunDuple
 beak-duple dun-structor id env = (id ,′ env) , dun-structor id env
-
-
----------------------------
--- Things that didn't work:
-
----? There has to be a way to do the following. I don't know the right incantation.
----? NO: It can't work.  Not with regular lists.  (?)
----? Example: dunlin-friends = sara ∷ elsbeth ∷ bill ∷ []  -- 6 != 3 of type ℕ (because elsbeth doesn't have sara's type Dun 3 4)
-
--- dunlins : List (Dun ℕ ℕ)  -- Set !=< ℕ
--- dunlins : List (Dun _ _) -- checks but only for the first element in list
--- dunlins : List (Dun i j) -- i is not in scope
--- dunlins : {i j : ℕ} → List (Dun i j) -- checks but then first element fails: zero != i of type ℕ
-
--- Trying to apply this
--- https://agda.zulipchat.com/#narrow/stream/259644-newcomers/topic/Collection.20of.20indexed.20type.20with.20different.20indexes.3F/near/446454518:
--- to multiple indexes:
--- dunlins = (0 , (λ i → (0 , (λ e → thin-beak i e)))) ∷ []
-
-{-
-dunlins = (thin-beak  0 0) ∷
-          (thin-beak  1 0) ∷
-          (thin-beak  2 1) ∷
-          (thick-beak 3 1) ∷ []
-
-environments : {i j : ℕ} → List (Env i (List j))
-environments = (undisturbed 0 (0 ∷ 1 ∷ [])) ∷
-               (undisturbed 1 (2 ∷ 3 ∷ [])) ∷ []
--}
--- Note that the indexes in these two lists are supposed to be
--- carefully kept in sync.  This is why I wanted to initialize using
--- DunEnvsAssocs.  Dstep and Estep have to keep them in sync, too, though.
--- Or store the indexes wholly in a DunEnvsAssocs.
-
