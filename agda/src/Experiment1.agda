@@ -6,9 +6,10 @@ open import Niche
 open import Function.Base
 open import Data.List
 open import Data.Nat using (ℕ; zero; suc; _+_; _*_; _∸_; _^_)
-open import Data.Product.Base using (_×_; _,′_) -- Needs stdlib 2.0
+open import Data.Product.Base -- using (_×_; _,′_) -- Needs stdlib 2.0
 open import Agda.Builtin.Sigma
 open import Agda.Builtin.Maybe
+
 
 -- See docs/DunlinStory1.md for the rationale for the names and type constructors
 -- or record fields below.
@@ -69,89 +70,33 @@ DunEnvsAssocs = List DunEnvsPair
 -- How to make collections of dunlins or envs, given that
 -- each has a different type?  Answer #1: Sigma pairs.
 
-{-
-Which version below is better?
-
-The signature of the element type DunDuple is easier to read than that of
-DunTriple, but the signature of the function that constructs the triples
-is simpler -- than the one that constructs pairs. More importantly, if
-there are more than two parameters, then one just has to iteratively
-extend the signature of the element type, whereas with the Duple version
-it just gets more complicated.  So despite the nasty signature of
-DunTriple, I think it's better.  (One could of course make a function
-that constructed such a type for any n parameters (that have their own
-types).  But I don't think that's worth the trouble for this application.)
-
-On the other hand, extracting the actual dunlin (or env) from the Sigma structure
-might be easier if there's just a single Sigma pair with an embedded
-regular ntuple.
--}
-
 --------------
--- Version 1:
--- Represent dependence on two parameters by Sigma pair containing Sigma pair
-
--- Type abbrev: dependent pair whose second element contains a dependent pair.
-DunTriple : Set
-DunTriple = (Σ ℕ (λ i → Σ ℕ (λ e → Dun i e)))
-
--- DunTriple makers
--- Note sure how to avoid defining multiple functions, one for each constructor.
--- I don't seem to be able to use a constructor as an argument to a function.
-
--- First arg is a Dun constructor.  Next two are its parameters.
-beak-triple : ((id env : ℕ) → Dun id env) → ℕ → ℕ → DunTriple
-beak-triple dun-structor id env = id , env , dun-structor id env
--- comma is right-associative, so that's = (id , (env , (thin-beak id env)))
-
-
--- Collection of dunlins (embeded in "Σ triples):
-dunlins : List DunTriple
-dunlins = beak-triple thin-beak  0 0 ∷
-          beak-triple thin-beak  1 0 ∷
-          beak-triple thin-beak  2 1 ∷
-          beak-triple thick-beak 3 1 ∷ []
-
--- Let's try to pull one out of the list:
-
--- The fact head returns a Maybe is kindof a pita for the moment.
-
-just-dunlin-triple : Maybe DunTriple
-just-dunlin-triple = head dunlins 
-
--- Well this is a KLUDGE.
-extract-duntriple : Maybe DunTriple → DunTriple
-extract-duntriple (just x) = x
-extract-duntriple Nothing = 42 , 42 , thin-beak 42 42
-
-dunlin-triple = extract-duntriple just-dunlin-triple
-
--- Here, finally, is the dunlin at beginning of the list of triples:
-dunlin = snd (snd dunlin-triple)
-
-{-
-triple-to-dunlin : {i e : ℕ} → DunTriple → (Dun i e)
-triple-to-dunlin dt = snd (snd dt)
--}
--- This doesn't work.  I think because just applying snd loses i and e
--- which were embedded in the triple.  Or maybe my signature is wrong--
--- I shouldn't bind i and e implicitly, since they're in the DunTriple.
--- Run C-c C-d and look at the type of dunlin.  It's
---     Dun (fst dunlin-triple) (fst (snd dunlin-triple))
--- although the value from C-c C-n is
---     thin-beak 0 0
-
-
---------------
--- Version 2:
 -- Represent dependence on two parameters by dependence on a (non-dependent) pair
 -- (more more generally, a non-dependent tuple).
 
-pair-to-dun : (tuple : Σ ℕ (λ v → ℕ)) → Set  -- had to read this off of C-c C-d
-pair-to-dun = (λ tuple → Dun (fst tuple) (snd tuple))
+-- pair-to-dun : (tuple : Σ ℕ (λ v → ℕ)) → Set  -- literal version of next line
+pair-to-dun : Σ[ _ ∈ ℕ ] ℕ → Set  -- That's the nondep pair type syntax from Data.Product.Base
+pair-to-dun tuple = Dun (fst tuple) (snd tuple)
 
-DunDuple : Set
-DunDuple = Σ (ℕ × ℕ) pair-to-dun
+-- abbreviate the type we need list elements to have
+DunTuple : Set
+DunTuple = Σ (ℕ × ℕ) pair-to-dun
 
-beak-duple : ((id env : ℕ) → Dun id env) → ℕ → ℕ → DunDuple
-beak-duple dun-structor id env = (id ,′ env) , dun-structor id env
+beak-tuple : ((id env : ℕ) → Dun id env) → ℕ → ℕ → DunTuple
+beak-tuple dun-structor id env = (id ,′ env) , dun-structor id env
+
+-- This process can be automated
+sara-tuple = beak-tuple thin-beak 3 4
+elsbeth-tuple = beak-tuple thick-beak 6 6
+bill-tuple = beak-tuple thin-beak 5 6
+dunlin-tuples = sara-tuple ∷ elsbeth-tuple ∷ bill-tuple ∷ []
+
+-- kludge version of head for testing without Maybe
+shrunken-head : {A : Set} → (default : A) → List A → A
+shrunken-head default [] = default
+shrunken-head default (x ∷ xs) = x
+
+-- doesn't work:
+-- shrunken-head {Dunlin} (thick-beak 0 0 0) dunlin-tuples
+
+
