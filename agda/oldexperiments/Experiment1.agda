@@ -145,10 +145,9 @@ triple-to-dunlin dt = snd (snd dt)
 --------------
 -- Version 2:
 -- Represent dependence on two parameters by dependence on a (non-dependent) pair
--- (more more generally, a non-dependent tuple).
 
-pair-to-dun : (tuple : Σ ℕ (λ v → ℕ)) → Set  -- had to read this off of C-c C-d
-pair-to-dun = (λ tuple → Dun (fst tuple) (snd tuple))
+pair-to-dun : (pr : Σ ℕ (λ v → ℕ)) → Set  -- had to read this off of C-c C-d
+pair-to-dun = (λ pr → Dun (fst pr) (snd pr))
 
 DunDuple : Set
 DunDuple = Σ (ℕ × ℕ) pair-to-dun
