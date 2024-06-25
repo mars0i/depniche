@@ -6,6 +6,7 @@ open import Data.List
 open import Data.Nat using (ℕ; zero; suc; _+_; _*_; _∸_; _^_)
 open import Agda.Builtin.Sigma
 open import Data.Product.Base using (_×_; _,′_) -- Needs stdlib 2.0
+open import Function.Base using (_∘_)
 
 data Cat : ℕ → Set where
   cat : (id : ℕ) → Cat id
@@ -149,16 +150,8 @@ exploding-head2 (x ∷ xs) = x
 
 -- Now we need a turtle extractor.
 
+-- I don't understand why these don't work, or how to construct them:
+-- tuple-to-turtle2 : {i e s : ℕ} → TurtleTuple2 → (Turtle i e s)
+-- tuple-to-turtle2 = snd ∘ snd ∘ snd
 -- tuple-to-turtle2 : {i e s : ℕ} → TurtleTuple2 → Turtle i e s
 -- tuple-to-turtle2 ttuple = snd (snd (snd ttuple))
-
-
-{-
-(λ tuple → let id : ℕ
-                                 id = fst tuple
-                                 env : ℕ
-                                 env = fst (snd tuple)
-                                 speed : ℕ
-                                 speed = snd (snd tuple)
-                             in (Turtle id env speed))
--}
