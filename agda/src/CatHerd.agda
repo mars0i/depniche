@@ -1,6 +1,7 @@
 -- Marshall's temporary basic syntax and semantics experiments, MWE's etc.
 module CatHerd where
 
+open import Agda.Builtin.Unit
 open import Data.List
 open import Data.Nat using (ℕ; zero; suc; _+_; _*_; _∸_; _^_)
 open import Agda.Builtin.Sigma
@@ -104,14 +105,53 @@ pack = (0 , donna) ∷ (1 , dan) ∷ []
 data Turtle : ℕ → ℕ → ℕ → Set where
   turtle : (id : ℕ) → (env : ℕ) → (speed : ℕ) → Turtle id env speed
 
+-- Non-dependent pair in a single Sigma pair:
+
 tuple-to-turtle : (tuple : Σ ℕ (λ _ → (Σ ℕ (λ _ → ℕ)))) → Set
 tuple-to-turtle = λ tuple → Turtle (fst tuple) (fst (snd tuple)) (snd (snd tuple))
 
 TurtleTuple : Set
 TurtleTuple = Σ (ℕ × ℕ × ℕ) tuple-to-turtle
 
+-- The turtle can be extracted from the resulting TurtleTuple using snd--easy peasy.
 tuple-turtle : ℕ → ℕ → ℕ → TurtleTuple
 tuple-turtle id env speed = (id ,′ env ,′ speed) , turtle id env speed
+
+tally-tuple = tuple-turtle 1 2 3 
+tory-tuple = tuple-turtle 0 5 1
+
+turtles = tally-tuple ∷ tory-tuple ∷ []
+
+-- For testing:skip the Maybe.
+exploding-head : List TurtleTuple → TurtleTuple
+exploding-head [] = tuple-turtle 42 42 42  -- return a default value
+exploding-head (x ∷ xs) = x
+
+-- No need to define a turtle-extractor, because it's just snd
+
+
+-- Sigma pair in Sigma pair in ...:
+
+TurtleTuple2 : Set
+TurtleTuple2 = Σ ℕ (λ i → Σ ℕ (λ e → Σ ℕ (λ s → Turtle i e s)))
+
+tuple-turtle2 : ℕ → ℕ → ℕ → TurtleTuple2
+tuple-turtle2 i e s = i , e , s , turtle i e s
+
+tally-tuple2 = tuple-turtle2 1 2 3 
+tory-tuple2 = tuple-turtle2 0 5 1
+
+turtles2 = tally-tuple2 ∷ tory-tuple2 ∷ []
+
+exploding-head2 : List TurtleTuple2 → TurtleTuple2
+exploding-head2 [] = tuple-turtle2 42 42 42  -- return a default value
+exploding-head2 (x ∷ xs) = x
+
+-- Now we need a turtle extractor.
+
+-- tuple-to-turtle2 : {i e s : ℕ} → TurtleTuple2 → Turtle i e s
+-- tuple-to-turtle2 ttuple = snd (snd (snd ttuple))
+
 
 {-
 (λ tuple → let id : ℕ
