@@ -1,4 +1,8 @@
--- Exploring how to specify configuration of a model (a System) in order to write the Dstep and Estep functions.
+-- Exploring how to specify configuration of a model (a System) in
+-- order to write the Dstep and Estep functions.
+
+-- See docs/DunlinStory1.md for the rationale for the names and type constructors
+-- or record fields below.
 
 module Experiment1 where
 
@@ -10,16 +14,17 @@ open import Data.Product.Base -- using (_×_; _,′_) -- Needs stdlib 2.0
 open import Agda.Builtin.Sigma
 open import Agda.Builtin.Maybe
 
+-- for primForce
+-- open import Agda.Builtin.Strict
 
--- See docs/DunlinStory1.md for the rationale for the names and type constructors
--- or record fields below.
 
 ----------------------------------------------------------
 -- Dun and Env types
 -- These correspond to the D and E defs in Niche.Example.
 
 -- Note that the env and dunlins parameters are not Env or Dun;
--- they are id numbers.
+-- they are id numbers.  Maybe this can be changed, but I couldn't get
+-- the mutual recursiou to work.
 
 data Dun : ℕ → ℕ → Set where
   thin-beak   : (id : ℕ) → (env : ℕ) → Dun id env
@@ -30,41 +35,6 @@ data Env : ℕ → List ℕ → Set where
   mildly-disturbed : (i : ℕ) → (dunlins : List ℕ) → Env i dunlins
   well-disturbed   : (i : ℕ) → (dunlins : List ℕ) → Env i dunlins
 
-
---------------------------
--- basic tests:
-
--- Can skip the type sig here:
-sara = thin-beak 3 4
-
--- Or like this:
-elsbeth : Dun _ _
-elsbeth = thick-beak 6 6
-
--- Or use the type sig to fill in the indexes:
-bill : Dun 5 6
-bill = thick-beak _ _
-
-north-sand = undisturbed 1 (5 ∷ 6 ∷ [])
-
-
-
-------------------------------------------------------------
--- Define data structure for initial set of relationships between dunlins and their environments
-
----------------------------
--- Simplistic:
-
-
--- This is supposed to be used to initialize a system, but
--- I haven't thought through the next steps.
-record DunEnvsPair : Set where
-  field
-    dunidx : ℕ
-    envidxs : List ℕ
-
-DunEnvsAssocs : Set
-DunEnvsAssocs = List DunEnvsPair
 
 -----------------------------------------------------------
 -- How to make collections of dunlins or envs, given that
@@ -85,18 +55,62 @@ DunTuple = Σ (ℕ × ℕ) pair-to-dun
 beak-tuple : ((id env : ℕ) → Dun id env) → ℕ → ℕ → DunTuple
 beak-tuple dun-structor id env = (id ,′ env) , dun-structor id env
 
+-- kinda backwards: we deconstruct a dunlin in order to recreate it in a Σ-type
+dunlin-to-tuple : {id env : ℕ} → Dun id env → DunTuple
+dunlin-to-tuple (thin-beak id env)   = beak-tuple thin-beak id env
+dunlin-to-tuple (thick-beak id env) = beak-tuple thick-beak id env
+
+
+
 -- This process can be automated
 sara-tuple = beak-tuple thin-beak 3 4
 elsbeth-tuple = beak-tuple thick-beak 6 6
-bill-tuple = beak-tuple thin-beak 5 6
+bill-tuple = dunlin-to-tuple (thin-beak 5 6)
+
 dunlin-tuples = sara-tuple ∷ elsbeth-tuple ∷ bill-tuple ∷ []
+
+default-dunlin = thin-beak 0 0
+default-dunlin-tuple = (dunlin-to-tuple default-dunlin)
 
 -- kludge version of head for testing without Maybe
 shrunken-head : {A : Set} → (default : A) → List A → A
 shrunken-head default [] = default
 shrunken-head default (x ∷ xs) = x
 
--- doesn't work:
--- shrunken-head {Dunlin} (thick-beak 0 0 0) dunlin-tuples
+-- Needs to be rewritten properly with Maybe
+dunlin-head : {id env : ℕ} → List DunTuple → (Dun id env)
+dunlin-head xs = let head-tuple = shrunken-head default-dunlin-tuple xs
+                 in {!!} -- snd head-tuple  -- doesn't work
+{-
+Goal: Dun id₁ env
+————————————————————————————————————————————————————————————
+head-tuple
+    : Σ (ℕ × ℕ) pair-to-dun
+head-tuple
+    = shrunken-head default-dunlin-tuple xs
+xs  : List DunTuple
+env : ℕ   (not in scope)
+id₁ : ℕ   (not in scope)
+-}
+
+first-dunlin-tuple = shrunken-head default-dunlin-tuple dunlin-tuples
+
+-- Doesn't work, but 'C-c C-n snd first-dunlin-tuple' does.
+-- sara-again = snd first-dunlin-tuple
 
 
+
+
+------------------------------------------------------------
+-- Define data structure for initial set of relationships between
+-- dunlins and their environments
+
+-- This is supposed to be used to initialize a system, but
+-- I haven't thought through the next steps.
+record DunEnvsPair : Set where
+  field
+    dunidx : ℕ
+    envidxs : List ℕ
+
+DunEnvsAssocs : Set
+DunEnvsAssocs = List DunEnvsPair
