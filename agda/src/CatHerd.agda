@@ -3,7 +3,7 @@ module CatHerd where
 open import Data.List
 open import Data.Nat using (ℕ) -- ; zero; suc; _+_; _*_; _∸_; _^_)
 open import Data.Product.Base using (_×_; _,′_)
--- open import Function.Base using (_∘_)
+open import Function.Base using (_∘_)
 open import Agda.Builtin.Sigma
 
 {-
@@ -72,3 +72,6 @@ lassie-pair = make-dog-pair 3 5 7
 lassie = snd lassie-pair
 
 pack = make-dog-pair 1 5 6 ∷ make-dog-pair 2 4 2 ∷ []
+
+-- fst-of-snd : {A B C : Set} → Σ A (Σ B C) → B
+-- fst-of-snd x = fst (snd x)
