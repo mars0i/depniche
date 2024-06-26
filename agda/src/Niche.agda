@@ -1,5 +1,5 @@
 {-# OPTIONS --allow-unsolved-metas #-}
--- Temporary: allow importing despite open holes 
+-- Temporary: allow importing this file despite open holes in it.
 
 module Niche where
 
