@@ -14,6 +14,8 @@ open import Data.Product.Base -- using (_×_; _,′_) -- Needs stdlib 2.0
 open import Agda.Builtin.Sigma
 open import Agda.Builtin.Maybe
 
+open import Kludges
+
 -- for primForce
 -- open import Agda.Builtin.Strict
 
@@ -40,64 +42,38 @@ data Env : ℕ → List ℕ → Set where
 -- How to make collections of dunlins or envs, given that
 -- each has a different type?  Answer #1: Sigma pairs.
 
---------------
 -- Represent dependence on two parameters by dependence on a (non-dependent) pair
 -- (more more generally, a non-dependent tuple).
 
--- pair-to-dun : (tuple : Σ ℕ (λ v → ℕ)) → Set  -- literal version of next line
-pair-to-dun : Σ[ _ ∈ ℕ ] ℕ → Set  -- That's the nondep pair type syntax from Data.Product.Base
-pair-to-dun tuple = Dun (fst tuple) (snd tuple)
-
 -- abbreviate the type we need list elements to have
-DunTuple : Set
-DunTuple = Σ (ℕ × ℕ) pair-to-dun
+DunPair : Set
+DunPair = Σ (ℕ × ℕ) (λ prod → Dun (fst prod) (snd prod))
 
-beak-tuple : ((id env : ℕ) → Dun id env) → ℕ → ℕ → DunTuple
-beak-tuple dun-structor id env = (id ,′ env) , dun-structor id env
+make-dun-pair : ((id env : ℕ) → Dun id env) → ℕ → ℕ → DunPair
+make-dun-pair structor id env = (id ,′ env) , structor id env
 
 -- kinda backwards: we deconstruct a dunlin in order to recreate it in a Σ-type
-dunlin-to-tuple : {id env : ℕ} → Dun id env → DunTuple
-dunlin-to-tuple (thin-beak id env)   = beak-tuple thin-beak id env
-dunlin-to-tuple (thick-beak id env) = beak-tuple thick-beak id env
+-- Seems potentially useful.
+dunlin-to-pair : {id env : ℕ} → Dun id env → DunPair
+dunlin-to-pair (thin-beak id env)  = make-dun-pair thin-beak id env
+dunlin-to-pair (thick-beak id env) = make-dun-pair thick-beak id env
 
+-- Just for quick testing and experimentation
+default-dun-tuple = make-dun-pair thin-beak 1000 1000
+dunlin-head = exploding-head default-dun-tuple
+dunlin-tail = exploding-tail default-dun-tuple
 
-
--- This process can be automated
-sara-tuple = beak-tuple thin-beak 3 4
-elsbeth-tuple = beak-tuple thick-beak 6 6
-bill-tuple = dunlin-to-tuple (thin-beak 5 6)
-
-dunlin-tuples = sara-tuple ∷ elsbeth-tuple ∷ bill-tuple ∷ []
-
-default-dunlin = thin-beak 0 0
-default-dunlin-tuple = (dunlin-to-tuple default-dunlin)
-
--- kludge version of head for testing without Maybe
-shrunken-head : {A : Set} → (default : A) → List A → A
-shrunken-head default [] = default
-shrunken-head default (x ∷ xs) = x
-
--- Needs to be rewritten properly with Maybe
-dunlin-head : {id env : ℕ} → List DunTuple → (Dun id env)
-dunlin-head xs = let head-tuple = shrunken-head default-dunlin-tuple xs
-                 in {!!} -- snd head-tuple  -- doesn't work
-{-
-Goal: Dun id₁ env
-————————————————————————————————————————————————————————————
-head-tuple
-    : Σ (ℕ × ℕ) pair-to-dun
-head-tuple
-    = shrunken-head default-dunlin-tuple xs
-xs  : List DunTuple
-env : ℕ   (not in scope)
-id₁ : ℕ   (not in scope)
+{- Tests
+sara-tuple = make-dun-pair thin-beak 3 4
+elsbeth-tuple = make-dun-pair thick-beak 6 6
+bill-tuple = dunlin-to-pair (thin-beak 5 6)
+flock = sara-tuple ∷ elsbeth-tuple ∷ bill-tuple ∷ []
+sara = snd (dunlin-head flock)
+elsbeth = snd (dunlin-head (dunlin-tail flock))
+bill = snd (dunlin-head (dunlin-tail (dunlin-tail flock)))
 -}
 
-first-dunlin-tuple = shrunken-head default-dunlin-tuple dunlin-tuples
-
--- Doesn't work, but 'C-c C-n snd first-dunlin-tuple' does.
--- sara-again = snd first-dunlin-tuple
-
+------------------------------------------------------------
 
 
 
