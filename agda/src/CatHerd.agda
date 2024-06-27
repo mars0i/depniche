@@ -24,13 +24,14 @@ data Mouse : ℕ → Set where
 make-mouse-pair : ℕ → Σ ℕ Mouse
 make-mouse-pair id = id , mouse id
 
+mouse-head = exploding-head (make-mouse-pair 1000)
+
 remy-pair = make-mouse-pair 3
 remy = snd remy-pair
 
 nest = make-mouse-pair 1 ∷ make-mouse-pair 2 ∷ []
 
-default-mouse-pair = make-mouse-pair 1000
-paulette = snd (exploding-head default-mouse-pair nest)
+paulette = snd (mouse-head nest)
 
 --------------------------------
 -- Uses a non-dependent pair to store two arguments as the first
@@ -49,13 +50,14 @@ CatPair = Σ (ℕ × ℕ) (λ prod → Cat (fst prod) (snd prod))
 make-cat-pair : ℕ → ℕ → CatPair
 make-cat-pair id purr = (id ,′ purr) , cat id purr
 
+cat-head = exploding-head (make-cat-pair 1000 1000)
+
 felix-pair = make-cat-pair 3 5
 felix = snd felix-pair
 
 herd = make-cat-pair 1 5 ∷ make-cat-pair 2 7 ∷ []
 
-default-cat-pair = make-cat-pair 1000 1000
-melissa = snd (exploding-head default-cat-pair herd)
+melissa = snd (cat-head herd)
 
 
 
@@ -78,14 +80,17 @@ DogPair = Σ (ℕ × ℕ × ℕ) (λ triple → Dog (fst triple)
 make-dog-pair : ℕ → ℕ → ℕ → DogPair
 make-dog-pair id bark size = (id ,′ bark ,′ size) , dog id bark size
 
+dog-head = exploding-head (make-dog-pair 1000 1000 1000)
+dog-tail = exploding-tail (make-dog-pair 1000 1000 1000)
+
 lassie-pair = make-dog-pair 3 5 7
 lassie = snd lassie-pair
 
 pack = make-dog-pair 1 5 6 ∷ make-dog-pair 2 4 2 ∷ []
 
-default-dog-pair = make-dog-pair 1000 1000 1000
-geoffrey = snd (exploding-head default-dog-pair pack)
-sara = snd (exploding-head default-dog-pair (exploding-tail default-dog-pair pack))
+geoffrey = snd (dog-head pack)
+sara = snd (dog-head (dog-tail pack))
+nobody = snd (dog-head (dog-tail (dog-tail pack)))
 
 -- fst-of-snd : {A B C : Set} → Σ A (Σ B C) → B
 -- fst-of-snd x = fst (snd x)
