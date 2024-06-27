@@ -6,6 +6,8 @@ open import Data.Product.Base using (_×_; _,′_)
 open import Function.Base using (_∘_)
 open import Agda.Builtin.Sigma
 
+open import Kludges
+
 {-
    Examples illustrating using dependent and non-dependent pairs to
    bundle up elements of indexed so that they can be stored in lists.
@@ -26,6 +28,9 @@ remy-pair = make-mouse-pair 3
 remy = snd remy-pair
 
 nest = make-mouse-pair 1 ∷ make-mouse-pair 2 ∷ []
+
+default-mouse-pair = make-mouse-pair 1000
+paulette = snd (exploding-head default-mouse-pair nest)
 
 --------------------------------
 -- Uses a non-dependent pair to store two arguments as the first
@@ -48,6 +53,11 @@ felix-pair = make-cat-pair 3 5
 felix = snd felix-pair
 
 herd = make-cat-pair 1 5 ∷ make-cat-pair 2 7 ∷ []
+
+default-cat-pair = make-cat-pair 1000 1000
+melissa = snd (exploding-head default-cat-pair herd)
+
+
 
 --------------------------------
 -- Shows how the non-dependent-pair-in-dependent pair can be
@@ -72,6 +82,10 @@ lassie-pair = make-dog-pair 3 5 7
 lassie = snd lassie-pair
 
 pack = make-dog-pair 1 5 6 ∷ make-dog-pair 2 4 2 ∷ []
+
+default-dog-pair = make-dog-pair 1000 1000 1000
+geoffrey = snd (exploding-head default-dog-pair pack)
+sara = snd (exploding-head default-dog-pair (exploding-tail default-dog-pair pack))
 
 -- fst-of-snd : {A B C : Set} → Σ A (Σ B C) → B
 -- fst-of-snd x = fst (snd x)
