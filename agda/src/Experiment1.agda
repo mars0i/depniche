@@ -49,6 +49,9 @@ data Env : ℕ → List ℕ → Set where
 DunPair : Set
 DunPair = Σ (ℕ × ℕ) (λ prod → Dun (fst prod) (snd prod))
 
+DunPairList : Set
+DunPairList = List DunPair
+
 make-dun-pair : ((id env : ℕ) → Dun id env) → ℕ → ℕ → DunPair
 make-dun-pair structor id env = (id ,′ env) , structor id env
 
@@ -67,6 +70,7 @@ dunlin-tail = exploding-tail default-dun-tuple
 sara-tuple = make-dun-pair thin-beak 3 4
 elsbeth-tuple = make-dun-pair thick-beak 6 6
 bill-tuple = dun-to-pair (thin-beak 5 6)
+
 flock = sara-tuple ∷ elsbeth-tuple ∷ bill-tuple ∷ []
 sara = snd (dunlin-head flock)
 elsbeth = snd (dunlin-head (dunlin-tail flock))
@@ -78,6 +82,9 @@ bill = snd (dunlin-head (dunlin-tail (dunlin-tail flock)))
 -- abbreviate the type we need list elements to have
 EnvPair : Set
 EnvPair = Σ (ℕ × List ℕ) (λ prod → Env (fst prod) (snd prod))
+
+EnvPairList : Set
+EnvPairList = List EnvPair
 
 make-env-pair : ((id : ℕ) (dunlins : List ℕ) → Env id dunlins) → ℕ → List ℕ → EnvPair
 make-env-pair structor id dunlins = (id ,′ dunlins) , structor id dunlins
@@ -104,11 +111,46 @@ env2 = snd (env-head (env-tail envs))
 env3 = snd (env-head (env-tail (env-tail envs)))
 -}
 
+SysListPair : (Set × Set)
+SysListPair = (DunPairList ,′ EnvPairList)
 
 ------------------------------------------------------------
 -- Define data structure for initial set of relationships between
 -- dunlins and their environments
 
+-- 8 envs, 4 dunlins
+
+
+{-
+dun-env-assocs : List (ℕ ×
+                       ℕ → ℕ → Dun ℕ ℕ ×
+                       List ℕ × 
+                       ℕ → List ℕ → Env ℕ (List ℕ))
+-}
+dun-env-assocs = (0 ,′ thin-beak  ,′ [ 1 ] ,′ [ undisturbed ]) ∷
+                 (1 ,′ thick-beak ,′ [ 2 ] ,′ [ mildly-disturbed ]) ∷
+                 (2 ,′ thin-beak  ,′ [ 5 ] ,′ [ mildly-disturbed ]) ∷
+                 (3 ,′ thick-beak ,′ [ 7 ] ,′ [ well-disturbed ]) ∷
+                 []
+
+
+{- Why doesn't this type check?
+-- make-duns-and-envs : List (ℕ × List ℕ) → EnvPairList
+-- make-duns-and-envs : List (ℕ × List ℕ) → SysListPair
+make-duns-and-envs : List (ℕ × List ℕ) → (DunPairList ,′ EnvPairList)
+make-duns-and-envs :List (Σ ℕ (λ x → Σ ((id₁ env : ℕ) → Dun id₁ env) (λ x₁ → Σ (List ℕ) (λ x₂ → List ((id₁ : ℕ) (dunlins : List ℕ) → Env id₁ dunlins)))))
+make-duns-and-envs = {!!}
+-}
+
+-- make-duns : List (ℕ × List ℕ) → List DunPair
+make-duns [] = []
+make-duns (x ∷ xs) = let dun-id = fst x
+                         dun-constructor = snd x
+                         env-ids = fst (snd x)
+
+                     in [ make-dun-pair dun-id env-ids ]
+
+{-
 -- This is supposed to be used to initialize a system, but
 -- I haven't thought through the next steps.
 record DunEnvsPair : Set where
@@ -118,3 +160,4 @@ record DunEnvsPair : Set where
 
 DunEnvsAssocs : Set
 DunEnvsAssocs = List DunEnvsPair
+-}
