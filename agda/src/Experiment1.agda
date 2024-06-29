@@ -133,22 +133,48 @@ dun-env-assocs = (0 ,′ thin-beak  ,′ [ 1 ] ,′ [ undisturbed ]) ∷
                  (3 ,′ thick-beak ,′ [ 7 ] ,′ [ well-disturbed ]) ∷
                  []
 
+make-duns-and-envs : List (ℕ × List ℕ) → DunPairList × EnvPairList
+make-duns-and-envs = {!!}
 
-{- Why doesn't this type check?
--- make-duns-and-envs : List (ℕ × List ℕ) → EnvPairList
--- make-duns-and-envs : List (ℕ × List ℕ) → SysListPair
-make-duns-and-envs : List (ℕ × List ℕ) → (DunPairList ,′ EnvPairList)
-make-duns-and-envs :List (Σ ℕ (λ x → Σ ((id₁ env : ℕ) → Dun id₁ env) (λ x₁ → Σ (List ℕ) (λ x₂ → List ((id₁ : ℕ) (dunlins : List ℕ) → Env id₁ dunlins)))))
+
+{-
+-- Why does this work, but a pair (or list) using DunPairList and EnvPairList doesn't?
+make-duns-and-envs : List (Σ ℕ (λ x → Σ ((id₁ env : ℕ) → Dun id₁ env)
+                                        (λ x₁ → Σ (List ℕ)
+                                                  (λ x₂ → List ((id₁ : ℕ)
+                                                                (dunlins : List ℕ) → Env id₁ dunlins)))))
 make-duns-and-envs = {!!}
 -}
 
--- make-duns : List (ℕ × List ℕ) → List DunPair
+{-
+-- make-duns-and-envs : List (ℕ × List ℕ) → EnvPairList
+-- make-duns-and-envs : List (ℕ × List ℕ) → SysListPair
+-- make-duns-and-envs : List (Σ ℕ (λ x → Σ ((id₁ env : ℕ) → Dun id₁ env)
+--                                         (λ x₁ → Σ (List ℕ)
+--                                                   (λ x₂ → List ((id₁ : ℕ)
+--                                                                 (dunlins : List ℕ) → Env id₁ dunlins)))))
+-- Can't get this to work; I don't know why.  I'll use a list instead.
+-- This shows that (DunPairList ,′ EnvPairList) can work ...
+y : Set × Set
+y = DunPairList ,′ EnvPairList
+-- Literal, expanded version:
+x : Set × Set
+x = (List (Σ (Σ ℕ (λ x → ℕ)) (λ prod → Dun (Data.Product.Base.Σ.proj₁ prod) (snd prod)))) ,′ (List (Σ (Σ ℕ (λ x → List ℕ)) (λ prod → Env (Data.Product.Base.Σ.proj₁ prod) (snd prod))))
+
+-- Doesn't work either.
+make-duns-and-envs : List (ℕ × List ℕ) → DunPairList ∷ EnvPairList ∷ []
+make-duns-and-envs = {!!}
+-}
+
+{-
+make-duns : List (ℕ × List ℕ) → List DunPair
 make-duns [] = []
 make-duns (x ∷ xs) = let dun-id = fst x
                          dun-constructor = snd x
                          env-ids = fst (snd x)
 
                      in [ make-dun-pair dun-id env-ids ]
+-}
 
 {-
 -- This is supposed to be used to initialize a system, but
