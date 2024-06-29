@@ -61,12 +61,14 @@ dun-to-pair : {id env : ℕ} → Dun id env → DunPair
 dun-to-pair (thin-beak id env)  = make-dun-pair thin-beak id env
 dun-to-pair (thick-beak id env) = make-dun-pair thick-beak id env
 
+
+{- Tests
+
 -- Just for quick testing and experimentation
 default-dun-tuple = make-dun-pair thin-beak 1000 1000
 dunlin-head = exploding-head default-dun-tuple
 dunlin-tail = exploding-tail default-dun-tuple
 
-{- Tests
 sara-tuple = make-dun-pair thin-beak 3 4
 elsbeth-tuple = make-dun-pair thick-beak 6 6
 bill-tuple = dun-to-pair (thin-beak 5 6)
@@ -96,6 +98,7 @@ env-to-pair (undisturbed id dunlins)  = make-env-pair undisturbed id dunlins
 env-to-pair (mildly-disturbed id dunlins)  = make-env-pair mildly-disturbed id dunlins
 env-to-pair (well-disturbed id dunlins)  = make-env-pair well-disturbed id dunlins
 
+{-
 -- Just for quick testing and experimentation
 default-env-tuple = make-env-pair undisturbed 1000 [ 1000 ]
 env-head = exploding-head default-env-tuple
@@ -104,15 +107,19 @@ env-tail = exploding-tail default-env-tuple
 envs = make-env-pair undisturbed 1 [ 1 ] ∷
        make-env-pair mildly-disturbed 2 (2 ∷ 3 ∷ [])∷
        env-to-pair (well-disturbed 3 []) ∷ []
-
-{- TESTS
-env1 = snd (env-head envs)
-env2 = snd (env-head (env-tail envs))
-env3 = snd (env-head (env-tail (env-tail envs)))
 -}
 
 SysListPair : (Set × Set)
 SysListPair = (DunPairList ,′ EnvPairList)
+
+-- How can you define a data type with parameters that are functions?
+data DunEnvAssoc : ℕ →
+                   ((dun-id : ℕ) → (env : ℕ) → Dun dun-id env) →
+                   (List ℕ) →
+                   ((env-id : ℕ) → (duns : List ℕ) → Env env-id duns)
+                   where
+                 
+
 
 ------------------------------------------------------------
 -- Define data structure for initial set of relationships between
