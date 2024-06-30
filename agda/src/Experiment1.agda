@@ -14,6 +14,7 @@ open import Data.Product.Base -- using (_×_; _,′_) -- Needs stdlib 2.0
 open import Agda.Builtin.Sigma
 open import Agda.Builtin.Maybe
 
+
 open import Kludges
 
 -- for primForce
@@ -112,14 +113,25 @@ envs = make-env-pair undisturbed 1 [ 1 ] ∷
 SysListPair : (Set × Set)
 SysListPair = (DunPairList ,′ EnvPairList)
 
+
+
+f : (id : ℕ) → (env : ℕ) → ((id env : ℕ) → Dun id env) → Dun id env
+f i e tb = tb i e
+
+-- data Foo : ℕ → ℕ → Set
+
 -- How can you define a data type with parameters that are functions?
 data DunEnvAssoc : ℕ →
-                   ((dun-id : ℕ) → (env : ℕ) → Dun dun-id env) →
+                   ((dun-id : ℕ) → (env : ℕ) → Dun dun-id env) →      -- Dun constructor
                    (List ℕ) →
-                   ((env-id : ℕ) → (duns : List ℕ) → Env env-id duns)
+                   ((env-id : ℕ) → (duns : List ℕ) → Env env-id duns) -- Env constructor
+                   → Set
                    where
-                 
-
+  dun-env-assoc : (dun-id : ℕ) → 
+                  (dun-maker : ((dun-id : ℕ) → (env : ℕ) → Dun dun-id env)) →
+                  (env-ids : List ℕ) →
+                  (env-maker : (env-id : ℕ) → (duns : List ℕ) → Env env-id duns) →
+                  DunEnvAssoc dun-id dun-maker env-ids env-maker
 
 ------------------------------------------------------------
 -- Define data structure for initial set of relationships between
