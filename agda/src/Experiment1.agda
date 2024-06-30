@@ -120,7 +120,10 @@ f i e tb = tb i e
 
 -- data Foo : ℕ → ℕ → Set
 
--- How can you define a data type with parameters that are functions?
+{- Never mind. Can't put this in a list.  
+
+-- Try replacing with records!
+
 data DunEnvAssoc : ℕ →
                    ((dun-id : ℕ) → (env : ℕ) → Dun dun-id env) →      -- Dun constructor
                    (List ℕ) →
@@ -132,6 +135,20 @@ data DunEnvAssoc : ℕ →
                   (env-ids : List ℕ) →
                   (env-maker : (env-id : ℕ) → (duns : List ℕ) → Env env-id duns) →
                   DunEnvAssoc dun-id dun-maker env-ids env-maker
+
+-- Oh frig. This won't work because the elements are different types.
+dun-env-assocs = dun-env-assoc 0 thin-beak [ 1 ] undisturbed ∷
+                 dun-env-assoc 1 thick-beak [ 2 ] mildly-disturbed ∷
+                 dun-env-assoc 2 thin-beak [ 5 ] mildly-disturbed ∷
+                 dun-env-assoc 3 thick-beak [ 7 ] well-disturbed ∷ []
+-}
+
+-- This works, but processing it turns out to be a pita
+dun-env-assocs = (0 ,′ thin-beak  ,′ [ 1 ] ,′ [ undisturbed ]) ∷
+                 (1 ,′ thick-beak ,′ [ 2 ] ,′ [ mildly-disturbed ]) ∷
+                 (2 ,′ thin-beak  ,′ [ 5 ] ,′ [ mildly-disturbed ]) ∷
+                 (3 ,′ thick-beak ,′ [ 7 ] ,′ [ well-disturbed ]) ∷
+                 []
 
 ------------------------------------------------------------
 -- Define data structure for initial set of relationships between
@@ -146,11 +163,6 @@ dun-env-assocs : List (ℕ ×
                        List ℕ × 
                        ℕ → List ℕ → Env ℕ (List ℕ))
 -}
-dun-env-assocs = (0 ,′ thin-beak  ,′ [ 1 ] ,′ [ undisturbed ]) ∷
-                 (1 ,′ thick-beak ,′ [ 2 ] ,′ [ mildly-disturbed ]) ∷
-                 (2 ,′ thin-beak  ,′ [ 5 ] ,′ [ mildly-disturbed ]) ∷
-                 (3 ,′ thick-beak ,′ [ 7 ] ,′ [ well-disturbed ]) ∷
-                 []
 
 {-
 make-duns-and-envs : List (ℕ ×
