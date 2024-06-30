@@ -1,7 +1,7 @@
 module CatHerd where
 
 open import Data.List
-open import Data.Nat using (ℕ) -- ; zero; suc; _+_; _*_; _∸_; _^_)
+open import Data.Nat using (ℕ ; zero; suc; _+_; _*_; _∸_; _^_)
 open import Data.Product.Base using (_×_; _,′_)
 open import Function.Base using (_∘_)
 open import Agda.Builtin.Sigma
@@ -15,6 +15,46 @@ open import Kludges
    different indexes, elements with different indexes can't be directly
    stored in a list.
 -}
+
+--------------------------------
+-- Sigma pair and normal pair tips:
+
+-- Note that in a Sigma pair, the function that specifies the
+-- relationship between the first and second elements is the
+-- second element in the *type*.  In the instance, the second
+-- element is *the result of applying that function* to the first
+-- argument.  The second element is not (typically) a function.
+
+-- In the signature,
+-- the second element is a function from an instance of the first type,
+-- *to the type itself* that is displayed after → .  i.e. the second element
+-- is a kind of type constructor--or rather a function that returns a type.
+-- This is why the following type checks.  The second element in the signature
+-- takes an instance of ℕ, in this case 2, and ignores it, returning the
+-- the type ℕ.  Since 3 is an instance of that type, it checks.
+y : Σ ℕ (λ x → ℕ)
+y = 2 , 3
+
+-- × and ,′ do the same thing, but add the λ wrapper for you.
+-- And look--you can actually just use a comma instead of comma-tick
+-- in this case.  Either one works.
+x : ℕ × ℕ
+x = 1 , 2
+
+-- You can pattern match on Sigma pairs:
+myfst : {A B : Set} → {a : A} → Σ A (λ x → B) → A
+myfst (x , y) = x  -- the parens on lhs are required
+
+mysnd : {A B : Set} → {a : A} → Σ A (λ x → B) → B  -- note type of result is different
+mysnd (x , y) = y
+
+-- And you can also pattern match (at least sometimes) with non-dep pairs,
+-- but you have to use comma, not comma-tick.
+myndfst : {A B : Set} → {a : A} → (A × B) → A
+myndfst (x , y) = x
+
+myndsnd : {A B : Set} → {a : A} → (A × B) → B
+myndsnd (x , y) = y
 
 --------------------------------
 
