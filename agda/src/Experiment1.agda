@@ -111,7 +111,7 @@ envs = make-env-pair undisturbed 1 [ 1 ] ∷
 -}
 
 SysListPair : (Set × Set)
-SysListPair = (DunPairList ,′ EnvPairList)
+SysListPair = (DunPairList , EnvPairList)
 
 
 
@@ -143,11 +143,18 @@ dun-env-assocs = dun-env-assoc 0 thin-beak [ 1 ] undisturbed ∷
                  dun-env-assoc 3 thick-beak [ 7 ] well-disturbed ∷ []
 -}
 
--- This works, but processing it turns out to be a pita
-dun-env-assocs = (0 ,′ thin-beak  ,′ [ 1 ] ,′ [ undisturbed ]) ∷
-                 (1 ,′ thick-beak ,′ [ 2 ] ,′ [ mildly-disturbed ]) ∷
-                 (2 ,′ thin-beak  ,′ [ 5 ] ,′ [ mildly-disturbed ]) ∷
-                 (3 ,′ thick-beak ,′ [ 7 ] ,′ [ well-disturbed ]) ∷
+
+-- This works, but processing it turns out to be a pita.
+-- Note that without the type sig, the commas have to be comma-ticks; with the sig, commas are OK.
+                                                                   -- THIS DOESN'T MAKE SENSE:
+dun-env-assocs : List (ℕ ×                                         -- dunlin's id
+                       ((i : ℕ) → (e : ℕ) → Dun i e) ×             -- dunlin constructor
+                       List ℕ ×                                    -- dunlin ids for env
+                       List ((i : ℕ) → (ds : List ℕ) → Env i ds))  -- env constructors
+dun-env-assocs = (0 , thin-beak  , [ 1 ] , [ undisturbed ]) ∷
+                 (1 , thick-beak , [ 2 ] , [ mildly-disturbed ]) ∷
+                 (2 , thin-beak  , [ 5 ] , [ mildly-disturbed ]) ∷
+                 (3 , thick-beak , [ 7 ] , [ well-disturbed ]) ∷
                  []
 
 ------------------------------------------------------------
