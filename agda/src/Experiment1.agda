@@ -14,6 +14,7 @@ open import Data.Product.Base -- using (_×_; _,′_) -- Needs stdlib 2.0
 open import Agda.Builtin.Sigma
 open import Agda.Builtin.Maybe
 
+
 open import Kludges
 
 -- for primForce
@@ -112,14 +113,42 @@ envs = make-env-pair undisturbed 1 [ 1 ] ∷
 SysListPair : (Set × Set)
 SysListPair = (DunPairList ,′ EnvPairList)
 
--- How can you define a data type with parameters that are functions?
-data DunEnvAssoc : ℕ →
-                   ((dun-id : ℕ) → (env : ℕ) → Dun dun-id env) →
-                   (List ℕ) →
-                   ((env-id : ℕ) → (duns : List ℕ) → Env env-id duns)
-                   where
-                 
 
+
+f : (id : ℕ) → (env : ℕ) → ((id env : ℕ) → Dun id env) → Dun id env
+f i e tb = tb i e
+
+-- data Foo : ℕ → ℕ → Set
+
+{- Never mind. Can't put this in a list.  
+
+-- Try replacing with records!
+
+data DunEnvAssoc : ℕ →
+                   ((dun-id : ℕ) → (env : ℕ) → Dun dun-id env) →      -- Dun constructor
+                   (List ℕ) →
+                   ((env-id : ℕ) → (duns : List ℕ) → Env env-id duns) -- Env constructor
+                   → Set
+                   where
+  dun-env-assoc : (dun-id : ℕ) → 
+                  (dun-maker : ((dun-id : ℕ) → (env : ℕ) → Dun dun-id env)) →
+                  (env-ids : List ℕ) →
+                  (env-maker : (env-id : ℕ) → (duns : List ℕ) → Env env-id duns) →
+                  DunEnvAssoc dun-id dun-maker env-ids env-maker
+
+-- Oh frig. This won't work because the elements are different types.
+dun-env-assocs = dun-env-assoc 0 thin-beak [ 1 ] undisturbed ∷
+                 dun-env-assoc 1 thick-beak [ 2 ] mildly-disturbed ∷
+                 dun-env-assoc 2 thin-beak [ 5 ] mildly-disturbed ∷
+                 dun-env-assoc 3 thick-beak [ 7 ] well-disturbed ∷ []
+-}
+
+-- This works, but processing it turns out to be a pita
+dun-env-assocs = (0 ,′ thin-beak  ,′ [ 1 ] ,′ [ undisturbed ]) ∷
+                 (1 ,′ thick-beak ,′ [ 2 ] ,′ [ mildly-disturbed ]) ∷
+                 (2 ,′ thin-beak  ,′ [ 5 ] ,′ [ mildly-disturbed ]) ∷
+                 (3 ,′ thick-beak ,′ [ 7 ] ,′ [ well-disturbed ]) ∷
+                 []
 
 ------------------------------------------------------------
 -- Define data structure for initial set of relationships between
@@ -134,11 +163,6 @@ dun-env-assocs : List (ℕ ×
                        List ℕ × 
                        ℕ → List ℕ → Env ℕ (List ℕ))
 -}
-dun-env-assocs = (0 ,′ thin-beak  ,′ [ 1 ] ,′ [ undisturbed ]) ∷
-                 (1 ,′ thick-beak ,′ [ 2 ] ,′ [ mildly-disturbed ]) ∷
-                 (2 ,′ thin-beak  ,′ [ 5 ] ,′ [ mildly-disturbed ]) ∷
-                 (3 ,′ thick-beak ,′ [ 7 ] ,′ [ well-disturbed ]) ∷
-                 []
 
 {-
 make-duns-and-envs : List (ℕ ×
