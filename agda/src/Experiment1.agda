@@ -120,6 +120,8 @@ SysListPair = DunPairList × EnvPairList
 For each env there are zero to many dunlins.
 So we need to associate multiple dun ids with each env id.
 We also need to specify which env and dun constructors go with each id.
+We put the id relationships in a single list in order to keep the
+dunlins and environments, which have to point to each other, consistent.
 
 It might be better to do this with records rather than non-dep tuples.
 I think that would work.
@@ -152,7 +154,19 @@ assocs-to-system [] = {!!}
 assocs-to-system (x ∷ xs) = {!!}
 -}
 
+-- Less efficient to run through the config list twice, but it's simpler,
+-- and shouldn't take long anyway.
+
 assocs-to-envs : DunEnvAssocs → List EnvPair
 assocs-to-envs [] = []
-assocs-to-envs (x ∷ xs) = let (env-id , dun-ids , env-maker , dun-makers) = x
+assocs-to-envs (x ∷ xs) = let (env-id , dun-ids , env-maker , _) = x
                           in (make-env-pair env-maker env-id dun-ids) ∷ assocs-to-envs xs
+
+make-duns-for-env : ℕ → List ℕ → List ((i : ℕ) → (e : ℕ) → Dun i e) → DunPair
+make-duns-for-env = {!!}
+                    
+
+assocs-to-duns : DunEnvAssocs → List DunPair
+assocs-to-duns [] = []
+assocs-to-duns (x ∷ xs) = let (env-id , dun-ids , _ , dun-makers) = x
+                           in (make-duns-for-env env-id dun-ids dun-makers) ∷ assocs-to-duns xs
