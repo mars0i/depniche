@@ -48,13 +48,22 @@ myfst (x , y) = x  -- the parens on lhs are required
 mysnd : {A B : Set} → {a : A} → Σ A (λ x → B) → B  -- note type of result is different
 mysnd (x , y) = y
 
--- And you can also pattern match (at least sometimes) with non-dep pairs,
+-- And you can also pattern match with non-dep pairs,
 -- but you have to use comma, not comma-tick.
-myndfst : {A B : Set} → {a : A} → (A × B) → A
-myndfst (x , y) = x
+myndfst : {A B : Set} → (A × B) → A
+myndfst (a , b) = a
 
-myndsnd : {A B : Set} → {a : A} → (A × B) → B
-myndsnd (x , y) = y
+myndsnd : {A B : Set} →  (A × B) → B
+myndsnd (a , b) = b
+
+-- This works with iterated commas, too.
+thd : {A B C : Set} → (A × B × C) → C
+thd (a , b , c) = c
+
+-- Pattern matching works with let, as I'd expect.
+thd2 : {A B C : Set} → (A × B × C) → C
+thd2 x = let (a , b , c) = x
+         in c
 
 -- SO WHAT'S THE DIFFERENCE BETWEEN COMMA AND COMMA-TICK?
 -- I think it's this:

@@ -110,8 +110,8 @@ envs = make-env-pair undisturbed 1 [ 1 ] ∷
        env-to-pair (well-disturbed 3 []) ∷ []
 -}
 
-SysListPair : (Set × Set)
-SysListPair = (DunPairList , EnvPairList)
+SysListPair : Set
+SysListPair = DunPairList × EnvPairList
 
 -----------------------------
 -- Method for configuring an entire system
@@ -144,4 +144,15 @@ dun-env-assocs = (0 , [ 1 ] , undisturbed , [ thin-beak ]) ∷
                  []
 
 
--- assocs-to-envs-and-duns : 
+{-
+-- Not working
+-- assocs-to-system : DunEnvAssocs → SysListPair
+assocs-to-system : DunEnvAssocs → List EnvPair × List DunPair
+assocs-to-system [] = {!!}
+assocs-to-system (x ∷ xs) = {!!}
+-}
+
+assocs-to-envs : DunEnvAssocs → List EnvPair
+assocs-to-envs [] = []
+assocs-to-envs (x ∷ xs) = let (env-id , dun-ids , env-maker , dun-makers) = x
+                          in (make-env-pair env-maker env-id dun-ids) ∷ assocs-to-envs xs
