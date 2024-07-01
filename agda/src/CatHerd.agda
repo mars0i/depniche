@@ -56,6 +56,13 @@ myndfst (x , y) = x
 myndsnd : {A B : Set} → {a : A} → (A × B) → B
 myndsnd (x , y) = y
 
+-- SO WHAT'S THE DIFFERENCE BETWEEN COMMA AND COMMA-TICK?
+-- I think it's this:
+-- Sometimes it's possible to define a non-dependent pair
+-- without a type signature.  In that case, you need comma-tick to tell
+-- Agda what's going on with the second argument.  However, when you have
+-- type signature using × then you can use either.  Not sure about that.
+
 --------------------------------
 
 data Mouse : ℕ → Set where
@@ -89,6 +96,7 @@ CatPair = Σ (ℕ × ℕ) (λ prod → Cat (fst prod) (snd prod))
 -- Note comma-tick (non-dependent) vs. comma (dependent)
 make-cat-pair : ℕ → ℕ → CatPair
 make-cat-pair id purr = (id ,′ purr) , cat id purr
+
 
 cat-head = exploding-head (make-cat-pair 1000 1000)
 
