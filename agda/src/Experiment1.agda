@@ -6,16 +6,16 @@
 
 module Experiment1 where
 
-open import Niche
+open import Agda.Builtin.Sigma
+open import Agda.Builtin.Maybe
 open import Function.Base
 open import Data.List
 open import Data.Vec as V using (_∷_)
 open import Data.Nat using (ℕ; zero; suc; _+_; _*_; _∸_; _^_)
 open import Data.Product.Base -- using (_×_; _,′_) -- Needs stdlib 2.0
-open import Agda.Builtin.Sigma
-open import Agda.Builtin.Maybe
+open import Relation.Binary.PropositionalEquality using (_≡_; refl)
 
-
+open import Niche
 open import Kludges
 
 -- for primForce
@@ -140,12 +140,22 @@ DunEnvAssocs = List (List ℕ ×                                -- dunlin ids fo
 
 -- NO THIS IS NOT RIGHT.  It requires that each env has the same number of dunlins.
 -- Also, breaks the functions below.
+DunEnvAssocs : {m n : ℕ} → {m ≡ n} → Set
+DunEnvAssocs {m = m} {n = n} = List (V.Vec ℕ m ×                        -- dunlin ids for env
+                                     V.Vec ((i : ℕ) → (e : ℕ) → Dun i e) n ×  -- dunlin constructors
+                                     ℕ ×                                      -- env id
+                                     ((i : ℕ) → (ds : List ℕ) → Env i ds) )  -- env constructor
+
+                       
+
+{-
 DunEnvAssocs : {n : ℕ} → Set
 DunEnvAssocs {zero} = List (V.Vec ℕ zero × V.Vec ℕ zero × ℕ × ((i : ℕ) → (ds : List ℕ) → Env i ds) )
 DunEnvAssocs {suc n} = List (V.Vec ℕ n ×                        -- dunlin ids for env
                        V.Vec ((i : ℕ) → (e : ℕ) → Dun i e) n ×  -- dunlin constructors
                        ℕ ×                                      -- env id
                        ((i : ℕ) → (ds : List ℕ) → Env i ds) )   -- env constructor
+-}
 
 -- Less efficient to run through the config list twice, but it's a lot simpler,
 -- and shouldn't take long.
