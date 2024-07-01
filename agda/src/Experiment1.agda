@@ -113,48 +113,28 @@ envs = make-env-pair undisturbed 1 [ 1 ] ∷
 SysListPair : (Set × Set)
 SysListPair = (DunPairList , EnvPairList)
 
+-----------------------------
+{-
+For each env there are zero to many dunlins.
+So we need to associate multiple dun ids with each env id.
+We also need to specify which env and dun constructors go with each id.
 
+It might be better to do this with records rather than non-dep tuples.
+I think that would work.
 
-f : (id : ℕ) → (env : ℕ) → ((id env : ℕ) → Dun id env) → Dun id env
-f i e tb = tb i e
-
--- data Foo : ℕ → ℕ → Set
-
-{- Never mind. Can't put this in a list.  
-
--- Try replacing with records!
-
-data DunEnvAssoc : ℕ →
-                   ((dun-id : ℕ) → (env : ℕ) → Dun dun-id env) →      -- Dun constructor
-                   (List ℕ) →
-                   ((env-id : ℕ) → (duns : List ℕ) → Env env-id duns) -- Env constructor
-                   → Set
-                   where
-  dun-env-assoc : (dun-id : ℕ) → 
-                  (dun-maker : ((dun-id : ℕ) → (env : ℕ) → Dun dun-id env)) →
-                  (env-ids : List ℕ) →
-                  (env-maker : (env-id : ℕ) → (duns : List ℕ) → Env env-id duns) →
-                  DunEnvAssoc dun-id dun-maker env-ids env-maker
-
--- Oh frig. This won't work because the elements are different types.
-dun-env-assocs = dun-env-assoc 0 thin-beak [ 1 ] undisturbed ∷
-                 dun-env-assoc 1 thick-beak [ 2 ] mildly-disturbed ∷
-                 dun-env-assoc 2 thin-beak [ 5 ] mildly-disturbed ∷
-                 dun-env-assoc 3 thick-beak [ 7 ] well-disturbed ∷ []
+(Can't do it in any straightforward way with datatypes, because indexed
+datatypes are different types and therefore can't appear in a list.)
 -}
 
-
--- This works, but processing it turns out to be a pita.
 -- Note that without the type sig, the commas have to be comma-ticks; with the sig, commas are OK.
-                                                                   -- THIS DOESN'T MAKE SENSE:
-dun-env-assocs : List (ℕ ×                                         -- dunlin's id
-                       ((i : ℕ) → (e : ℕ) → Dun i e) ×             -- dunlin constructor
-                       List ℕ ×                                    -- dunlin ids for env
-                       List ((i : ℕ) → (ds : List ℕ) → Env i ds))  -- env constructors
-dun-env-assocs = (0 , thin-beak  , [ 1 ] , [ undisturbed ]) ∷
-                 (1 , thick-beak , [ 2 ] , [ mildly-disturbed ]) ∷
-                 (2 , thin-beak  , [ 5 ] , [ mildly-disturbed ]) ∷
-                 (3 , thick-beak , [ 7 ] , [ well-disturbed ]) ∷
+dun-env-assocs : List (ℕ ×                                     -- env id
+                       List ℕ ×                                -- dunlin ids for env
+                       ((i : ℕ) → (ds : List ℕ) → Env i ds) ×  -- env constructor
+                       List ((i : ℕ) → (e : ℕ) → Dun i e) )    -- dunlin constructors
+dun-env-assocs = (0 , [ 1 ] , undisturbed , [ thin-beak ]) ∷
+                 (1 , [ 2 ] , mildly-disturbed , [ thick-beak ]) ∷
+                 (2 , [ 5 ] , mildly-disturbed , [ thin-beak ]) ∷
+                 (3 , [ 7 ] , well-disturbed , [ thick-beak ]) ∷
                  []
 
 ------------------------------------------------------------
