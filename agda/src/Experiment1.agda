@@ -9,6 +9,7 @@ module Experiment1 where
 open import Niche
 open import Function.Base
 open import Data.List
+open import Data.Vec as V using (_∷_)
 open import Data.Nat using (ℕ; zero; suc; _+_; _*_; _∸_; _^_)
 open import Data.Product.Base -- using (_×_; _,′_) -- Needs stdlib 2.0
 open import Agda.Builtin.Sigma
@@ -130,10 +131,19 @@ datatypes are different types and therefore can't appear in a list.)
 -- The lengths of the two lists arguments should be the same.  So maybe should be
 -- replaced by vectors, or add length proofs.
 DunEnvAssocs : Set
+DunEnvAssocs = List (List ℕ ×                                -- dunlin ids for env
+                     List ((i : ℕ) → (e : ℕ) → Dun i e) ×    -- dunlin constructors
+                     ℕ ×                                     -- env id
+                     ((i : ℕ) → (ds : List ℕ) → Env i ds) )  -- env constructor
+
+
+{-
+DunEnvAssocs : Set
 DunEnvAssocs = List (ℕ ×                                     -- env id
-                     List ℕ ×                                -- dunlin ids for env
-                     ((i : ℕ) → (ds : List ℕ) → Env i ds) ×  -- env constructor
-                     List ((i : ℕ) → (e : ℕ) → Dun i e) )    -- dunlin constructors
+                               V.Vec ℕ n ×                             -- dunlin ids for env
+                               ((i : ℕ) → (ds : List ℕ) → Env i ds) ×  -- env constructor
+                               V.Vec ((i : ℕ) → (e : ℕ) → Dun i e) n)  -- dunlin constructors
+-}
 
 -- Less efficient to run through the config list twice, but it's a lot simpler,
 -- and shouldn't take long.
@@ -144,7 +154,7 @@ DunEnvAssocs = List (ℕ ×                                     -- env id
 -- Creates a list of environment Sigma-pairs from the assocs.
 assocs-to-envs : DunEnvAssocs → List EnvPair
 assocs-to-envs [] = []
-assocs-to-envs (x ∷ xs) = let (env-id , dun-ids , env-maker , _) = x
+assocs-to-envs (x ∷ xs) = let (dun-ids , _ , env-id , env-maker) = x
                           in (make-env-pair env-maker env-id dun-ids) ∷ assocs-to-envs xs
 
 ---------
@@ -163,7 +173,7 @@ duns-for-env _ _ _ = [] -- This shouldn't happen, but if it does, it's a bug.
 assocs-to-dunlists : DunEnvAssocs → List (List DunPair)
 assocs-to-dunlists [] = []
 assocs-to-dunlists (x ∷ xs) =
-    let (env-id , dun-ids , _ , dun-makers) = x
+    let (dun-ids , dun-makers , env-id , _) = x
     in (duns-for-env env-id dun-ids dun-makers) ∷ assocs-to-dunlists xs
 
 -- Creates a list of dunlin Sigma-pairs from the assocs.
@@ -176,10 +186,10 @@ assocs-to-duns assocs = concat (assocs-to-dunlists assocs)
 -- Note that without the type sig, the commas have to be comma-ticks;
 -- with the sig, commas are OK.
 dun-env-assocs : DunEnvAssocs
-dun-env-assocs = (0 , [ 1 ] , undisturbed , [ thin-beak ]) ∷
-                 (1 , [ 2 ] , mildly-disturbed , [ thick-beak ]) ∷
-                 (2 , [ 5 ] , mildly-disturbed , [ thin-beak ]) ∷
-                 (3 , [ 7 ] , well-disturbed , [ thick-beak ]) ∷
+dun-env-assocs = ([ 1 ] , [ thin-beak ] , 0 , undisturbed) ∷
+                 ([ 2 ] , [ thick-beak ] , 1 , mildly-disturbed) ∷
+                 ([ 5 ] , [ thin-beak ] , 2 , mildly-disturbed) ∷
+                 ([ 7 ] , [ thick-beak ] , 3 , well-disturbed) ∷
                  []
 
 envpairs = assocs-to-envs dun-env-assocs
