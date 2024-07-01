@@ -114,6 +114,8 @@ SysListPair : (Set × Set)
 SysListPair = (DunPairList , EnvPairList)
 
 -----------------------------
+-- Method for configuring an entire system
+
 {-
 For each env there are zero to many dunlins.
 So we need to associate multiple dun ids with each env id.
@@ -126,60 +128,20 @@ I think that would work.
 datatypes are different types and therefore can't appear in a list.)
 -}
 
+
+DunEnvAssocs : Set
+DunEnvAssocs = List (ℕ ×                                     -- env id
+                     List ℕ ×                                -- dunlin ids for env
+                     ((i : ℕ) → (ds : List ℕ) → Env i ds) ×  -- env constructor
+                     List ((i : ℕ) → (e : ℕ) → Dun i e) )    -- dunlin constructors
+
 -- Note that without the type sig, the commas have to be comma-ticks; with the sig, commas are OK.
-dun-env-assocs : List (ℕ ×                                     -- env id
-                       List ℕ ×                                -- dunlin ids for env
-                       ((i : ℕ) → (ds : List ℕ) → Env i ds) ×  -- env constructor
-                       List ((i : ℕ) → (e : ℕ) → Dun i e) )    -- dunlin constructors
+dun-env-assocs : DunEnvAssocs
 dun-env-assocs = (0 , [ 1 ] , undisturbed , [ thin-beak ]) ∷
                  (1 , [ 2 ] , mildly-disturbed , [ thick-beak ]) ∷
                  (2 , [ 5 ] , mildly-disturbed , [ thin-beak ]) ∷
                  (3 , [ 7 ] , well-disturbed , [ thick-beak ]) ∷
                  []
 
-------------------------------------------------------------
--- Define data structure for initial set of relationships between
--- dunlins and their environments
 
--- 8 envs, 4 dunlins
-
-
-{-
-dun-env-assocs : List (ℕ ×
-                       ℕ → ℕ → Dun ℕ ℕ ×
-                       List ℕ × 
-                       ℕ → List ℕ → Env ℕ (List ℕ))
--}
-
-{-
-make-duns-and-envs : List (ℕ ×
-                           ℕ → ℕ → Set ×      -- Dun constructor
-                           List ℕ ×
-                           ℕ → List ℕ → Set)  -- Env constructor
-                     → DunPairList × EnvPairList
-make-duns-and-envs [] = [] × []
-make-duns-and-envs (params ∷ more-params)  = {!!} -- let dun-id = (fst params)
-                                           -- in ?
--}
-
-{-
-make-duns : List (ℕ × List ℕ) → List DunPair
-make-duns [] = []
-make-duns (x ∷ xs) = let dun-id = fst x
-                         dun-constructor = snd x
-                         env-ids = fst (snd x)
-
-                     in [ make-dun-pair dun-id env-ids ]
--}
-
-{-
--- This is supposed to be used to initialize a system, but
--- I haven't thought through the next steps.
-record DunEnvsPair : Set where
-  field
-    dunidx : ℕ
-    envidxs : List ℕ
-
-DunEnvsAssocs : Set
-DunEnvsAssocs = List DunEnvsPair
--}
+-- assocs-to-envs-and-duns : 
