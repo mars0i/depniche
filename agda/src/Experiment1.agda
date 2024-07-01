@@ -130,20 +130,22 @@ datatypes are different types and therefore can't appear in a list.)
 -- The structure of a list of configuration information for initializing a system.
 -- The lengths of the two lists arguments should be the same.  So maybe should be
 -- replaced by vectors, or add length proofs.
+{-
 DunEnvAssocs : Set
 DunEnvAssocs = List (List ℕ ×                                -- dunlin ids for env
                      List ((i : ℕ) → (e : ℕ) → Dun i e) ×    -- dunlin constructors
                      ℕ ×                                     -- env id
                      ((i : ℕ) → (ds : List ℕ) → Env i ds) )  -- env constructor
-
-
-{-
-DunEnvAssocs : Set
-DunEnvAssocs = List (ℕ ×                                     -- env id
-                               V.Vec ℕ n ×                             -- dunlin ids for env
-                               ((i : ℕ) → (ds : List ℕ) → Env i ds) ×  -- env constructor
-                               V.Vec ((i : ℕ) → (e : ℕ) → Dun i e) n)  -- dunlin constructors
 -}
+
+-- NO THIS IS NOT RIGHT.  It requires that each env has the same number of dunlins.
+-- Also, breaks the functions below.
+DunEnvAssocs : {n : ℕ} → Set
+DunEnvAssocs {zero} = List (V.Vec ℕ zero × V.Vec ℕ zero × ℕ × ((i : ℕ) → (ds : List ℕ) → Env i ds) )
+DunEnvAssocs {suc n} = List (V.Vec ℕ n ×                        -- dunlin ids for env
+                       V.Vec ((i : ℕ) → (e : ℕ) → Dun i e) n ×  -- dunlin constructors
+                       ℕ ×                                      -- env id
+                       ((i : ℕ) → (ds : List ℕ) → Env i ds) )   -- env constructor
 
 -- Less efficient to run through the config list twice, but it's a lot simpler,
 -- and shouldn't take long.
@@ -155,7 +157,7 @@ DunEnvAssocs = List (ℕ ×                                     -- env id
 assocs-to-envs : DunEnvAssocs → List EnvPair
 assocs-to-envs [] = []
 assocs-to-envs (x ∷ xs) = let (dun-ids , _ , env-id , env-maker) = x
-                          in (make-env-pair env-maker env-id dun-ids) ∷ assocs-to-envs xs
+                          in (make-env-pair env-maker env-id (V.toList dun-ids)) ∷ assocs-to-envs xs
 
 ---------
 -- Create the dunlins from a DunEnvAssocs list.
@@ -174,7 +176,7 @@ assocs-to-dunlists : DunEnvAssocs → List (List DunPair)
 assocs-to-dunlists [] = []
 assocs-to-dunlists (x ∷ xs) =
     let (dun-ids , dun-makers , env-id , _) = x
-    in (duns-for-env env-id dun-ids dun-makers) ∷ assocs-to-dunlists xs
+    in (duns-for-env env-id (V.toList dun-ids) (V.toList dun-makers)) ∷ assocs-to-dunlists xs
 
 -- Creates a list of dunlin Sigma-pairs from the assocs.
 assocs-to-duns : DunEnvAssocs → List DunPair
