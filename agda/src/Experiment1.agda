@@ -63,13 +63,7 @@ dun-to-pair (thin-beak id env)  = make-dun-pair thin-beak id env
 dun-to-pair (thick-beak id env) = make-dun-pair thick-beak id env
 
 
-{- Tests
-
--- Just for quick testing and experimentation
-default-dun-tuple = make-dun-pair thin-beak 1000 1000
-dunlin-head = exploding-head default-dun-tuple
-dunlin-tail = exploding-tail default-dun-tuple
-
+{-
 sara-tuple = make-dun-pair thin-beak 3 4
 elsbeth-tuple = make-dun-pair thick-beak 6 6
 bill-tuple = dun-to-pair (thin-beak 5 6)
@@ -100,21 +94,22 @@ env-to-pair (mildly-disturbed id dunlins)  = make-env-pair mildly-disturbed id d
 env-to-pair (well-disturbed id dunlins)  = make-env-pair well-disturbed id dunlins
 
 {-
--- Just for quick testing and experimentation
-default-env-tuple = make-env-pair undisturbed 1000 [ 1000 ]
-env-head = exploding-head default-env-tuple
-env-tail = exploding-tail default-env-tuple
-
 envs = make-env-pair undisturbed 1 [ 1 ] ∷
        make-env-pair mildly-disturbed 2 (2 ∷ 3 ∷ [])∷
        env-to-pair (well-disturbed 3 []) ∷ []
 -}
 
-SysListPair : Set
-SysListPair = DunPairList × EnvPairList
+-----------------------------
+-- For quick testing and experimentation.  Don't use for production code.
+default-dun-tuple = make-dun-pair thin-beak 1000 1000
+dun-head = exploding-head default-dun-tuple
+dun-tail = exploding-tail default-dun-tuple
+default-env-tuple = make-env-pair undisturbed 1000 [ 1000 ]
+env-head = exploding-head default-env-tuple
+env-tail = exploding-tail default-env-tuple
 
 -----------------------------
--- Method for configuring an entire system
+-- Configuring an entire system
 
 {-
 For each env there are zero to many dunlins.
@@ -131,13 +126,55 @@ datatypes are different types and therefore can't appear in a list.)
 -}
 
 
+-- The structure of a list of configuration information for initializing a system.
+-- The lengths of the two lists arguments should be the same.  So maybe should be
+-- replaced by vectors, or add length proofs.
 DunEnvAssocs : Set
 DunEnvAssocs = List (ℕ ×                                     -- env id
                      List ℕ ×                                -- dunlin ids for env
                      ((i : ℕ) → (ds : List ℕ) → Env i ds) ×  -- env constructor
                      List ((i : ℕ) → (e : ℕ) → Dun i e) )    -- dunlin constructors
 
--- Note that without the type sig, the commas have to be comma-ticks; with the sig, commas are OK.
+-- Less efficient to run through the config list twice, but it's a lot simpler,
+-- and shouldn't take long.
+
+---------
+-- Create the environments from a DunEnvAssocs list.
+
+-- Creates a list of environment Sigma-pairs from the assocs.
+assocs-to-envs : DunEnvAssocs → List EnvPair
+assocs-to-envs [] = []
+assocs-to-envs (x ∷ xs) = let (env-id , dun-ids , env-maker , _) = x
+                          in (make-env-pair env-maker env-id dun-ids) ∷ assocs-to-envs xs
+
+---------
+-- Create the dunlins from a DunEnvAssocs list.
+
+-- Helper function for assocs-to-dunlists. Assumes the two arg lists are same length.
+-- Strictly speaking ought to be Maybe-ed, or use vectors or add a length proof. (TODO?)
+duns-for-env : ℕ → List ℕ → List ((i : ℕ) → (e : ℕ) → Dun i e) → List DunPair
+duns-for-env env-id [] [] = []
+duns-for-env env-id (id ∷ dun-ids) (maker ∷ dun-makers) =
+    let dun-pair = make-dun-pair maker id env-id
+    in dun-pair ∷ duns-for-env env-id dun-ids dun-makers
+duns-for-env _ _ _ = [] -- This shouldn't happen, but if it does, it's a bug.
+                    
+-- Helper for assocs-to-duns, which flattens this list list.
+assocs-to-dunlists : DunEnvAssocs → List (List DunPair)
+assocs-to-dunlists [] = []
+assocs-to-dunlists (x ∷ xs) =
+    let (env-id , dun-ids , _ , dun-makers) = x
+    in (duns-for-env env-id dun-ids dun-makers) ∷ assocs-to-dunlists xs
+
+-- Creates a list of dunlin Sigma-pairs from the assocs.
+assocs-to-duns : DunEnvAssocs → List DunPair
+assocs-to-duns assocs = concat (assocs-to-dunlists assocs)
+
+
+-- Example:
+
+-- Note that without the type sig, the commas have to be comma-ticks;
+-- with the sig, commas are OK.
 dun-env-assocs : DunEnvAssocs
 dun-env-assocs = (0 , [ 1 ] , undisturbed , [ thin-beak ]) ∷
                  (1 , [ 2 ] , mildly-disturbed , [ thick-beak ]) ∷
@@ -145,28 +182,11 @@ dun-env-assocs = (0 , [ 1 ] , undisturbed , [ thin-beak ]) ∷
                  (3 , [ 7 ] , well-disturbed , [ thick-beak ]) ∷
                  []
 
+envpairs = assocs-to-envs dun-env-assocs
+dunpairs = assocs-to-duns dun-env-assocs
 
-{-
--- Not working
--- assocs-to-system : DunEnvAssocs → SysListPair
-assocs-to-system : DunEnvAssocs → List EnvPair × List DunPair
-assocs-to-system [] = {!!}
-assocs-to-system (x ∷ xs) = {!!}
+{- testing:
+a-dun = snd (dun-head dunpairs)
+an-env = snd (env-head envpairs)
 -}
 
--- Less efficient to run through the config list twice, but it's simpler,
--- and shouldn't take long anyway.
-
-assocs-to-envs : DunEnvAssocs → List EnvPair
-assocs-to-envs [] = []
-assocs-to-envs (x ∷ xs) = let (env-id , dun-ids , env-maker , _) = x
-                          in (make-env-pair env-maker env-id dun-ids) ∷ assocs-to-envs xs
-
-make-duns-for-env : ℕ → List ℕ → List ((i : ℕ) → (e : ℕ) → Dun i e) → DunPair
-make-duns-for-env = {!!}
-                    
-
-assocs-to-duns : DunEnvAssocs → List DunPair
-assocs-to-duns [] = []
-assocs-to-duns (x ∷ xs) = let (env-id , dun-ids , _ , dun-makers) = x
-                           in (make-duns-for-env env-id dun-ids dun-makers) ∷ assocs-to-duns xs
