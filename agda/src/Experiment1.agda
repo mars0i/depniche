@@ -34,11 +34,19 @@ data Dun : ℕ → ℕ → Set where
   thin-beak   : (id : ℕ) → (env : ℕ) → Dun id env
   thick-beak  : (id : ℕ) → (env : ℕ) → Dun id env
 
+-- An abbreviation for the type of Dun constructors will be useful later.
+DunConstructor : Set 
+DunConstructor = (i : ℕ) → (e : ℕ) → Dun i e
+
+
 data Env : ℕ → List ℕ → Set where
   undisturbed      : (id : ℕ) → (dunlins : List ℕ) → Env id dunlins
   mildly-disturbed : (id : ℕ) → (dunlins : List ℕ) → Env id dunlins
   well-disturbed   : (id : ℕ) → (dunlins : List ℕ) → Env id dunlins
 
+-- An abbreviation for the type of Env constructors will be useful later.
+EnvConstructor : Set
+EnvConstructor = (i : ℕ) → (ds : List ℕ) → Env i ds
 
 -----------------------------------------------------------
 -- How to make collections of dunlins or envs, given that
@@ -138,24 +146,16 @@ DunEnvAssocs = List (List ℕ ×                                -- dunlin ids fo
                      ((i : ℕ) → (ds : List ℕ) → Env i ds) )  -- env constructor
 -}
 
--- NO THIS IS NOT RIGHT.  It requires that each env has the same number of dunlins.
--- Also, breaks the functions below.
-DunEnvAssocs : {m n : ℕ} → {m ≡ n} → Set
-DunEnvAssocs {m = m} {n = n} = List (V.Vec ℕ m ×                        -- dunlin ids for env
-                                     V.Vec ((i : ℕ) → (e : ℕ) → Dun i e) n ×  -- dunlin constructors
-                                     ℕ ×                                      -- env id
-                                     ((i : ℕ) → (ds : List ℕ) → Env i ds) )  -- env constructor
-
                        
 
-{-
+
 DunEnvAssocs : {n : ℕ} → Set
 DunEnvAssocs {zero} = List (V.Vec ℕ zero × V.Vec ℕ zero × ℕ × ((i : ℕ) → (ds : List ℕ) → Env i ds) )
-DunEnvAssocs {suc n} = List (V.Vec ℕ n ×                        -- dunlin ids for env
-                       V.Vec ((i : ℕ) → (e : ℕ) → Dun i e) n ×  -- dunlin constructors
-                       ℕ ×                                      -- env id
-                       ((i : ℕ) → (ds : List ℕ) → Env i ds) )   -- env constructor
--}
+DunEnvAssocs {suc n} = List (V.Vec ℕ n ×               -- dunlin ids for env
+                             V.Vec DunConstructor n ×
+                             ℕ ×                       -- env id
+                             EnvConstructor) 
+
 
 -- Less efficient to run through the config list twice, but it's a lot simpler,
 -- and shouldn't take long.
