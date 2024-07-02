@@ -1,4 +1,4 @@
-module CatHerd where
+module learning/CatHerd where
 
 open import Data.List
 
