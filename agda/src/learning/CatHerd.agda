@@ -77,6 +77,19 @@ thd2 x = let (a , b , c) = x
 -- Agda what's going on with the second argument.  However, when you have
 -- type signature using × then you can use either.  Not sure about that.
 
+
+-- This shows that you can curry the Vec type to use it as the second
+-- type in a Sigma pair.
+spair : Σ ℕ (V.Vec ℕ)
+spair = 3 , 1 V.∷ 2 V.∷ 5 V.∷ V.[]
+
+-- However, if you want to make more than one Vec depend on the fst,
+-- you need abstraction.
+morepair : Σ ℕ (λ n → (V.Vec ℕ n) × (V.Vec ℕ n))
+morepair = 2 , 1 V.∷ 2 V.∷ V.[] , 4 V.∷ 7 V.∷ V.[]
+-- note because comma works for non-dep as well as dep pairs, and
+-- it's right associative, a series of commas works.
+
 --------------------------------
 
 data Mouse : ℕ → Set where
