@@ -87,8 +87,8 @@ spair = 3 , 1 V.∷ 2 V.∷ 5 V.∷ V.[]
 -- you need abstraction.
 morepair : Σ ℕ (λ n → (V.Vec ℕ n) × (V.Vec ℕ n))
 morepair = 2 , 1 V.∷ 2 V.∷ V.[] , 4 V.∷ 7 V.∷ V.[]
--- note because comma works for non-dep as well as dep pairs, and
--- it's right associative, a series of commas works.
+-- Note that because comma works for non-dep as well as dep pairs,
+-- and it's right associative, a series of commas works in the second line.
 
 --------------------------------
 
