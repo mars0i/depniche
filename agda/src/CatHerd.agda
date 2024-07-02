@@ -1,6 +1,10 @@
 module CatHerd where
 
 open import Data.List
+
+-- no open, to avoid conflicts with List
+import Data.Vec as V -- using (_∷_; [])
+
 open import Data.Nat using (ℕ ; zero; suc; _+_; _*_; _∸_; _^_)
 open import Data.Product.Base using (_×_; _,′_)
 open import Function.Base using (_∘_)
@@ -15,6 +19,7 @@ open import Kludges
    different indexes, elements with different indexes can't be directly
    stored in a list.
 -}
+
 
 --------------------------------
 -- Sigma pair and normal pair tips:
@@ -151,3 +156,18 @@ nobody = snd (dog-head (dog-tail (dog-tail pack)))
 
 -- fst-of-snd : {A B C : Set} → Σ A (Σ B C) → B
 -- fst-of-snd x = fst (snd x)
+
+-----------------------------------------
+
+-- Can Agda infer that the vecs must be equal without being told? Yes.
+zipnats : {n : ℕ} → V.Vec ℕ n → V.Vec ℕ n → V.Vec (ℕ × ℕ) n
+zipnats V.[] ws = V.[]
+zipnats (v V.∷ vs) (w V.∷ ws) = (v ,′ w) V.∷ zipnats vs ws
+
+v2 : V.Vec ℕ 2
+v2 = 1 V.∷ 2 V.∷ V.[]
+w2 : V.Vec ℕ 2
+w2 = 10 V.∷ 20 V.∷ V.[]
+x2 : V.Vec ℕ 3
+x2 = 1 V.∷ 2 V.∷ 3 V.∷ V.[]
+
