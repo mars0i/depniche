@@ -57,7 +57,7 @@ EnvConstructor = (i : ℕ) → (ds : List ℕ) → Env i ds
 
 -- abbreviate the type we need list elements to have
 DunPair : Set
-DunPair = Σ (ℕ × ℕ) (λ (id , env-id) → Dun id env-id)
+DunPair = Σ (ℕ × ℕ) (λ (id , env-id) → Dun id env-id) -- comma pattern match in lambda
 
 DunPairList : Set
 DunPairList = List DunPair
@@ -87,7 +87,7 @@ bill = snd (dunlin-head (dunlin-tail (dunlin-tail flock)))
 
 -- abbreviate the type we need list elements to have
 EnvPair : Set
-EnvPair = Σ (ℕ × List ℕ) (λ (id , dun-ids) → Env id dun-ids) -- pattern match in lambda
+EnvPair = Σ (ℕ × List ℕ) (λ (id , dun-ids) → Env id dun-ids)
 
 EnvPairList : Set
 EnvPairList = List EnvPair
