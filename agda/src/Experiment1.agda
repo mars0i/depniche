@@ -119,42 +119,8 @@ env-tail = exploding-tail default-env-tuple
 
 -----------------------------
 -- Configuring an entire system
-
-{-
-For each env there are zero to many dunlins.
-So we need to associate multiple dun ids with each env id.
-We also need to specify which env and dun constructors go with each id.
-We put the id relationships in a single list in order to keep the
-dunlins and environments, which have to point to each other, consistent.
-
-It might be better to do this with records rather than non-dep tuples.
-I think that would work.
-
-(Can't do it in any straightforward way with datatypes, because indexed
-datatypes are different types and therefore can't appear in a list.)
--}
-
-
--- The structure of a list of configuration information for initializing a system.
--- The lengths of the two lists arguments should be the same.  So maybe should be
--- replaced by vectors, or add length proofs.
-{-
-DunEnvAssocs : Set
-DunEnvAssocs = List (List ℕ ×                                -- dunlin ids for env
-                     List ((i : ℕ) → (e : ℕ) → Dun i e) ×    -- dunlin constructors
-                     ℕ ×                                     -- env id
-                     ((i : ℕ) → (ds : List ℕ) → Env i ds) )  -- env constructor
--}
-{-
-DunEnvAssocs : {n : ℕ} → Set
-DunEnvAssocs {zero} = List (V.Vec ℕ zero × V.Vec ℕ zero × ℕ × ((i : ℕ) → (ds : List ℕ) → Env i ds) )
-DunEnvAssocs {suc n} = List (V.Vec ℕ n ×               -- dunlin ids for env
-                             V.Vec DunConstructor n ×
-                             ℕ ×                       -- env id
-                             EnvConstructor) 
--}                     
-
 -- I guess another way to do it would be to pair the dunlin ids and constructors
+
 -- in a single embedded list.
 DunEnvAssocs : Set
 DunEnvAssocs = List (Σ ℕ (λ n →    -- number of dunlins in this environment
