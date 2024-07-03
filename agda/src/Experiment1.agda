@@ -123,11 +123,7 @@ env-tail = exploding-tail default-env-tuple
 
 -- in a single embedded list.
 DunEnvAssocs : Set
-DunEnvAssocs = List (Σ ℕ (λ n →    -- number of dunlins in this environment
-                                V.Vec ℕ n ×               -- dunlin ids
-                                V.Vec DunConstructor n ×  -- dunlin varieties
-                                ℕ ×                       -- env id
-                                EnvConstructor))          -- env variety
+DunEnvAssocs = List ((List ℕ × List DunConstructor) × (ℕ × EnvConstructor))
 
 
 -- Less efficient to run through the config list twice, but it's simpler
@@ -139,8 +135,8 @@ DunEnvAssocs = List (Σ ℕ (λ n →    -- number of dunlins in this environmen
 -- Creates a list of environment Sigma-pairs from the assocs.
 assocs-to-envs : DunEnvAssocs → List EnvPair
 assocs-to-envs [] = []
-assocs-to-envs (x ∷ xs) = let (_ , dun-ids , _ , env-id , env-maker) = x
-                          in (make-env-pair env-maker env-id (V.toList dun-ids)) ∷ assocs-to-envs xs
+assocs-to-envs (x ∷ xs) = let ((dun-ids , _) , (env-id , env-maker)) = x
+                          in (make-env-pair env-maker env-id dun-ids) ∷ assocs-to-envs xs
 
 ---------
 -- Create the dunlins from a DunEnvAssocs list.
@@ -158,8 +154,8 @@ duns-for-env _ _ _ = [] -- This shouldn't happen, but if it does, it's a bug.
 assocs-to-dunlists : DunEnvAssocs → List (List DunPair)
 assocs-to-dunlists [] = []
 assocs-to-dunlists (x ∷ xs) =
-    let (_ , dun-ids , dun-makers , env-id , _) = x
-    in (duns-for-env env-id (V.toList dun-ids) (V.toList dun-makers)) ∷ assocs-to-dunlists xs
+    let ((dun-ids , dun-makers) , (env-id , _)) = x
+    in (duns-for-env env-id dun-ids dun-makers) ∷ assocs-to-dunlists xs
 
 -- Creates a list of dunlin Sigma-pairs from the assocs.
 assocs-to-duns : DunEnvAssocs → List DunPair
@@ -171,10 +167,10 @@ assocs-to-duns assocs = concat (assocs-to-dunlists assocs)
 -- Note that without the type sig, the commas have to be comma-ticks;
 -- with the sig, commas are OK.
 dun-env-assocs : DunEnvAssocs
-dun-env-assocs = (1 , V.[ 1 ] , V.[ thin-beak ] , 0 , undisturbed) ∷
-                 (1 , V.[ 2 ] , V.[ thick-beak ] , 1 , mildly-disturbed) ∷
-                 (2 , 3 V.∷ 4 V.∷ V.[] , thin-beak V.∷ thin-beak V.∷ V.[] , 2 , mildly-disturbed) ∷
-                 (1 , V.[ 5 ] , V.[ thick-beak ] , 3 , well-disturbed) ∷
+dun-env-assocs = (([ 1 ] , [ thin-beak ]) , (0 , undisturbed)) ∷
+                 (([ 2 ] , [ thick-beak ]) , (1 , mildly-disturbed)) ∷
+                 ((3 ∷ 4 ∷ [] , thin-beak ∷ thin-beak ∷ []) , (2 , mildly-disturbed)) ∷
+                 (([ 5 ] , [ thick-beak ]) , (3 , well-disturbed)) ∷
                  []
 
 -- The first element of each top level pairs in these lists is just there
