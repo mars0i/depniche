@@ -1,14 +1,20 @@
+-- Marshall's lessons and experiments.
+-- A collection of cats is a ... herd.
+-- (And trying to get Agda to do what I want is like herding cats.)
 module learning/CatHerd where
 
-open import Data.List
+open import Agda.Builtin.Bool
+open import Agda.Builtin.Nat -- defines _==_ i.e. regular equality
+open import Agda.Builtin.Sigma
+open import Data.Bool -- has if/then as well as 𝔹
 
+open import Data.List
 -- no open, to avoid conflicts with List
 import Data.Vec as V -- using (_∷_; [])
 
 open import Data.Nat using (ℕ ; zero; suc; _+_; _*_; _∸_; _^_)
 open import Data.Product.Base using (_×_; _,′_)
 open import Function.Base using (_∘_)
-open import Agda.Builtin.Sigma
 
 open import Kludges
 
@@ -22,31 +28,72 @@ open import Kludges
 
 
 --------------------------------
--- Sigma pair and normal pair tips:
+-- Sigma pair and normal pair tips
 
--- Note that in a Sigma pair, the function that specifies the
--- relationship between the first and second elements is the
--- second element in the *type*.  In the instance, the second
--- element is *the result of applying that function* to the first
--- argument.  The second element is not (typically) a function.
+{-
+I'm finally starting to get clear on this.
 
--- In the signature,
--- the second element is a function from an instance of the first type,
--- *to the type itself* that is displayed after → .  i.e. the second element
--- is a kind of type constructor--or rather a function that returns a type.
--- This is why the following type checks.  The second element in the signature
--- takes an instance of ℕ, in this case 2, and ignores it, returning the
--- the type ℕ.  Since 3 is an instance of that type, it checks.
+The second element of a Sigma pair *type* is a function that constructs
+a *type*, given an instance of (type which is) the first element
+of the type.
+
+(To create a non-dependent pair by hand, just let the function that
+is the second element ignore its argument.
+Or abbreviate that process using × .)
+
+The second element of the *instance* of a Sigma pair is any value
+that has the type constructed in the Sigma type.  No function has
+to be involved.
+-}
+
+-- Examples:
+
+-- Non-dependent pair, since x is ignored in first line:
+p : Σ ℕ (λ x → ℕ)
+p = 2 , 5 * ((λ x → x + 2) 2)  -- second elem need not include any function: it just has to eval to a ℕ
+
+-- Another non-dependent pair:
 y : Σ ℕ (λ x → ℕ)
 y = 2 , 3
 
+-- Full-fledged dependent pairs:
+
+-- If second arg of instance is not a ℕ, it won't type check:
+q : Σ ℕ (λ x → if (x == 0) then ℕ else Bool)
+q = 0 , 43
+
+-- If second arg of instance is not a Bool, it won't type check:
+r : Σ ℕ (λ x → if (x == 0) then ℕ else Bool)
+r = 17 , false
+
+
+{- This is why Sigma pairs are useful for indexed types, as
+suggested by Naïm Camille Favier https://agda.zulipchat.com/#narrow/stream/259644-newcomers/topic/.E2.9C.94.20Collection.20of.20indexed.20type.20with.20different.20indexes.3F/near/446454518
+
+Each index gives you a different type, so it can't be used where you
+need instances of the same type, as in a List. A Sigma pair in
+which the second element of the type is an indexed type, is
+something that is a single type, but that contains an instance of
+a different type in the instance second, depending on the value
+of the instance first.
+-}
+
+
+-- Another way of making a non-dep pair, avoiding verbosity of the
+-- λ wrapper in the signature.
 -- × and ,′ do the same thing, but add the λ wrapper for you.
 -- And look--you can actually just use a comma instead of comma-tick
 -- in this case.  Either one works.
 x : ℕ × ℕ
 x = 1 , 2
 
--- You can pattern match on Sigma pairs:
+
+-- When I wrote these next two examples, I thought they were full-
+-- fledged Sigma types, i.e. not non-dep pairs, but they're actually
+-- non-dep pairs since the type returned by the snd in the signature
+-- is constant.
+
+-- You can pattern match on Sigma pairs
 myfst : {A B : Set} → {a : A} → Σ A (λ x → B) → A
 myfst (x , y) = x  -- the parens on lhs are required
 
