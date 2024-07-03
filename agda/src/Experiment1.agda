@@ -154,6 +154,8 @@ DunEnvAssocs {suc n} = List (V.Vec ℕ n ×               -- dunlin ids for env
                              EnvConstructor) 
 -}                     
 
+-- I guess another way to do it would be to pair the dunlin ids and constructors
+-- in a single embedded list.
 DunEnvAssocs : Set
 DunEnvAssocs = List (Σ ℕ (λ n →    -- number of dunlins in this environment
                                 V.Vec ℕ n ×               -- dunlin ids
