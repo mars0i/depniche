@@ -4,7 +4,7 @@
 -- See docs/DunlinStory1.md for the rationale for the names and type constructors
 -- or record fields below.
 
-module Experiment1 where
+module DunlinsEnvs where
 
 open import Agda.Builtin.Sigma
 open import Agda.Builtin.Maybe
@@ -31,8 +31,8 @@ open import Kludges
 -- the mutual recursiou to work.
 
 data Dun : ℕ → ℕ → Set where
-  thin-beak   : (id : ℕ) → (env : ℕ) → Dun id env
-  thick-beak  : (id : ℕ) → (env : ℕ) → Dun id env
+  short-beak   : (id : ℕ) → (env : ℕ) → Dun id env
+  long-beak  : (id : ℕ) → (env : ℕ) → Dun id env
 
 -- An abbreviation for the type of the Dun constructors will be useful later.
 DunConstructor : Set 
@@ -68,14 +68,14 @@ make-dun-pair structor id env = (id ,′ env) , structor id env
 -- kinda backwards: we deconstruct a dunlin in order to recreate it in a Σ-type
 -- Seems potentially useful.
 dun-to-pair : {id env : ℕ} → Dun id env → DunPair
-dun-to-pair (thin-beak id env)  = make-dun-pair thin-beak id env
-dun-to-pair (thick-beak id env) = make-dun-pair thick-beak id env
+dun-to-pair (short-beak id env)  = make-dun-pair short-beak id env
+dun-to-pair (long-beak id env) = make-dun-pair long-beak id env
 
 
 {-
-sara-tuple = make-dun-pair thin-beak 3 4
-elsbeth-tuple = make-dun-pair thick-beak 6 6
-bill-tuple = dun-to-pair (thin-beak 5 6)
+sara-tuple = make-dun-pair short-beak 3 4
+elsbeth-tuple = make-dun-pair long-beak 6 6
+bill-tuple = dun-to-pair (short-beak 5 6)
 
 flock = sara-tuple ∷ elsbeth-tuple ∷ bill-tuple ∷ []
 sara = snd (dunlin-head flock)
@@ -110,7 +110,7 @@ envs = make-env-pair undisturbed 1 [ 1 ] ∷
 
 -----------------------------
 -- For quick testing and experimentation.  Don't use for production code.
-default-dun-tuple = make-dun-pair thin-beak 1000 1000
+default-dun-tuple = make-dun-pair short-beak 1000 1000
 dun-head = exploding-head default-dun-tuple
 dun-tail = exploding-tail default-dun-tuple
 default-env-tuple = make-env-pair undisturbed 1000 [ 1000 ]
@@ -167,10 +167,10 @@ assocs-to-duns assocs = concat (assocs-to-dunlists assocs)
 -- Note that without the type sig, the commas have to be comma-ticks;
 -- with the sig, commas are OK.
 dun-env-assocs : DunEnvAssocs
-dun-env-assocs = (([ 1 ] , [ thin-beak ]) , (0 , undisturbed)) ∷
-                 (([ 2 ] , [ thick-beak ]) , (1 , mildly-disturbed)) ∷
-                 ((3 ∷ 4 ∷ [] , thin-beak ∷ thin-beak ∷ []) , (2 , mildly-disturbed)) ∷
-                 (([ 5 ] , [ thick-beak ]) , (3 , well-disturbed)) ∷
+dun-env-assocs = ((3 ∷ 4 ∷ [] , short-beak ∷ short-beak ∷ []) , (0 , mildly-disturbed)) ∷
+                 (([ 1 ] , [ short-beak ]) , (1 , undisturbed)) ∷
+                 (([ 2 ] , [ long-beak ]) , (2 , mildly-disturbed)) ∷
+                 (([ 5 ] , [ long-beak ]) , (3 , well-disturbed)) ∷
                  []
 
 -- The first element of each top level pairs in these lists is just there
@@ -181,5 +181,6 @@ envpairs = assocs-to-envs dun-env-assocs
 dunpairs = assocs-to-duns dun-env-assocs
 
 -- Testing--throw away the first element of top-level pairs:
-a-dun = snd (dun-head dunpairs)
 an-env = snd (env-head envpairs)
+a-dun = snd (dun-head dunpairs)
+another-dun = snd (dun-head (dun-tail dunpairs))
