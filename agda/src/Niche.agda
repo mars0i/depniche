@@ -96,9 +96,11 @@ module System (DunlinNames : Set) (EnvNames : Set) where
 
 module Example where
 
-  ---? I don't understand the Σ[ ∈ ] syntax.  Some kind of dependent pair type, I think.
-  ---? Source code didn't help enough.  Not sure where to find out more.   (Is this left
-  ---? from treating envs and dunlins as strings, but they no longer are?)
+  --? I think the next two definitions allow proving that two strings are equal,
+  --? but I'm confused about how they work. (Were these here for an initial example,
+  --? but aren't needed now?)
+
+  --? i.e. given a string, there's a string that its equal to?
   `_ : String → Set  -- note prefix operators
   `_ str = Σ[ a ∈ String ] a ≡ str
 
