@@ -1,6 +1,6 @@
 -- Marshall's lessons and experiments.
 -- A collection of cats is a ... herd.
--- (And trying to get Agda to do what I want is like herding cats.)
+-- (And sometimes trying to get Agda to do what I want seems like herding cats.)
 module learning/CatHerd where
 
 open import Agda.Builtin.Bool
