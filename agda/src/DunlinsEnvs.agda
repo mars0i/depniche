@@ -6,11 +6,20 @@
 
 {-
 
-Callan: I saw your Example module and wanted to do something slightly
-more involved  with the dunlin and enviorment types in order to implement
-the transition rules.  (I wasn't sure how to fill in the holes you left in
-the e-evolve function; I needed a story to motivate the rules, and that
-meant changing the dunlin and environment types.)
+Callan:
+
+After looking at the Example module in Niche.agda, I wanted to do
+something slightly more involved  with the dunlin and enviorment
+types in order to implement the transition rules Dstep and Estep.
+I wasn't sure how to fill in the holes you left in the e-evolve
+function; I needed a story to motivate the rules, and that meant
+changing the dunlin and environment types.
+
+I'm not sure if the way I did this is appropriate.  I just wanted
+to get something working, and it was a learning experience.
+
+I have no problem with this being revised or completely rethought
+and rewritten from scratch.
 
 In the code below, a lot is based on indexed types.  I'm not sure
 if that's the right way to go.  Among other things rather than a
