@@ -4,6 +4,30 @@
 -- See docs/DunlinStory1.md for the rationale for the names and type constructors
 -- or record fields below.
 
+{-
+
+Callan: I saw your Example module and wanted to do something slightly
+more involved  with the dunlin and enviorment types in order to implement
+the transition rules.  (I wasn't sure how to fill in the holes you left in
+the e-evolve function; I needed a story to motivate the rules, and that
+meant changing the dunlin and environment types.)
+
+In the code below, a lot is based on indexed types.  I'm not sure
+if that's the right way to go.  Among other things rather than a
+dunlin's actual environment being embedded in the dunlin
+instance, and the dunlins assocated with an environment being
+embedded in the environment instance,  there are just Nats that
+index the relevant other types stored in each dunlin or
+environment.  I couldn't figure out how to make the recursive
+definitions work.  I also wonder whether records would be better
+than datatypes.
+
+Also, there is a configuration structure, DunEnvAssocs, that the
+code  uses initialize a system.  This is just some collections of
+Nats.  Not sure whether that's the way to go.
+
+-}
+
 module DunlinsEnvs where
 
 open import Agda.Builtin.Sigma
@@ -192,5 +216,7 @@ another-dun = snd (dun-head (dun-tail dunpairs))
 -----------------
 -- Fitness and niche construction
 
+-- TODO
+
 -- See docs/DunlinStory1.md for a sketch of possible rules to
--- use to implement `d-evolve` and `e-volve` in Niche.agda.
+-- use to implement `Dstep and `Estep in Niche.agda.
