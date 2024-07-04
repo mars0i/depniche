@@ -38,7 +38,7 @@ data Dun : ℕ → ℕ → Set where
 DunConstructor : Set 
 DunConstructor = (i : ℕ) → (e : ℕ) → Dun i e
 
-
+-- In a future version, perhaps the level of disturbed-ness should captured by an index.
 data Env : ℕ → List ℕ → Set where
   undisturbed      : (id : ℕ) → (dunlins : List ℕ) → Env id dunlins
   mildly-disturbed : (id : ℕ) → (dunlins : List ℕ) → Env id dunlins
@@ -173,6 +173,10 @@ dun-env-assocs = ((3 ∷ 4 ∷ [] , short-beak ∷ short-beak ∷ []) , (0 , mil
                  (([ 5 ] , [ long-beak ]) , (3 , well-disturbed)) ∷
                  []
 
+{- (I wish Agda had a normal list and vector syntax.  I don't care if the number
+of characters is the same as Haskell/OCaml/Idris/Lean. It's still harder to read.) -}
+
+
 -- The first element of each top level pairs in these lists is just there
 -- to allow different types to live in the same list.  When processing
 -- the envs or dunlins, it can be ignored (but might need to be recreated to
@@ -184,3 +188,9 @@ dunpairs = assocs-to-duns dun-env-assocs
 an-env = snd (env-head envpairs)
 a-dun = snd (dun-head dunpairs)
 another-dun = snd (dun-head (dun-tail dunpairs))
+
+-----------------
+-- Fitness and niche construction
+
+-- See docs/DunlinStory1.md for a sketch of possible rules to
+-- use to implement `d-evolve` and `e-volve` in Niche.agda.
