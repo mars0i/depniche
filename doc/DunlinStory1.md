@@ -107,6 +107,11 @@ their food is being depleted), and little or no fitness in
 * Alternatively, the rule could be that `short-beak` dunlins are what
   cause an environment more suitable for `long-beak` dunlins.
 
+* *What happens if there are multiple dunlins in an env, and they are
+  not of the same type?*
+
+##### Movement ("niche choice")
+
 * We could allow dunlins to "migrate" between environments.  What
   determines that?  Some possible rules:
 
@@ -121,9 +126,19 @@ their food is being depleted), and little or no fitness in
       iff it that environment is better for that kind of dunlin,
       or iff it's two steps better (and randomly chooses a
       direction if both neighbors are equally good).
+
+    * A simple rule would be that a dunlin that's in a zero-fitness
+    environment moves to a random neighboring environment.
+
+    * Or to the *best* neighboring environment, or random if they are
+    equally good?  In that case, if the dunlin goes to an equally bad
+    environment, does it remember not to go back to the one that was
+    as bad on the previous timestep?  (Not in the simplest model, but
+    this adding htis would make the model more realistic.)
 	  
 * Need to add death.  When does a dunlin die?  Do we store a
-nutritional state counter? Or does it die the first time it gets no food?
+nutritional state counter? Or does it die the first time it gets
+no food? Can it die of old age?
 
 ##### Proximity
 
