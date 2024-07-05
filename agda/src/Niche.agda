@@ -147,6 +147,7 @@ module Example where
   open System D E
   
   -- TODO: define fitness functions for each dunlin-in-env for use here.
+  --? Q: Why does t need to be an argument? The same rule applies in every timestep.
   d-evolve :  ∀ (t : 𝕋) → (Eₜ : List E) → (Dₜ : List D) → List D
   d-evolve t (no-nest ∷ []) Dₜ  = [ brown ]
   d-evolve t (nest ∷ []) Dₜ  =  [ grey ]
@@ -157,6 +158,7 @@ module Example where
   -- TODO: define niche-construction function so that when there's
   -- a particular kind of dunlin in a particular kind of env, the
   -- env is sometimes modified/replaced.  Or just build that into e-evolve.
+  --? Q: Why does t need to be an argument? The same rule applies in every timestep.
   e-evolve :  ∀ (t : 𝕋) → (Eₜ : List E) → (Dₜ : List D) → List E
   e-evolve t Dₜ [] = [ no-nest ]
   e-evolve t Dₜ (grey ∷ ds) = {!!}
