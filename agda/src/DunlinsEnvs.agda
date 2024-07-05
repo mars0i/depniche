@@ -4,9 +4,7 @@
 -- See docs/DunlinStory1.md for the rationale for the names and type constructors
 -- or record fields below.
 
-{-
-
-Callan:
+{- Notes on code
 
 After looking at the Example module in Niche.agda, I wanted to do
 something slightly more involved  with the dunlin and enviorment
@@ -15,8 +13,10 @@ I wasn't sure how to fill in the holes you left in the e-evolve
 function; I needed a story to motivate the rules, and that meant
 changing the dunlin and environment types.
 
-I'm not sure if the way I did this is appropriate.  I just wanted
-to get something working, and it was a learning experience.
+I'm not sure if the way I did this is a good idea.  I just wanted
+to get something working, and it was a learning experience, but
+I may have gone down a bad path, or I might have made poor choices
+within a good path.
 
 I have no problem with this being revised or completely rethought
 and rewritten from scratch.
@@ -68,8 +68,8 @@ data Dun : ℕ → ℕ → Set where
   long-beak  : (id : ℕ) → (env : ℕ) → Dun id env
 
 -- An abbreviation for the type of the Dun constructors will be useful later.
-DunConstructor : Set 
-DunConstructor = (i : ℕ) → (e : ℕ) → Dun i e
+DunConstr : Set 
+DunConstr = (i : ℕ) → (e : ℕ) → Dun i e
 
 -- In a future version, perhaps the level of disturbed-ness should captured by an index.
 data Env : ℕ → List ℕ → Set where
@@ -78,8 +78,8 @@ data Env : ℕ → List ℕ → Set where
   well-disturbed   : (id : ℕ) → (dunlins : List ℕ) → Env id dunlins
 
 -- An abbreviation for the type of the Env constructors will be useful later.
-EnvConstructor : Set
-EnvConstructor = (i : ℕ) → (ds : List ℕ) → Env i ds
+EnvConstr : Set
+EnvConstr = (i : ℕ) → (ds : List ℕ) → Env i ds
 
 -----------------------------------------------------------
 -- How to make collections of dunlins or envs, given that
@@ -156,7 +156,7 @@ env-tail = exploding-tail default-env-tuple
 
 -- in a single embedded list.
 DunEnvAssocs : Set
-DunEnvAssocs = List ((List ℕ × List DunConstructor) × (ℕ × EnvConstructor))
+DunEnvAssocs = List ((List ℕ × List DunConstr) × (ℕ × EnvConstr))
 
 
 -- Less efficient to run through the config list twice, but it's simpler
@@ -176,7 +176,7 @@ assocs-to-envs (x ∷ xs) = let ((dun-ids , _) , (env-id , env-maker)) = x
 
 -- Helper function for assocs-to-dunlists. Assumes the two arg lists are same length.
 -- Strictly speaking ought to be Maybe-ed, or use vectors or add a length proof. (TODO?)
-duns-for-env : ℕ → List ℕ → List DunConstructor → List DunPair
+duns-for-env : ℕ → List ℕ → List DunConstr → List DunPair
 duns-for-env env-id [] [] = []
 duns-for-env env-id (id ∷ dun-ids) (maker ∷ dun-makers) =
     let dun-pair = make-dun-pair maker id env-id
@@ -224,8 +224,36 @@ another-dun = snd (dun-head (dun-tail dunpairs))
 
 -----------------
 -- Fitness and niche construction
-
 -- TODO
 
 -- See docs/DunlinStory1.md for a sketch of possible rules to
 -- use to implement `Dstep and `Estep in Niche.agda.
+
+-- number of offspring for next generation
+Fitness : Set
+Fitness = ℕ
+
+-- See docs/DunlinStory1.md for rationale, constraints
+get-fitness : {dun-id env-id : ℕ} → {dun-ids : List ℕ} →
+          Dun dun-id env-id → Env env-id dun-ids → Fitness
+get-fitness (short-beak _ _) (undisturbed _ _)      = 0
+get-fitness (short-beak _ _) (mildly-disturbed _ _) = 1
+get-fitness (short-beak _ _) (well-disturbed _ _)   = 2
+get-fitness (long-beak _ _)  (undisturbed _ _)      = 2
+get-fitness (long-beak _ _)  (mildly-disturbed _ _) = 1
+get-fitness (long-beak _ _)  (well-disturbed _ _)   = 0
+
+-- Original example in Niche.agda also had a timestep parameter, but it wasn't used. 
+-- Since each env contains a list of dunllins in it, maybe we can
+-- iterate through the env list, and ignore the dunlin list.
+-- d-evolve :  (Eₜ : EnvPairList) → (Dₜ : DunPairList) → DunPairList
+d-evolve :  (Eₜ : EnvPairList) → DunPairList
+d-evolve Eₜ = {!!}
+-- for each env:
+--   * extract the dunlins in it
+--   * for each such dunlin:
+--       - use get-fitness to return the fitnesses for each
+--       - create fitness new dunlins of the same kind, and place them ... in some env,
+--         updating the env in the dunlin (and in the envs? then need a different type)
+--   * possibly kill some old dunlins
+ 
