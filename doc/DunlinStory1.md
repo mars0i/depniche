@@ -121,6 +121,9 @@ their food is being depleted), and little or no fitness in
       iff it that environment is better for that kind of dunlin,
       or iff it's two steps better (and randomly chooses a
       direction if both neighbors are equally good).
+	  
+* Need to add death.  When does a dunlin die?  Do we store a
+nutritional state counter? Or does it die the first time it gets no food?
 
 ##### Proximity
 
@@ -154,7 +157,11 @@ Questions:
 
 * More dimensions of environmental variation.
 
+* Mutation: i.e. random changes from one dunlin variant to another.
+
 * Indexed dunlin variants.
+
+* Indexed dunlin variants with mutation. This could allow gradual evolution over time.
 
 * Sexual reproduction.  But for that to be worthwhile, we might
 want more complex "phenotypes".
