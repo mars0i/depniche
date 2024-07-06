@@ -45,22 +45,18 @@ open import Kludges
 -- Dun and Env types
 -- These correspond to the D and E defs in Niche.Example.
 
--- Note that the env and dunlins parameters are not Env or Dun;
--- they are id numbers.  Maybe this can be changed, but I couldn't get
--- the mutual recursiou to work.
-
 data Dun : Set where
-  short-beak   : (id : ℕ) → (env : ℕ) → Dun
-  long-beak  : (id : ℕ) → (env : ℕ) → Dun
+  short-beak   : (id : ℕ) → (loc : ℕ) → Dun
+  long-beak  : (id : ℕ) → (loc : ℕ) → Dun
 
 -- An abbreviation for the type of the Dun constructors will be useful later.
 DunConstr : Set 
 DunConstr = (i : ℕ) → (e : ℕ) → Dun
 
 data Env : Set where
-  undisturbed      : (id : ℕ) → (dunlins : List ℕ) → Env
-  mildly-disturbed : (id : ℕ) → (dunlins : List ℕ) → Env
-  well-disturbed   : (id : ℕ) → (dunlins : List ℕ) → Env
+  undisturbed      : (loc : ℕ) → (dunlins : List ℕ) → Env
+  mildly-disturbed : (loc : ℕ) → (dunlins : List ℕ) → Env
+  well-disturbed   : (loc : ℕ) → (dunlins : List ℕ) → Env
 -- In a future version, perhaps the level of disturbed-ness should captured by an
 -- parameter rather than different constructors.  If it's an index, that captures
 -- the idea that it's a different type, and it might require using lists or
@@ -85,8 +81,8 @@ DunEnvAssocs = List ((List ℕ × List DunConstr) × (ℕ × EnvConstr))
 -- Creates a list of environment Sigma-pairs from the assocs.
 assocs-to-envs : DunEnvAssocs → List Env
 assocs-to-envs [] = []
-assocs-to-envs (x ∷ xs) = let ((dun-ids , _) , (env-id , env-maker)) = x
-                          in (env-maker env-id dun-ids) ∷ assocs-to-envs xs
+assocs-to-envs (x ∷ xs) = let ((dun-ids , _) , (loc , env-maker)) = x
+                          in (env-maker loc dun-ids) ∷ assocs-to-envs xs
 
 ---------
 -- Create the dunlins from a DunEnvAssocs list.
@@ -94,18 +90,18 @@ assocs-to-envs (x ∷ xs) = let ((dun-ids , _) , (env-id , env-maker)) = x
 -- Helper function for assocs-to-dunlists. Assumes the two arg lists are same length.
 -- Strictly speaking ought to be Maybe-ed, or use vectors or add a length proof. (TODO?)
 duns-for-env : ℕ → List ℕ → List DunConstr → List Dun
-duns-for-env env-id [] [] = []
-duns-for-env env-id (id ∷ dun-ids) (maker ∷ dun-makers) =
-    let dun-pair = maker id env-id
-    in dun-pair ∷ duns-for-env env-id dun-ids dun-makers
+duns-for-env loc [] [] = []
+duns-for-env loc (id ∷ dun-ids) (maker ∷ dun-makers) =
+    let dun-pair = maker id loc
+    in dun-pair ∷ duns-for-env loc dun-ids dun-makers
 duns-for-env _ _ _ = [] -- This shouldn't happen, but if it does, it's a bug.
                     
 -- Helper for assocs-to-duns, which flattens this list list.
 assocs-to-dunlists : DunEnvAssocs → List (List Dun)
 assocs-to-dunlists [] = []
 assocs-to-dunlists (x ∷ xs) =
-    let ((dun-ids , dun-makers) , (env-id , _)) = x
-    in (duns-for-env env-id dun-ids dun-makers) ∷ assocs-to-dunlists xs
+    let ((dun-ids , dun-makers) , (loc , _)) = x
+    in (duns-for-env loc dun-ids dun-makers) ∷ assocs-to-dunlists xs
 
 -- Creates a list of dunlin Sigma-pairs from the assocs.
 assocs-to-duns : DunEnvAssocs → List Dun
@@ -146,7 +142,7 @@ Fitness : Set
 Fitness = ℕ
 
 -- See docs/DunlinStory1.md for rationale, constraints
-get-fitness : {dun-id env-id : ℕ} → {dun-ids : List ℕ} → Dun → Env → Fitness
+get-fitness : {dun-id loc : ℕ} → {dun-ids : List ℕ} → Dun → Env → Fitness
 get-fitness (short-beak _ _) (undisturbed _ _)      = 0
 get-fitness (short-beak _ _) (mildly-disturbed _ _) = 1
 get-fitness (short-beak _ _) (well-disturbed _ _)   = 2
