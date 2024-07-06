@@ -57,11 +57,14 @@ data Dun : Set where
 DunConstr : Set 
 DunConstr = (i : ℕ) → (e : ℕ) → Dun
 
--- In a future version, perhaps the level of disturbed-ness should captured by an index.
 data Env : Set where
   undisturbed      : (id : ℕ) → (dunlins : List ℕ) → Env
   mildly-disturbed : (id : ℕ) → (dunlins : List ℕ) → Env
   well-disturbed   : (id : ℕ) → (dunlins : List ℕ) → Env
+-- In a future version, perhaps the level of disturbed-ness should captured by an
+-- index rather than different constructors.  This may require using lists or
+-- vectors over sigma pairs (Σ ℕ (Env ℕ)) instead of Envs.  (See
+-- learning/Model1indexedID.agda in commit #3f46335 for illustrations.)
 
 -- An abbreviation for the type of the Env constructors will be useful later.
 EnvConstr : Set
@@ -150,14 +153,18 @@ get-fitness (long-beak _ _)  (undisturbed _ _)      = 2
 get-fitness (long-beak _ _)  (mildly-disturbed _ _) = 1
 get-fitness (long-beak _ _)  (well-disturbed _ _)   = 0
 
--- Original example in Niche.agda also had a timestep parameter, but it wasn't used. 
--- Since each env contains a list of dunllins in it, maybe we can
--- iterate through the env list, and ignore the dunlin list.
--- d-evolve :  (Eₜ : EnvPairList) → (Dₜ : DunPairList) → DunPairList
-d-evolve :  (Eₜ : List Env) → List Dun
+-- Original example in Niche.agda also had a timestep parameter, but 
+-- the transition rules can be the same at every time.
+-- Since each env contains a list of dunlins in it, an option might be
+-- to iterate through the env list, and ignore the dunlin list.
+d-evolve : (Eₜ : List Env) → (Dₜ : List Dun) → List Dun
 d-evolve Eₜ = {!!}
 -- for each env:
---   * extract the dunlins in it
+--   * Reconstruct the dunlins in it (possible since at present dunlins don't
+--     have any data except the dunlin id and the env id, both of which are known
+--     to the env).  Later we'll need to be able to look up dunlins by id, or
+--     store the dunlins themselves in the env if there's a way to do that.
+--     CONSIDER STORING DUNLINS IN ENVS, BUT ONLY ENV IDS IN DUNLINS.
 --   * for each such dunlin:
 --       - use get-fitness to return the fitnesses for each
 --       - create fitness new dunlins of the same kind, and place them ... in some env,
