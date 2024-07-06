@@ -26,6 +26,19 @@ open import Kludges
    stored in a list.
 -}
 
+-----------------------------------
+-- Storing data in a data type without indexing
+
+data Thing : Set where
+  thing : (a : ℕ) → Thing
+  thang : (a : ℕ) → (b : ℕ) → Thing
+
+things : List Thing
+things = thing 1 ∷ thing 25 ∷ thang 15 5 ∷ thing 4 ∷ thang 1 2 ∷ []
+
+a-of-thing : Thing → ℕ
+a-of-thing (thing a) = a
+a-of-thing (thang a b) = a
 
 --------------------------------
 -- Sigma pair and normal pair tips
