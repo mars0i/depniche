@@ -11,13 +11,13 @@ I wasn't sure how to fill in the holes you left in the e-evolve
 function; I needed a story to motivate the rules, and that meant
 changing the dunlin and environment types.
 
-I'm not sure if the way I did this is a good idea.  I just wanted
-to get something working, and it was a learning experience, but
-I may have gone down a bad path, or I might have made poor choices
-within a good path.
-
-I have no problem with this being revised or completely rethought
-and rewritten from scratch.
+I'm not sure if the way I did this is a good idea, and it doesn't
+quite fit what I'd originally envisioned (which may be a bad idea
+anyway).  I just wanted to get something working, and it was a
+learning experience, but I may have gone down a bad path, or I
+might have made poor choices within a good path. So I have no
+problem with this being revised or completely rethought and
+rewritten from scratch.
 
 Also, there is a configuration structure, DunEnvAssocs, that the
 code  uses initialize a system.  This is just some collections of
@@ -45,6 +45,9 @@ open import Kludges
 -- Dun and Env types
 -- These correspond to the D and E defs in Niche.Example.
 
+-- Each dunlin has a unique id, and a location loc, which is an id for
+-- the dunlin's current environment.  (It could be the env itself, but
+-- I couldn't figure out how to do this kind of mutual recursion.)
 data Dun : Set where
   short-beak   : (id : ℕ) → (loc : ℕ) → Dun
   long-beak  : (id : ℕ) → (loc : ℕ) → Dun
@@ -53,27 +56,33 @@ data Dun : Set where
 DunConstr : Set 
 DunConstr = (i : ℕ) → (e : ℕ) → Dun
 
+-- Environments have a location loc, which is a unique id and also specifies
+-- which environments are adjacent (e.g. env 5 is next to envs 4 and 6).
+-- Environments also contain zero or more dunlins. Here we construct actual
+-- dunlins rather than storing their ids.
 data Env : Set where
-  undisturbed      : (loc : ℕ) → (dunlins : List ℕ) → Env
-  mildly-disturbed : (loc : ℕ) → (dunlins : List ℕ) → Env
-  well-disturbed   : (loc : ℕ) → (dunlins : List ℕ) → Env
+  undisturbed      : (loc : ℕ) → (dunlins : List Dun) → Env
+  mildly-disturbed : (loc : ℕ) → (dunlins : List Dun) → Env
+  well-disturbed   : (loc : ℕ) → (dunlins : List Dun) → Env
 -- In a future version, perhaps the level of disturbed-ness should captured by an
 -- parameter rather than different constructors.  If it's an index, that captures
 -- the idea that it's a different type, and it might require using lists or
 -- vectors over sigma pairs (Σ ℕ (Env ℕ)) instead of Envs.  (See
 -- learning/Model1indexedID.agda in commit #3f46335 for illustrations.)
+-- Perhaps the location id should be a type index as well.
 
 -- An abbreviation for the type of the Env constructors will be useful later.
 EnvConstr : Set
-EnvConstr = (i : ℕ) → (ds : List ℕ) → Env
+EnvConstr = (i : ℕ) → (ds : List Dun) → Env
 
 -----------------------------
 -- Configuring an entire system
--- I guess another way to do it would be to pair the dunlin ids and constructors
+-- I guess anothger way to do it would be to pair the dunlin ids and constructors
 
 -- in a single embedded list.
 DunEnvAssocs : Set
-DunEnvAssocs = List ((List ℕ × List DunConstr) × (ℕ × EnvConstr))
+DunEnvAssocs = List ((List ℕ × List DunConstr) × (ℕ × EnvConstr)) 
+--                    dun ids                     loc
 
 ---------
 -- Create the environments from a DunEnvAssocs list.
@@ -81,8 +90,9 @@ DunEnvAssocs = List ((List ℕ × List DunConstr) × (ℕ × EnvConstr))
 -- Creates a list of environment Sigma-pairs from the assocs.
 assocs-to-envs : DunEnvAssocs → List Env
 assocs-to-envs [] = []
-assocs-to-envs (x ∷ xs) = let ((dun-ids , _) , (loc , env-maker)) = x
-                          in (env-maker loc dun-ids) ∷ assocs-to-envs xs
+assocs-to-envs (x ∷ xs) = let ((dun-ids , dun-constrs) , (loc , env-constr)) = x
+                              duns = zipWith (λ id constr → (constr id loc)) dun-ids dun-constrs
+                          in (env-constr loc duns) ∷ assocs-to-envs xs
 
 ---------
 -- Create the dunlins from a DunEnvAssocs list.
@@ -91,17 +101,17 @@ assocs-to-envs (x ∷ xs) = let ((dun-ids , _) , (loc , env-maker)) = x
 -- Strictly speaking ought to be Maybe-ed, or use vectors or add a length proof. (TODO?)
 duns-for-env : ℕ → List ℕ → List DunConstr → List Dun
 duns-for-env loc [] [] = []
-duns-for-env loc (id ∷ dun-ids) (maker ∷ dun-makers) =
+duns-for-env loc (id ∷ dun-ids) (maker ∷ dun-constrs) =
     let dun-pair = maker id loc
-    in dun-pair ∷ duns-for-env loc dun-ids dun-makers
+    in dun-pair ∷ duns-for-env loc dun-ids dun-constrs
 duns-for-env _ _ _ = [] -- This shouldn't happen, but if it does, it's a bug.
                     
 -- Helper for assocs-to-duns, which flattens this list list.
 assocs-to-dunlists : DunEnvAssocs → List (List Dun)
 assocs-to-dunlists [] = []
 assocs-to-dunlists (x ∷ xs) =
-    let ((dun-ids , dun-makers) , (loc , _)) = x
-    in (duns-for-env loc dun-ids dun-makers) ∷ assocs-to-dunlists xs
+    let ((dun-ids , dun-constrs) , (loc , _)) = x
+    in (duns-for-env loc dun-ids dun-constrs) ∷ assocs-to-dunlists xs
 
 -- Creates a list of dunlin Sigma-pairs from the assocs.
 assocs-to-duns : DunEnvAssocs → List Dun
@@ -154,8 +164,19 @@ get-fitness (long-beak _ _)  (well-disturbed _ _)   = 0
 -- the transition rules can be the same at every time.
 -- Since each env contains a list of dunlins in it, an option might be
 -- to iterate through the env list, and ignore the dunlin list.
-d-evolve : (Eₜ : List Env) → (Dₜ : List Dun) → List Dun
+
+-- Since this model stores dunlins inside environments, we can update the dunlins
+-- by iterating through the envs.  There are several things might occur:
+--   Determine each dunlin's fitness
+--   Create new dunlins as a response, and place them in some environments.
+--   Change state of environments in response to niche construction by dunlins.
+--   Possibly change state of environments in response to states of neighboring envs.
+--   Allow old dunlins to move to adjacent environments.
+-- These need not all be done by d-evolve.  Callan's idea of modifying
+-- dunlins and envs separately is a good idea.
+d-evolve : (Eₜ : List Env) → List Env
 d-evolve Eₜ = {!!}
+-- old notes:
 -- for each env:
 --   * Reconstruct the dunlins in it (possible since at present dunlins don't
 --     have any data except the dunlin id and the env id, both of which are known
