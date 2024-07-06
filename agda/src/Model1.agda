@@ -62,7 +62,8 @@ data Env : Set where
   mildly-disturbed : (id : ℕ) → (dunlins : List ℕ) → Env
   well-disturbed   : (id : ℕ) → (dunlins : List ℕ) → Env
 -- In a future version, perhaps the level of disturbed-ness should captured by an
--- index rather than different constructors.  This may require using lists or
+-- parameter rather than different constructors.  If it's an index, that captures
+-- the idea that it's a different type, and it might require using lists or
 -- vectors over sigma pairs (Σ ℕ (Env ℕ)) instead of Envs.  (See
 -- learning/Model1indexedID.agda in commit #3f46335 for illustrations.)
 
