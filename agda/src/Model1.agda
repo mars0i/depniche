@@ -45,6 +45,9 @@ open import Kludges
 -- Dun and Env types
 -- These correspond to the D and E defs in Niche.Example.
 
+-- TODO: Create unique dunlin id generator, and a make-dunlin function
+-- that always gives new dunlins a new id.
+
 -- Each dunlin has a unique id, and a location loc, which is an id for
 -- the dunlin's current environment.  (It could be the env itself, but
 -- I couldn't figure out how to do this kind of mutual recursion.)
@@ -74,6 +77,12 @@ data Env : Set where
 -- An abbreviation for the type of the Env constructors will be useful later.
 EnvConstr : Set
 EnvConstr = (i : ℕ) → (ds : List Dun) → Env
+
+-- projection operators
+env-params : Env → (ℕ × List Dun)
+env-params (undisturbed loc dunlins) = (loc , dunlins)
+env-params (mildly-disturbed loc dunlins) = (loc , dunlins)
+env-params (well-disturbed loc dunlins) = (loc , dunlins)
 
 -----------------------------
 -- Configuring an entire system
@@ -160,6 +169,11 @@ get-fitness (long-beak _ _)  (undisturbed _ _)      = 2
 get-fitness (long-beak _ _)  (mildly-disturbed _ _) = 1
 get-fitness (long-beak _ _)  (well-disturbed _ _)   = 0
 
+offspring : Dun → Env → List Dun
+offspring (short-beak id loc) env = {!!} -- NEED unique-id creator. get fitness, create dunlins
+offspring (long-beak  id loc) env = {!!} -- Can use List.Base.iterate (no repeat since need new id)
+
+
 -- Original example in Niche.agda also had a timestep parameter, but 
 -- the transition rules can be the same at every time.
 -- Since each env contains a list of dunlins in it, an option might be
@@ -175,7 +189,12 @@ get-fitness (long-beak _ _)  (well-disturbed _ _)   = 0
 -- These need not all be done by d-evolve.  Callan's idea of modifying
 -- dunlins and envs separately is a good idea.
 d-evolve : (Eₜ : List Env) → List Env
-d-evolve Eₜ = {!!}
+d-evolve [] = []
+d-evolve (e ∷ es) = let (loc , dunlins) = env-params e
+                    in {!!}
+
+
+
 -- old notes:
 -- for each env:
 --   * Reconstruct the dunlins in it (possible since at present dunlins don't
