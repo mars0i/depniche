@@ -45,11 +45,10 @@ open import Kludges
 -- Dun and Env types
 -- These correspond to the D and E defs in Niche.Example.
 
--- TODO: Create unique dunlin id generator, and a make-dunlin function
--- that always gives new dunlins a new id.
+--------
 
--- Each dunlin has a unique id, and a location loc, which is an id for
--- the dunlin's current environment.  (It could be the env itself, but
+-- Each dunlin should have a unique id, and a location loc, which is an id
+-- for the dunlin's current environment.  (It could be the env itself, but
 -- I couldn't figure out how to do this kind of mutual recursion.)
 data Dun : Set where
   short-beak   : (id : ℕ) → (loc : ℕ) → Dun
@@ -58,6 +57,18 @@ data Dun : Set where
 -- An abbreviation for the type of the Dun constructors will be useful later.
 DunConstr : Set 
 DunConstr = (i : ℕ) → (e : ℕ) → Dun
+
+-- Urgh.  To generate new ids in the natural way (incrementing the last
+-- one stored in a global), dunlin creation would have to be done in a
+-- state monad or something like that.
+
+-- Make a new dunlin using the provided constructor, creating a new id by
+-- incrementing the previous max id that should be passed in.  The new id
+-- can be extracted from the new dunlin as the new max id.
+new-dunlin : (max-id : ℕ) → DunConstr → (env-id : ℕ) → Dun
+new-dunlin max-id constr env-id = constr (suc max-id) env-id
+
+--------
 
 -- Environments have a location loc, which is a unique id and also specifies
 -- which environments are adjacent (e.g. env 5 is next to envs 4 and 6).
@@ -110,8 +121,8 @@ assocs-to-envs (x ∷ xs) = let ((dun-ids , dun-constrs) , (loc , env-constr)) =
 -- Strictly speaking ought to be Maybe-ed, or use vectors or add a length proof. (TODO?)
 duns-for-env : ℕ → List ℕ → List DunConstr → List Dun
 duns-for-env loc [] [] = []
-duns-for-env loc (id ∷ dun-ids) (maker ∷ dun-constrs) =
-    let dun-pair = maker id loc
+duns-for-env loc (id ∷ dun-ids) (constr ∷ dun-constrs) =
+    let dun-pair = constr id loc
     in dun-pair ∷ duns-for-env loc dun-ids dun-constrs
 duns-for-env _ _ _ = [] -- This shouldn't happen, but if it does, it's a bug.
                     
@@ -188,10 +199,12 @@ offspring (long-beak  id loc) env = {!!} -- Can use List.Base.iterate (no repeat
 --   Allow old dunlins to move to adjacent environments.
 -- These need not all be done by d-evolve.  Callan's idea of modifying
 -- dunlins and envs separately is a good idea.
-d-evolve : (Eₜ : List Env) → List Env
-d-evolve [] = []
-d-evolve (e ∷ es) = let (loc , dunlins) = env-params e
-                    in {!!}
+-- max-dun-id is the previous maximum dunlin-id, which should be passed to new-dunlin,
+-- which will increment it.
+d-evolve : (max-dun-id : ℕ) → (Eₜ : List Env) → List Env
+d-evolve max-id [] = []
+d-evolve max-id (e ∷ es) = let (loc , dunlins) = env-params e
+                           in {!!}
 
 
 
