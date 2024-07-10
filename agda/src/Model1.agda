@@ -65,8 +65,8 @@ DunConstr = (i : ℕ) → (e : ℕ) → Dun
 -- Make a new dunlin using the provided constructor, creating a new id by
 -- incrementing the previous max id that should be passed in.  The new id
 -- can be extracted from the new dunlin as the new max id.
-new-dunlin : (max-id : ℕ) → DunConstr → (env-id : ℕ) → Dun
-new-dunlin max-id constr env-id = constr (suc max-id) env-id
+new-dun : DunConstr → (env-id : ℕ) → (max-id : ℕ) → Dun
+new-dun constr env-id max-id = constr (suc max-id) env-id
 
 --------
 
@@ -180,9 +180,9 @@ get-fitness (long-beak _ _)  (undisturbed _ _)      = 2
 get-fitness (long-beak _ _)  (mildly-disturbed _ _) = 1
 get-fitness (long-beak _ _)  (well-disturbed _ _)   = 0
 
-offspring : Dun → Env → List Dun
-offspring (short-beak id loc) env = {!!} -- NEED unique-id creator. get fitness, create dunlins
-offspring (long-beak  id loc) env = {!!} -- Can use List.Base.iterate (no repeat since need new id)
+offspring : (max-id : ℕ) → Dun → (env-id : ℕ) → List Dun
+offspring max-id (short-beak _ loc) env-id = iterate (new-dun short-beak env-id) ?
+offspring max-id (long-beak  _ loc) env-id = {!!} -- Can use List.Base.iterate (no repeat since need new id)
 
 
 -- Original example in Niche.agda also had a timestep parameter, but 
