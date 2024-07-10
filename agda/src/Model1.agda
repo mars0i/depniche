@@ -68,6 +68,12 @@ DunConstr = (i : ℕ) → (e : ℕ) → Dun
 new-dun : DunConstr → (env-id : ℕ) → (max-id : ℕ) → Dun
 new-dun constr env-id max-id = constr (suc max-id) env-id
 
+-- For use inside List.iterate and similar functions to generate a
+-- sequence of dunlins with consequitive (presumably new) ids.
+next-dun : Dun → Dun
+next-dun (short-beak id loc) = short-beak (suc id) loc
+next-dun (long-beak id loc) = long-beak (suc id) loc
+
 --------
 
 -- Environments have a location loc, which is a unique id and also specifies
@@ -172,17 +178,19 @@ Fitness : Set
 Fitness = ℕ
 
 -- See docs/DunlinStory1.md for rationale, constraints
-get-fitness : {dun-id loc : ℕ} → {dun-ids : List ℕ} → Dun → Env → Fitness
-get-fitness (short-beak _ _) (undisturbed _ _)      = 0
-get-fitness (short-beak _ _) (mildly-disturbed _ _) = 1
-get-fitness (short-beak _ _) (well-disturbed _ _)   = 2
-get-fitness (long-beak _ _)  (undisturbed _ _)      = 2
-get-fitness (long-beak _ _)  (mildly-disturbed _ _) = 1
-get-fitness (long-beak _ _)  (well-disturbed _ _)   = 0
+fitness : Dun → Env → Fitness
+fitness (short-beak _ _) (undisturbed _ _)      = 0
+fitness (short-beak _ _) (mildly-disturbed _ _) = 1
+fitness (short-beak _ _) (well-disturbed _ _)   = 2
+fitness (long-beak _ _)  (undisturbed _ _)      = 2
+fitness (long-beak _ _)  (mildly-disturbed _ _) = 1
+fitness (long-beak _ _)  (well-disturbed _ _)   = 0
 
-offspring : (max-id : ℕ) → Dun → (env-id : ℕ) → List Dun
-offspring max-id (short-beak _ loc) env-id = iterate (new-dun short-beak env-id) ?
-offspring max-id (long-beak  _ loc) env-id = {!!} -- Can use List.Base.iterate (no repeat since need new id)
+-- Should new envs be introduced here?  Maybe better to put in a separate step.
+reproduce : (max-id : ℕ) → (num-kids : ℕ) → (parent : Dun) → List Dun
+reproduce _ 0 _ = []
+reproduce max-id (suc n) (short-beak _ loc) = iterate next-dun (short-beak (suc max-id) loc) (suc n)
+reproduce max-id (suc n) (long-beak _ loc)  =  iterate next-dun (long-beak  (suc max-id) loc) (suc n)
 
 
 -- Original example in Niche.agda also had a timestep parameter, but 
@@ -201,9 +209,11 @@ offspring max-id (long-beak  _ loc) env-id = {!!} -- Can use List.Base.iterate (
 -- dunlins and envs separately is a good idea.
 -- max-dun-id is the previous maximum dunlin-id, which should be passed to new-dunlin,
 -- which will increment it.
-d-evolve : (max-dun-id : ℕ) → (Eₜ : List Env) → List Env
+d-evolve : (max-id : ℕ) → (Eₜ : List Env) → List Env
 d-evolve max-id [] = []
 d-evolve max-id (e ∷ es) = let (loc , dunlins) = env-params e
+                                                     -- Abstract this out:
+                               nests = Data.List.map (λ dun → (reproduce max-id (fitness dun e) dun)) dunlins
                            in {!!}
 
 
