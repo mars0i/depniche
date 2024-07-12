@@ -1,5 +1,4 @@
 module Model1 where
-
 -- See docs/DunlinStory1.md for rationale for names, data, etc.
 
 {- General notes on code
@@ -187,10 +186,19 @@ fitness (long-beak _ _)  (mildly-disturbed _ _) = 1
 fitness (long-beak _ _)  (well-disturbed _ _)   = 0
 
 -- Should new envs be introduced here?  Maybe better to put in a separate step.
-reproduce : (max-id : ℕ) → (num-kids : ℕ) → (parent : Dun) → List Dun
-reproduce _ 0 _ = []
-reproduce max-id (suc n) (short-beak _ loc) = iterate next-dun (short-beak (suc max-id) loc) (suc n)
-reproduce max-id (suc n) (long-beak _ loc)  =  iterate next-dun (long-beak  (suc max-id) loc) (suc n)
+reproduce : (max-id : ℕ) → (num-kids : ℕ) → (choose-kid-loc : ℕ → ℕ) → (parent : Dun) → List Dun
+reproduce _ 0 _ _ = []
+reproduce max-id (suc n) choose-loc (short-beak _ loc) = iterate next-dun (short-beak (suc max-id) loc) (suc n)
+reproduce max-id (suc n) choose-loc (long-beak _ loc)  = iterate next-dun (long-beak  (suc max-id) loc) (suc n)
+
+-- Calculates number of kids from fitness of dun relative to env, and calls reproduce.
+reproduce-per-fit : (max-id : ℕ) → (env : Env) → (choose-kid-loc : ℕ → ℕ) → (parent : Dun) → List Dun
+reproduce-per-fit max-id env choose-loc dun = reproduce max-id (fitness dun env) choose-loc dun
+
+-- This location-chooser puts offspring in the same env as parent:
+kid-loc-same : ℕ → ℕ
+kid-loc-same loc = loc
+
 
 
 -- Original example in Niche.agda also had a timestep parameter, but 
@@ -209,12 +217,12 @@ reproduce max-id (suc n) (long-beak _ loc)  =  iterate next-dun (long-beak  (suc
 -- dunlins and envs separately is a good idea.
 -- max-dun-id is the previous maximum dunlin-id, which should be passed to new-dunlin,
 -- which will increment it.
-d-evolve : (max-id : ℕ) → (Eₜ : List Env) → List Env
-d-evolve max-id [] = []
-d-evolve max-id (e ∷ es) = let (loc , dunlins) = env-params e
-                                                     -- Abstract this out:
-                               nests = Data.List.map (λ dun → (reproduce max-id (fitness dun e) dun)) dunlins
-                           in {!!}
+d-evolve : (max-id : ℕ) → (Eₜ : List Env) → (choose-kid-loc : ℕ → ℕ) → List Env
+d-evolve max-id [] _ = []
+d-evolve max-id (env ∷ es) choose-loc = let (loc , dunlins) = env-params env
+                                            clutches = Data.List.map (reproduce-per-fit max-id env choose-loc) dunlins
+                                            -- Add dunlins to environment
+                                        in ?
 
 
 
