@@ -26,7 +26,9 @@ Nats.  Not sure whether that's the way to go.
 
 -- open import Agda.Builtin.Sigma
 open import Agda.Builtin.Maybe
+open import Agda.Builtin.Nat
 open import Function.Base
+open import Data.Bool
 open import Data.List
 open import Data.Vec as V using (_∷_)
 open import Data.Nat using (ℕ; zero; suc; _+_; _*_; _∸_; _^_)
@@ -44,7 +46,8 @@ open import Kludges
 -- Dun and Env types
 -- These correspond to the D and E defs in Niche.Example.
 
---------
+-----------------------------------
+-- Dunlins
 
 -- Each dunlin should have a unique id, and a location loc, which is an id
 -- for the dunlin's current environment.  (It could be the env itself, but
@@ -73,7 +76,24 @@ next-dun : Dun → Dun
 next-dun (short-beak id loc) = short-beak (suc id) loc
 next-dun (long-beak id loc) = long-beak (suc id) loc
 
---------
+-- projection operators
+
+-- projection operators
+dun-params : Dun → (ℕ × ℕ)
+dun-params (short-beak id loc) = (id , loc)
+dun-params (long-beak id loc) = (id , loc)
+
+dun-id : Dun → ℕ
+dun-id (short-beak id _) = id 
+dun-id (long-beak id _) = id
+
+dun-loc : Dun → ℕ
+dun-loc (short-beak _ loc) = loc 
+dun-loc (long-beak _ loc) = loc
+
+
+-----------------------------------
+-- Environments
 
 -- Environments have a location loc, which is a unique id and also specifies
 -- which environments are adjacent (e.g. env 5 is next to envs 4 and 6).
@@ -99,6 +119,16 @@ env-params : Env → (ℕ × List Dun)
 env-params (undisturbed loc dunlins) = (loc , dunlins)
 env-params (mildly-disturbed loc dunlins) = (loc , dunlins)
 env-params (well-disturbed loc dunlins) = (loc , dunlins)
+
+env-loc : Env → ℕ
+env-loc (undisturbed loc _) = loc
+env-loc (mildly-disturbed loc _) = loc
+env-loc (well-disturbed loc _) = loc
+
+env-dunlins : Env → List Dun
+env-dunlins (undisturbed _ dunlins) = dunlins
+env-dunlins (mildly-disturbed _ dunlins) = dunlins
+env-dunlins (well-disturbed _ dunlins) = dunlins
 
 -----------------------------
 -- Configuring an entire system
@@ -145,13 +175,14 @@ assocs-to-duns assocs = concat (assocs-to-dunlists assocs)
 
 -- Example:
 
+-- TEMPORARY KLUDGE: ENV 0 DOESN'T EXIST; IT INDICATES ERROR.  SO DON'T USE IT.
 -- Note that without the type sig, the commas have to be comma-ticks;
 -- with the sig, commas are OK.
 dun-env-assocs : DunEnvAssocs
-dun-env-assocs = ((3 ∷ 4 ∷ [] , short-beak ∷ short-beak ∷ []) , (0 , mildly-disturbed)) ∷
-                 (([ 1 ] , [ short-beak ]) , (1 , undisturbed)) ∷
-                 (([ 2 ] , [ long-beak ]) , (2 , mildly-disturbed)) ∷
-                 (([ 5 ] , [ long-beak ]) , (3 , well-disturbed)) ∷
+dun-env-assocs = ((3 ∷ 4 ∷ [] , short-beak ∷ short-beak ∷ []) , (1 , mildly-disturbed)) ∷
+                 (([ 1 ] , [ short-beak ]) , (2 , undisturbed)) ∷
+                 (([ 2 ] , [ long-beak ]) , (3 , mildly-disturbed)) ∷
+                 (([ 5 ] , [ long-beak ]) , (4 , well-disturbed)) ∷
                  []
 
 {- (I wish Agda had a normal list and vector syntax.  I don't care if the number
@@ -186,20 +217,46 @@ fitness (long-beak _ _)  (mildly-disturbed _ _) = 1
 fitness (long-beak _ _)  (well-disturbed _ _)   = 0
 
 -- Should new envs be introduced here?  Maybe better to put in a separate step.
-reproduce : (max-id : ℕ) → (num-kids : ℕ) → (choose-kid-loc : ℕ → ℕ) → (parent : Dun) → List Dun
+-- choose-kid-loc is some function from each dunlin to a new location. This can take
+-- account the dunlin's current location, the dunlin's id, or other internal state
+-- of the dunlin.  (This should be in field built into the Dun datatype instead, OO-style?)
+reproduce : (max-id : ℕ) → (num-kids : ℕ) → (choose-kid-loc : Dun  → ℕ) → (parent : Dun) → List Dun
 reproduce _ 0 _ _ = []
 reproduce max-id (suc n) choose-loc (short-beak _ loc) = iterate next-dun (short-beak (suc max-id) loc) (suc n)
 reproduce max-id (suc n) choose-loc (long-beak _ loc)  = iterate next-dun (long-beak  (suc max-id) loc) (suc n)
 
 -- Calculates number of kids from fitness of dun relative to env, and calls reproduce.
-reproduce-per-fit : (max-id : ℕ) → (env : Env) → (choose-kid-loc : ℕ → ℕ) → (parent : Dun) → List Dun
+reproduce-per-fit : (max-id : ℕ) → (env : Env) → (choose-loc : Dun → ℕ) → (parent : Dun) → List Dun
 reproduce-per-fit max-id env choose-loc dun = reproduce max-id (fitness dun env) choose-loc dun
 
 -- This location-chooser puts offspring in the same env as parent:
-kid-loc-same : ℕ → ℕ
-kid-loc-same loc = loc
+kid-loc-same : Dun → ℕ
+kid-loc-same (short-beak id loc) = loc
+kid-loc-same (long-beak id loc) =  loc
 
+-- Simple linear search to look up envs by env id, i.e. location.
+-- Can be replaced -- with something more efficient if needed.
+-- TODO:
+-- Should probably be replaced anyway with a using Maybe or a version
+-- in which it's provable that the desired environment would be found.
+lookup-env : List Env → (loc : ℕ) → Env
+lookup-env [] _ = undisturbed 0 [] -- dummy env to indicate error.  FIXME.
+lookup-env (env ∷ envs) loc-to-find = if loc-to-find == (env-loc env)
+                                      then env
+                                      else lookup-env envs loc-to-find
 
+-- TODO:
+-- The idea is to update the list of envs by replacing each env with one in
+-- which dunlins are consed onto the env's list of dunlins.
+-- TODO:
+-- Should probably be replaced anyway with a using Maybe or a version
+-- in which it's provable that the desired environment would be found.
+add-dunlins-to-envs : List Env → List Dun → List Env
+add-dunlins-to-envs envs [] = {!!}
+add-dunlins-to-envs envs (dun ∷ duns) = let env = lookup-env envs (dun-loc dun)
+                                        in {!!} -- have to update the list of envs
+
+                                                 
 
 -- Original example in Niche.agda also had a timestep parameter, but 
 -- the transition rules can be the same at every time.
@@ -217,12 +274,13 @@ kid-loc-same loc = loc
 -- dunlins and envs separately is a good idea.
 -- max-dun-id is the previous maximum dunlin-id, which should be passed to new-dunlin,
 -- which will increment it.
-d-evolve : (max-id : ℕ) → (Eₜ : List Env) → (choose-kid-loc : ℕ → ℕ) → List Env
+d-evolve : (max-id : ℕ) → (Eₜ : List Env) → (choose-loc : Dun → ℕ) → List Env
 d-evolve max-id [] _ = []
 d-evolve max-id (env ∷ es) choose-loc = let (loc , dunlins) = env-params env
                                             clutches = Data.List.map (reproduce-per-fit max-id env choose-loc) dunlins
-                                            -- Add dunlins to environment
-                                        in ?
+                                            new-dunlins = Data.List.concat clutches
+                                            -- Add dunlins to environments
+                                        in {!!}
 
 
 
