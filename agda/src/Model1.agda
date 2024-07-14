@@ -239,11 +239,11 @@ kid-loc-same (long-beak id loc) =  loc
 -- TODO:
 -- Should probably be replaced anyway with a using Maybe or a version
 -- in which it's provable that the desired environment would be found.
-lookup-env : List Env → (loc : ℕ) → Env
-lookup-env [] _ = undisturbed 0 [] -- dummy env to indicate error.  FIXME.
-lookup-env (env ∷ envs) loc-to-find = if loc-to-find == (env-loc env)
-                                      then env
-                                      else lookup-env envs loc-to-find
+lookup-env : (loc : ℕ) → List Env → Env
+lookup-env _ [] = undisturbed 0 [] -- dummy env to indicate error.  FIXME.
+lookup-env loc (env ∷ envs) = if loc-to-find == (env-loc env)
+                              then env
+                              else lookup-env envs loc-to-find
 
 -- TODO:
 -- The idea is to update the list of envs by replacing each env with one in
