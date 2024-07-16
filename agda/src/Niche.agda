@@ -22,6 +22,12 @@ open import Relation.Nullary.Decidable
 
 -- helpers (probably in std-lib _somewhere_)
 
+--? I need some help understanding the following two definitions,
+--? their purpose, and the applications below in the example section.
+--? I think I'm partially familiar with related ideas from Idris, I think,
+--? but not enough.  Checking the source for `Dec`, `yes`, and
+--? `no` in the source is not sufficiently helpful at this stage.
+
 -- This function of a type returns a type.
 Dec≡ : (A : Set) → Set
 Dec≡ A = (a b : A) → Dec (a ≡ b)
