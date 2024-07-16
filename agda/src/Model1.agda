@@ -29,7 +29,7 @@ open import Agda.Builtin.Maybe
 open import Agda.Builtin.Nat
 open import Function.Base
 open import Data.Bool
-open import Data.List
+open import Data.List using (List; _∷_; []; [_]; iterate; _++_; concat; zipWith; _[_]%=_; _[_]∷=_)
 open import Data.Vec as V using (_∷_)
 open import Data.Nat using (ℕ; zero; suc; _+_; _*_; _∸_; _^_)
 open import Data.Product.Base -- using (_×_; _,′_) -- Needs stdlib 2.0
@@ -91,6 +91,11 @@ dun-loc : Dun → ℕ
 dun-loc (short-beak _ loc) = loc 
 dun-loc (long-beak _ loc) = loc
 
+-- Is this non-idiomatic?
+dun-constructor : Dun → DunConstr
+dun-constructor (short-beak _ _) = short-beak
+dun-constructor (long-beak _ _) = long-beak
+
 
 -----------------------------------
 -- Environments
@@ -129,6 +134,12 @@ env-dunlins : Env → List Dun
 env-dunlins (undisturbed _ dunlins) = dunlins
 env-dunlins (mildly-disturbed _ dunlins) = dunlins
 env-dunlins (well-disturbed _ dunlins) = dunlins
+
+-- Is this non-idiomatic?
+env-constructor : Env → EnvConstr
+env-constructor (undisturbed _ _) = undisturbed
+env-constructor (mildly-disturbed _ _) = mildly-disturbed
+env-constructor (well-disturbed _ _) = well-disturbed
 
 -----------------------------
 -- Configuring an entire system
@@ -234,16 +245,27 @@ kid-loc-same : Dun → ℕ
 kid-loc-same (short-beak id loc) = loc
 kid-loc-same (long-beak id loc) =  loc
 
+add-duns-by-loc : (dloc : ℕ) → (offspring : List Dun) → (envs : List Env) → List Env
+add-duns-by-loc _ _ [] = [] -- shouldn't occur: excluded by call from add-duns
+add-duns-by-loc dloc offspring (env ∷ envs) = let (eloc , eduns) = env-params env
+                                                  env-constr = env-constructor env
+                                              in if dloc == eloc
+                                                 then env-constr eloc (offspring ++ eduns) ∷ envs
+                                                 else env ∷ (add-duns-by-loc dloc offspring envs)
+
 -- Simple linear search to look up envs by env id, i.e. location.
 -- Can be replaced -- with something more efficient if needed.
--- TODO:
--- Should probably be replaced anyway with a using Maybe or a version
--- in which it's provable that the desired environment would be found.
-lookup-env : (loc : ℕ) → List Env → Env
-lookup-env _ [] = undisturbed 0 [] -- dummy env to indicate error.  FIXME.
-lookup-env loc (env ∷ envs) = if loc == (env-loc env)
-                              then env
-                              else lookup-env loc envs
+-- TODO?: Replace with version in which in which it's provable
+-- that the desired environment would be found?
+-- (Why not require that envs be listed in order, so we don't
+-- need to examine their internal indexes?  To make it easier to
+-- generalize to 2-D.)
+add-duns : (parent : Dun) → (offspring : List Dun) → (envs : List Env) → Maybe (List Env)
+add-duns _ _ [] = nothing  -- What happened to the envs?!?
+add-duns _ [] envs = just envs  -- Parent failed to reproduce
+add-duns parent offspring envs = just (add-duns-by-loc (dun-loc parent) offspring envs)
+-- Not sure why Emacs is graying the previous two lhs's.  Seems like all cases are covered.
+
 
 -- TODO:
 -- The idea is to update the list of envs by replacing each env with one in
@@ -251,11 +273,15 @@ lookup-env loc (env ∷ envs) = if loc == (env-loc env)
 -- TODO:
 -- Should probably be replaced anyway with a using Maybe or a version
 -- in which it's provable that the desired environment would be found.
-add-dunlins-to-envs : List Env → List Dun → List Env
-add-dunlins-to-envs envs [] = {!!}
-add-dunlins-to-envs envs (dun ∷ duns) = let env = lookup-env (dun-loc dun) envs
-                                        in {!!} -- have to update the list of envs
+add-generation : List Env → List Dun → Maybe (List Env)
+add-generation envs [] = just envs
+add-generation envs (dun ∷ duns) = {!!}
 
+
+{-
+add-duns-to-envs envs (dun ∷ duns) = let maybe-env = lookup-env (dun-loc dun) envs
+                                        in {!!} -- have to update the list of envs
+-}
                                                  
 
 -- Original example in Niche.agda also had a timestep parameter, but 
