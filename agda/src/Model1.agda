@@ -241,9 +241,9 @@ kid-loc-same (long-beak id loc) =  loc
 -- in which it's provable that the desired environment would be found.
 lookup-env : (loc : ℕ) → List Env → Env
 lookup-env _ [] = undisturbed 0 [] -- dummy env to indicate error.  FIXME.
-lookup-env loc (env ∷ envs) = if loc-to-find == (env-loc env)
+lookup-env loc (env ∷ envs) = if loc == (env-loc env)
                               then env
-                              else lookup-env envs loc-to-find
+                              else lookup-env loc envs
 
 -- TODO:
 -- The idea is to update the list of envs by replacing each env with one in
@@ -253,7 +253,7 @@ lookup-env loc (env ∷ envs) = if loc-to-find == (env-loc env)
 -- in which it's provable that the desired environment would be found.
 add-dunlins-to-envs : List Env → List Dun → List Env
 add-dunlins-to-envs envs [] = {!!}
-add-dunlins-to-envs envs (dun ∷ duns) = let env = lookup-env envs (dun-loc dun)
+add-dunlins-to-envs envs (dun ∷ duns) = let env = lookup-env (dun-loc dun) envs
                                         in {!!} -- have to update the list of envs
 
                                                  
