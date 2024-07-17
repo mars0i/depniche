@@ -29,7 +29,7 @@ open import Agda.Builtin.Maybe
 open import Agda.Builtin.Nat
 open import Function.Base
 open import Data.Bool
-open import Data.List using (List; _∷_; []; [_]; iterate; _++_; concat; zipWith; _[_]%=_; _[_]∷=_)
+open import Data.List as L using (List; _∷_; []; [_]; iterate; _++_; map; concat; concatMap; zipWith; _[_]%=_; _[_]∷=_)
 open import Data.Vec as V using (_∷_)
 open import Data.Nat using (ℕ; zero; suc; _+_; _*_; _∸_; _^_)
 open import Data.Product.Base -- using (_×_; _,′_) -- Needs stdlib 2.0
@@ -245,6 +245,7 @@ kid-loc-same : Dun → ℕ
 kid-loc-same (short-beak id loc) = loc
 kid-loc-same (long-beak id loc) =  loc
 
+{-
 add-duns-by-loc : (dloc : ℕ) → (offspring : List Dun) → (envs : List Env) → List Env
 add-duns-by-loc _ _ [] = [] -- shouldn't occur: excluded by call from add-duns
 add-duns-by-loc dloc offspring (env ∷ envs) = let (eloc , eduns) = env-params env
@@ -252,37 +253,25 @@ add-duns-by-loc dloc offspring (env ∷ envs) = let (eloc , eduns) = env-params 
                                               in if dloc == eloc
                                                  then env-constr eloc (offspring ++ eduns) ∷ envs
                                                  else env ∷ (add-duns-by-loc dloc offspring envs)
-
--- Simple linear search to look up envs by env id, i.e. location.
--- Can be replaced -- with something more efficient if needed.
--- TODO?: Replace with version in which in which it's provable
--- that the desired environment would be found?
--- (Why not require that envs be listed in order, so we don't
--- need to examine their internal indexes?  To make it easier to
--- generalize to 2-D.)
-add-duns : (parent : Dun) → (offspring : List Dun) → (envs : List Env) → Maybe (List Env)
-add-duns _ _ [] = nothing  -- What happened to the envs?!?
-add-duns _ [] envs = just envs  -- Parent failed to reproduce
-add-duns parent offspring envs = just (add-duns-by-loc (dun-loc parent) offspring envs)
--- Not sure why Emacs is graying the previous two lhs's.  Seems like all cases are covered.
-
-
--- TODO:
--- The idea is to update the list of envs by replacing each env with one in
--- which dunlins are consed onto the env's list of dunlins.
--- TODO:
--- Should probably be replaced anyway with a using Maybe or a version
--- in which it's provable that the desired environment would be found.
-add-generation : List Env → List Dun → Maybe (List Env)
-add-generation envs [] = just envs
-add-generation envs (dun ∷ duns) = {!!}
-
-
-{-
-add-duns-to-envs envs (dun ∷ duns) = let maybe-env = lookup-env (dun-loc dun) envs
-                                        in {!!} -- have to update the list of envs
 -}
+
+-- Assumes that env locations are unique.  (Maybe should be proven elsewhere?)
+-- Inefficient.  Maybe new dunlins should be sorted by loc.
+-- Or create a lookup structure.
+add-dun : Dun → List Env → List Env
+add-dun dun [] = [] -- no envs!
+add-dun dun (env ∷ envs) = let (env-loc , env-duns) = env-params env
+                               env-constr = env-constructor env
+                           in if (dun-loc dun) == env-loc
+                              then (env-constr env-loc (dun ∷ env-duns)) ∷ envs
+                              else env ∷ (add-dun dun envs)
                                                  
+-- Must be a better way than this ...
+-- Add a 
+add-duns : List Dun → List Env → List Env
+add-duns [] envs = envs
+add-duns (dun ∷ duns) envs = add-dun dun (add-duns duns envs)
+
 
 -- Original example in Niche.agda also had a timestep parameter, but 
 -- the transition rules can be the same at every time.
@@ -300,13 +289,14 @@ add-duns-to-envs envs (dun ∷ duns) = let maybe-env = lookup-env (dun-loc dun) 
 -- dunlins and envs separately is a good idea.
 -- max-dun-id is the previous maximum dunlin-id, which should be passed to new-dunlin,
 -- which will increment it.
-d-evolve : (max-id : ℕ) → (Eₜ : List Env) → (choose-loc : Dun → ℕ) → List Env
+d-evolve : (max-id : ℕ) → List Env → (choose-loc : Dun → ℕ) → List Env
 d-evolve max-id [] _ = []
-d-evolve max-id (env ∷ es) choose-loc = let (loc , dunlins) = env-params env
-                                            clutches = Data.List.map (reproduce-per-fit max-id env choose-loc) dunlins
-                                            new-dunlins = Data.List.concat clutches
-                                            -- Add dunlins to environments
-                                        in {!!}
+d-evolve max-id (env ∷ envs) choose-loc =
+    let (loc , dunlins) = env-params env  -- get dunlins in next env
+        new-dunlins = L.concatMap (reproduce-per-fit max-id env choose-loc) dunlins -- baby dunlins
+    in add-duns new-dunlins                                 -- Add babies to envs
+                (d-evolve (max-id + (L.length new-dunlins)) --  that result from adding other babies
+                          envs choose-loc)                  --  to envs.
 
 
 
@@ -323,3 +313,36 @@ d-evolve max-id (env ∷ es) choose-loc = let (loc , dunlins) = env-params env
 --         updating the env in the dunlin (and in the envs? then need a different type)
 --   * possibly kill some old dunlins
  
+
+
+{-
+-- Simple linear search to look up envs by env id, i.e. location.
+-- Can be replaced -- with something more efficient if needed.
+-- TODO?: Replace with version in which in which it's provable
+-- that the desired environment would be found?
+-- (Why not require that envs be listed in order, so we don't
+-- need to examine their internal indexes?  To make it easier to
+-- generalize to 2-D.)
+add-duns : (parent : Dun) → (offspring : List Dun) → (envs : List Env) → Maybe (List Env)
+add-duns _ _ [] = nothing  -- What happened to the envs?!?
+add-duns _ [] envs = just envs  -- Parent failed to reproduce
+add-duns parent offspring envs = just (add-duns-by-loc (dun-loc parent) offspring envs)
+-- Not sure why Emacs is graying the previous two lhs's.  Seems like all cases are covered.
+-}
+
+{-
+-- TODO:
+-- The idea is to update the list of envs by replacing each env with one in
+-- which dunlins are consed onto the env's list of dunlins.
+-- TODO:
+-- Should probably be replaced anyway with a using Maybe or a version
+-- in which it's provable that the desired environment would be found.
+add-generation : List Env → List Dun → Maybe (List Env)
+add-generation envs [] = just envs
+add-generation envs (dun ∷ duns) = {!!}
+-}
+
+{-
+add-duns-to-envs envs (dun ∷ duns) = let maybe-env = lookup-env (dun-loc dun) envs
+                                        in {!!} -- have to update the list of envs
+-}
