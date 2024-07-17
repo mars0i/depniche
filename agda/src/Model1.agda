@@ -130,10 +130,10 @@ env-loc (undisturbed loc _) = loc
 env-loc (mildly-disturbed loc _) = loc
 env-loc (well-disturbed loc _) = loc
 
-env-dunlins : Env → List Dun
-env-dunlins (undisturbed _ dunlins) = dunlins
-env-dunlins (mildly-disturbed _ dunlins) = dunlins
-env-dunlins (well-disturbed _ dunlins) = dunlins
+env-duns : Env → List Dun
+env-duns (undisturbed _ dunlins) = dunlins
+env-duns (mildly-disturbed _ dunlins) = dunlins
+env-duns (well-disturbed _ dunlins) = dunlins
 
 -- Is this non-idiomatic?
 env-constructor : Env → EnvConstr
@@ -235,10 +235,11 @@ reproduce : (max-id : ℕ) → (num-kids : ℕ) → (choose-kid-loc : Dun  → �
 reproduce _ 0 _ _ = []
 reproduce max-id (suc n) choose-loc (short-beak _ loc) = iterate next-dun (short-beak (suc max-id) loc) (suc n)
 reproduce max-id (suc n) choose-loc (long-beak _ loc)  = iterate next-dun (long-beak  (suc max-id) loc) (suc n)
+-- CHECK: Is max-id is getting incremented properly?
 
 -- Calculates number of kids from fitness of dun relative to env, and calls reproduce.
 reproduce-per-fit : (max-id : ℕ) → (env : Env) → (choose-loc : Dun → ℕ) → (parent : Dun) → List Dun
-reproduce-per-fit max-id env choose-loc dun = reproduce max-id (fitness dun env) choose-loc dun
+reproduce-per-fit max-id choose-loc dun = reproduce max-id (fitness dun env) choose-loc dun
 
 -- This location-chooser puts offspring in the same env as parent:
 kid-loc-same : Dun → ℕ
@@ -267,7 +268,6 @@ add-dun dun (env ∷ envs) = let (env-loc , env-duns) = env-params env
                               else env ∷ (add-dun dun envs)
                                                  
 -- Must be a better way than this ...
--- Add a 
 add-duns : List Dun → List Env → List Env
 add-duns [] envs = envs
 add-duns (dun ∷ duns) envs = add-dun dun (add-duns duns envs)
@@ -291,13 +291,71 @@ add-duns (dun ∷ duns) envs = add-dun dun (add-duns duns envs)
 -- which will increment it.
 d-evolve : (max-id : ℕ) → List Env → (choose-loc : Dun → ℕ) → List Env
 d-evolve max-id [] _ = []
+d-evolve max-id envs choose-loc =
+    let old-dunlins = L.concatMap env-duns envs
+        new-dunlins = L.concatMap (reproduce-per-fit max-id env choose-loc) old-dunlins -- make baby dunlins
+        new-max-id = max-id + (L.length new-dunlins) -- should be a better way
+    in add-duns new-dunlins envs
+
+{-
+-- THIS WORKS (or type checks) but seems unnecessarily complicated
+d-evolve : (max-id : ℕ) → List Env → (choose-loc : Dun → ℕ) → List Env
+d-evolve max-id [] _ = []
 d-evolve max-id (env ∷ envs) choose-loc =
     let (loc , dunlins) = env-params env  -- get dunlins in next env
         new-dunlins = L.concatMap (reproduce-per-fit max-id env choose-loc) dunlins -- baby dunlins
     in add-duns new-dunlins                                 -- Add babies to envs
                 (d-evolve (max-id + (L.length new-dunlins)) --  that result from adding other babies
                           envs choose-loc)                  --  to envs.
+-}
 
+
+-- old notes:
+-- for each env:
+--   * Reconstruct the dunlins in it (possible since at present dunlins don't
+--     have any data except the dunlin id and the env id, both of which are known
+--     to the env).  Later we'll need to be able to look up dunlins by id, or
+--     store the dunlins themselves in the env if there's a way to do that.
+--     CONSIDER STORING DUNLINS IN ENVS, BUT ONLY ENV IDS IN DUNLINS.
+--   * for each such dunlin:
+--       - use get-fitness to return the fitnesses for each
+--       - create fitness new dunlins of the same kind, and place them ... in some env,
+--         updating the env in the dunlin (and in the envs? then need a different type)
+--   * possibly kill some old dunlins
+ 
+
+
+{-
+-- Simple linear search to look up envs by env id, i.e. location.
+-- Can be replaced -- with something more efficient if needed.
+-- TODO?: Replace with version in which in which it's provable
+-- that the desired environment would be found?
+-- (Why not require that envs be listed in order, so we don't
+-- need to examine their internal indexes?  To make it easier to
+-- generalize to 2-D.)
+add-duns : (parent : Dun) → (offspring : List Dun) → (envs : List Env) → Maybe (List Env)
+add-duns _ _ [] = nothing  -- What happened to the envs?!?
+add-duns _ [] envs = just envs  -- Parent failed to reproduce
+add-duns parent offspring envs = just (add-duns-by-loc (dun-loc parent) offspring envs)
+-- Not sure why Emacs is graying the previous two lhs's.  Seems like all cases are covered.
+-}
+
+{-
+-- TODO:
+-- The idea is to update the list of envs by replacing each env with one in
+-- which dunlins are consed onto the env's list of dunlins.
+-- TODO:
+-- Should probably be replaced anyway with a using Maybe or a version
+-- in which it's provable that the desired environment would be found.
+add-generation : List Env → List Dun → Maybe (List Env)
+add-generation envs [] = just envs
+add-generation envs (dun ∷ duns) = {!!}
+-}
+
+{-
+add-duns-to-envs envs (dun ∷ duns) = let maybe-env = lookup-env (dun-loc dun) envs
+                                        in {!!} -- have to update the list of envs
+-}
 
 
 -- old notes:
