@@ -227,6 +227,13 @@ fitness (long-beak _ _)  (undisturbed _ _)      = 2
 fitness (long-beak _ _)  (mildly-disturbed _ _) = 1
 fitness (long-beak _ _)  (well-disturbed _ _)   = 0
 
+
+lookup-env-by-loc : List Env → (loc : ℕ) → Maybe Env
+lookup-env-by-loc [] _ = nothing
+lookup-env-by-loc (env ∷ envs) loc = if loc == (env-loc env)
+                                     then just env
+                                     else lookup-env-by-loc envs loc
+
 -- Should new envs be introduced here?  Maybe better to put in a separate step.
 -- choose-kid-loc is some function from each dunlin to a new location. This can take
 -- account the dunlin's current location, the dunlin's id, or other internal state
@@ -238,13 +245,25 @@ reproduce max-id (suc n) choose-loc (long-beak _ loc)  = iterate next-dun (long-
 -- CHECK: Is max-id is getting incremented properly?
 
 -- Calculates number of kids from fitness of dun relative to env, and calls reproduce.
-reproduce-per-fit : (max-id : ℕ) → (env : Env) → (choose-loc : Dun → ℕ) → (parent : Dun) → List Dun
-reproduce-per-fit max-id choose-loc dun = reproduce max-id (fitness dun env) choose-loc dun
+-- Probably SHOULD BE MAYBE-IZED.  At present it returns an empty list when an env
+-- can't be found.  This can't be distinguished from the zero fitness case.
+reproduce-per-fit : (max-id : ℕ) → (envs : List Env) → (choose-loc : Dun → ℕ) →
+                    (parent : Dun) → List Dun
+reproduce-per-fit _ [] _ _ = []  -- No envs, shouldn't happen.
+reproduce-per-fit max-id envs choose-loc parent with dun-loc parent
+...                                                | loc with lookup-env-by-loc envs loc
+...                                                         | nothing = [] -- can't find that env, shouldn't happen
+...                                                         | just env = let fit = fitness parent env
+                                                                         in if fit == 0
+                                                                            then []
+                                                                            else reproduce max-id fit choose-loc parent
+-- (Lines are too long. Not sure what my indentation options are here.)
+
 
 -- This location-chooser puts offspring in the same env as parent:
-kid-loc-same : Dun → ℕ
-kid-loc-same (short-beak id loc) = loc
-kid-loc-same (long-beak id loc) =  loc
+baby-loc-same : Dun → ℕ
+baby-loc-same (short-beak id loc) = loc
+baby-loc-same (long-beak id loc) =  loc
 
 {-
 add-duns-by-loc : (dloc : ℕ) → (offspring : List Dun) → (envs : List Env) → List Env
@@ -272,7 +291,6 @@ add-duns : List Dun → List Env → List Env
 add-duns [] envs = envs
 add-duns (dun ∷ duns) envs = add-dun dun (add-duns duns envs)
 
-
 -- Original example in Niche.agda also had a timestep parameter, but 
 -- the transition rules can be the same at every time.
 -- Since each env contains a list of dunlins in it, an option might be
@@ -293,7 +311,7 @@ d-evolve : (max-id : ℕ) → List Env → (choose-loc : Dun → ℕ) → List E
 d-evolve max-id [] _ = []
 d-evolve max-id envs choose-loc =
     let old-dunlins = L.concatMap env-duns envs
-        new-dunlins = L.concatMap (reproduce-per-fit max-id env choose-loc) old-dunlins -- make baby dunlins
+        new-dunlins = L.concatMap (reproduce-per-fit max-id envs choose-loc) old-dunlins -- make baby dunlins
         new-max-id = max-id + (L.length new-dunlins) -- should be a better way
     in add-duns new-dunlins envs
 
