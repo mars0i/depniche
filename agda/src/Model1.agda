@@ -307,6 +307,8 @@ add-duns (dun ∷ duns) envs = add-dun dun (add-duns duns envs)
 -- dunlins and envs separately is a good idea.
 -- max-dun-id is the previous maximum dunlin-id, which should be passed to new-dunlin,
 -- which will increment it.
+--
+-- TODO: -- Add removal of dead dunlins based on some criterion.
 d-evolve : (max-id : ℕ) → List Env → (choose-loc : Dun → ℕ) → List Env
 d-evolve max-id [] _ = []
 d-evolve max-id envs choose-loc =
@@ -327,6 +329,18 @@ d-evolve max-id (env ∷ envs) choose-loc =
                           envs choose-loc)                  --  to envs.
 -}
 
+niche-construct : Env → Env
+niche-construct env = {!!}  -- extract dunlins, look up their effect, and construct new env
+
+-- This modifies environments due to niche construction.  Since the dunlins that
+-- perform the niche construction are referenced in the envs, we don't need to
+-- pass them in separately.
+e-evolve : List Env → List Env
+e-evolve [] = []
+e-evolve (env ∷ envs) = (niche-construct env) ∷ e-evolve envs
+
+
+-----------------------------------------------------------------------------
 
 -- old notes:
 -- for each env:
@@ -341,22 +355,6 @@ d-evolve max-id (env ∷ envs) choose-loc =
 --         updating the env in the dunlin (and in the envs? then need a different type)
 --   * possibly kill some old dunlins
  
-
-
-{-
--- Simple linear search to look up envs by env id, i.e. location.
--- Can be replaced -- with something more efficient if needed.
--- TODO?: Replace with version in which in which it's provable
--- that the desired environment would be found?
--- (Why not require that envs be listed in order, so we don't
--- need to examine their internal indexes?  To make it easier to
--- generalize to 2-D.)
-add-duns : (parent : Dun) → (offspring : List Dun) → (envs : List Env) → Maybe (List Env)
-add-duns _ _ [] = nothing  -- What happened to the envs?!?
-add-duns _ [] envs = just envs  -- Parent failed to reproduce
-add-duns parent offspring envs = just (add-duns-by-loc (dun-loc parent) offspring envs)
--- Not sure why Emacs is graying the previous two lhs's.  Seems like all cases are covered.
--}
 
 {-
 -- TODO:
