@@ -128,6 +128,8 @@ v₉ = refl
 open import Data.Nat
 
 -- StringTree = Tree′ (MkValue ℕ (subst String))
+-- StringTree = Tree′ (MkValue (Vec String) (subst (Vec String)))
+StringTree = Tree′ (MkValue (Vec ℕ) (subst (Vec ℕ))) -- why Vec? Why same?
 
 
 ------------------------------------------------------------------------
