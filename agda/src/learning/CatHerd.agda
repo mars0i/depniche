@@ -1,12 +1,13 @@
 -- Marshall's lessons and experiments.
 -- A collection of cats is a ... herd.
--- (And sometimes trying to get Agda to do what I want seems like herding cats.)
+-- And sometimes trying to get Agda to do what I want seems like herding cats.
 module learning/CatHerd where
 
 open import Agda.Builtin.Bool
 open import Agda.Builtin.Nat -- defines _==_ i.e. regular equality
 open import Agda.Builtin.Sigma
 open import Data.Bool -- has if/then as well as 𝔹
+open import Data.Empty -- for ⊥
 
 open import Data.List
 -- no open, to avoid conflicts with List
@@ -264,15 +265,20 @@ data GreenChromide where
 data OrangeChromide where
   orange : (cleaner : GreenChromide) → OrangeChromide
 
--- But how do I define instances?
+-- https://agda.zulipchat.com/#narrow/stream/259644-newcomers/topic/Mutually.20recursive.20instances.3F/near/452283043
+no : GreenChromide → ⊥
+neither : OrangeChromide → ⊥
+no (green o) = neither o
+neither (orange g) = no g
+
+
+-- Q: But how do I define instances?
 -- The following causes "Termination checking failed".
 -- Or if I put declarations and defs in the usual order, I get
 -- "Not in scope: g1" (as one does).
-
 -- These don't help:
 -- interleaved mutual
 -- mutual
-
 {-
 o1 : OrangeChromide
 g1 : GreenChromide
@@ -280,3 +286,6 @@ g1 : GreenChromide
 o1 = orange g1
 g1 = green o1
 -}
+
+-- A: Not like that.  But see
+-- https://agda.zulipchat.com/#narrow/stream/259644-newcomers/topic/Mutually.20recursive.20instances.3F/near/452264027
