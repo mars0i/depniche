@@ -244,3 +244,39 @@ w2 = 10 V.∷ 20 V.∷ V.[]
 x2 : V.Vec ℕ 3
 x2 = 1 V.∷ 2 V.∷ 3 V.∷ V.[]
 
+-----------------------------------------
+-- Mutual recursion experiments
+-- See https://agda.readthedocs.io/en/latest/language/mutual-recursion.html
+
+-- Names of cleaner and host fish
+-- https://en.wikipedia.org/wiki/Cleaner_fish#Brackish_water_fish
+-- https://en.wikipedia.org/wiki/Green_chromide
+-- https://en.wikipedia.org/wiki/Orange_chromide
+
+-- I can define mutually recursive types:
+
+data GreenChromide : Set   -- cleaner fish
+data OrangeChromide : Set  -- host fish
+
+data GreenChromide where
+  green : (host : OrangeChromide) → GreenChromide
+
+data OrangeChromide where
+  orange : (cleaner : GreenChromide) → OrangeChromide
+
+-- But how do I define instances?
+-- The following causes "Termination checking failed".
+-- Or if I put declarations and defs in the usual order, I get
+-- "Not in scope: g1" (as one does).
+
+-- These don't help:
+-- interleaved mutual
+-- mutual
+
+{-
+o1 : OrangeChromide
+g1 : GreenChromide
+
+o1 = orange g1
+g1 = green o1
+-}
