@@ -351,6 +351,36 @@ open import Relation.Binary.PropositionalEquality -- for subst, at least
 -- Define my map type
 EnvMap = Tree (MkValue (Vec Env) (subst (Vec Env)))
 
+empty-env-map : EnvMap
+empty-env-map = empty
+
+singleton-env-map : EnvMap
+singleton-env-map = singleton 1 ((undisturbed 1 []) ∷ [])
+-- size singleton-env-map
+just-env1 = lookup singleton-env-map 1
+nada = lookup singleton-env-map 42
+
+-- Overwrites old element 1:
+singleton-env-map2 : EnvMap
+singleton-env-map2 = insert 1 ((mildly-disturbed 2 []) ∷ []) singleton-env-map
+just-env2 = lookup singleton-env-map2 1
+-- size singleton-env-map2
+
+-- Why is this complaining that the nil does not have size 2?
+-- Isn't the second arg a key?
+-- (And I still don't know why I have to wrap the vals in a Vec.)
+{-
+two-envs-map : EnvMap
+two-envs-map = insert 2 ((well-disturbed 3 []) ∷ []) empty
+-}
+-- Well note that in the AVL README, the singleton avl t₁ is created with a
+-- vector of length 2, and the first arg to the singleton is 2.
+-- Look also at the fromList example further down.  The keys correspond
+-- to the lengths of the vectors.  It may be relevant that the keys
+-- are parameters of the vectors.
+-- Maybe it's that (subst (Vec String)) means substitute the next arg
+-- of Vec, i.e. the Nat or Fin.  So can I do that with Env locs?
+
 env-pairs : List (ℕ × Env)
 env-pairs = L.map (λ e → (env-loc e) , e) all-envs
 
