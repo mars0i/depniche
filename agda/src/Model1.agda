@@ -30,7 +30,7 @@ open import Agda.Builtin.Nat
 open import Function.Base
 open import Data.Bool
 open import Data.List as L using (List; _∷_; []; [_]; iterate; _++_; map; concat; concatMap; zipWith; _[_]%=_; _[_]∷=_)
-open import Data.Vec as V using (_∷_)
+open import Data.Vec as V using (Vec; _∷_; [])
 open import Data.Nat using (ℕ; zero; suc; _+_; _*_; _∸_; _^_)
 open import Data.Product.Base -- using (_×_; _,′_) -- Needs stdlib 2.0
 open import Relation.Binary.PropositionalEquality using (_≡_; refl)
@@ -204,8 +204,8 @@ of characters is the same as Haskell/OCaml/Idris/Lean. It's still harder to read
 -- to allow different types to live in the same list.  When processing
 -- the envs or dunlins, it can be ignored (but might need to be recreated to
 -- make the next set of envs and dunlins.
-envpairs = assocs-to-envs dun-env-assocs
-dunpairs = assocs-to-duns dun-env-assocs
+all-envs = assocs-to-envs dun-env-assocs
+all-duns = assocs-to-duns dun-env-assocs
 
 -----------------
 -- Fitness and niche construction
@@ -338,6 +338,25 @@ niche-construct env = {!!}  -- extract dunlins, look up their effect, and constr
 e-evolve : List Env → List Env
 e-evolve [] = []
 e-evolve (env ∷ envs) = (niche-construct env) ∷ e-evolve envs
+
+-----------------------------------------------------------------------------
+-- experiment.  See CatMap, which is based on
+-- https://agda.github.io/agda-stdlib/v2.0/README.Data.Tree.AVL.html
+
+open import Data.Nat.Properties using (<-strictTotalOrder)
+import Data.Tree.AVL
+open Data.Tree.AVL <-strictTotalOrder
+open import Relation.Binary.PropositionalEquality -- for subst, at least
+
+-- Define my map type
+EnvMap = Tree (MkValue (Vec Env) (subst (Vec Env)))
+
+env-pairs : List (ℕ × Env)
+env-pairs = L.map (λ e → (env-loc e) , e) all-envs
+
+env-map : EnvMap
+env-map = fromList {!!} -- Data.Tree.AVL.fromList env-pairs
+
 
 
 -----------------------------------------------------------------------------

@@ -1,4 +1,5 @@
--- From https://agda.github.io/agda-stdlib/v2.0/README.Data.Tree.AVL.html
+-- Most of this is copied from
+-- https://agda.github.io/agda-stdlib/v2.0/README.Data.Tree.AVL.html
 
 {-# OPTIONS --cubical-compatible --safe #-}
 
@@ -131,6 +132,17 @@ open import Data.Nat
 -- StringTree = Tree′ (MkValue (Vec String) (subst (Vec String)))
 StringTree = Tree′ (MkValue (Vec ℕ) (subst (Vec ℕ))) -- why Vec? Why same?
 
+record Yo : Set where
+  constructor MkYo
+  field
+    this : ℕ
+    that : String
+
+open Yo
+
+yo1 = MkYo 5 "five"
+
+  
 
 ------------------------------------------------------------------------
 -- Further reading
