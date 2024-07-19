@@ -4,7 +4,7 @@
 -- See docs/DunlinStory1.md for the rationale for the names and type constructors
 -- or record fields below.
 
-module Experiment1 where
+module Model1outerSigma where
 
 open import Agda.Builtin.Sigma
 open import Agda.Builtin.Maybe
