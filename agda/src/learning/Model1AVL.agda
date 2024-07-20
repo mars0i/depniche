@@ -166,14 +166,25 @@ EnvMap = Map (ℕ × Env)
 --empty-map : Map 
 --empty-map = empty
 
-{-
+
 import Data.Tree.AVL
 open Data.Tree.AVL  <-strictTotalOrder
 open import Relation.Binary.PropositionalEquality -- for subst, at least
 
+{-
+data EnvLoc : (loc : ℕ) → Set where
+  un   : (dunlins : List Dun) → (loc : ℕ) → Env
+  mi   : (dunlins : List Dun) → (loc : ℕ) → Env
+  we   : (dunlins : List Dun) → (loc : ℕ) → Env
+-}
+
+locEnv : EnvConstr → List Dun → ℕ → Env
+locEnv constr duns loc = constr duns loc
+
 -- Define my map type
--- EnvAVL = Tree (MkValue (Vec Env) (subst (Vec Env)))
 EnvAVL = Tree (MkValue (Vec Env) (subst (Vec Env)))
+-- EnvAVL = Tree (MkValue Env (Data.Tree.AVL.const Env))
+-- EnvAVL = Tree (MkValue (locEnv undisturbed []) (subst (locEnv undisturbed [])))
 
 empty-env-map : EnvAVL
 empty-env-map = empty
@@ -210,4 +221,4 @@ env-pairs = L.map (λ e → (env-loc e) , e) all-envs
 
 env-map : EnvAVL
 env-map = fromList {!!} -- Data.Tree.AVL.fromList env-pairs
--}
+
