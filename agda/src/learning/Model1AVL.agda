@@ -156,11 +156,23 @@ empty-env-map = M.empty
 singleton-env-map = M.singleton 5 (undisturbed 1 [])
 -}
 
+{-
+import Data.Tree.AVL.IndexedMap
+open Data.Tree.AVL.IndexedMap -- <-strictTotalOrder
+
+EnvMap = Map (ℕ × Env)
+-}
+
+--empty-map : Map 
+--empty-map = empty
+
+{-
 import Data.Tree.AVL
 open Data.Tree.AVL  <-strictTotalOrder
 open import Relation.Binary.PropositionalEquality -- for subst, at least
 
 -- Define my map type
+-- EnvAVL = Tree (MkValue (Vec Env) (subst (Vec Env)))
 EnvAVL = Tree (MkValue (Vec Env) (subst (Vec Env)))
 
 empty-env-map : EnvAVL
@@ -198,3 +210,4 @@ env-pairs = L.map (λ e → (env-loc e) , e) all-envs
 
 env-map : EnvAVL
 env-map = fromList {!!} -- Data.Tree.AVL.fromList env-pairs
+-}
