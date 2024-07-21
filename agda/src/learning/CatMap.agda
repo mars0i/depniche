@@ -5,25 +5,58 @@
 
 module learning/CatMap where
 
-------------------------------------------------------------------------
--- Setup
-
--- AVL trees are defined in Data.Tree.AVL.
-
-import Data.Tree.AVL
+-- import Data.Tree.AVL
+import Data.Tree.AVL.Map as M
 
 -- This module is parametrised by keys, which have to form a (strict)
 -- total order, and values, which are indexed by keys. Let us use
 -- natural numbers as keys and vectors of strings as values.
 
 open import Data.Nat.Properties using (<-strictTotalOrder)
+open import Data.Bool.Base using (Bool)
 open import Data.Product.Base as Prod using (_,_; _,′_)
+open import Data.Maybe.Base as Maybe using (Maybe)
 open import Data.String.Base using (String)
 open import Data.Vec.Base using (Vec; _∷_; [])
 open import Relation.Binary.PropositionalEquality
+open import Data.Nat using (ℕ; zero; suc; _+_; _*_; _∸_; _^_)
 
-open Data.Tree.AVL <-strictTotalOrder renaming (Tree to Tree′)
-Tree = Tree′ (MkValue (Vec String) (subst (Vec String)))
+-- open Data.Tree.AVL <-strictTotalOrder 
+open M <-strictTotalOrder
+
+empty-sign-map : Map ℕ
+empty-sign-map = empty
+
+singleton-sign-map : Map ℕ
+singleton-sign-map = singleton 0 0
+
+doubleton-sign-map : Map ℕ
+doubleton-sign-map = insert 1 1 singleton-sign-map
+
+three-sign-map : Map ℕ
+three-sign-map = insert 2 0 doubleton-sign-map
+
+sign-map : Map ℕ
+sign-map = insert 3 1 three-sign-map
+
+twoIsInIt : Bool
+twoIsInIt = member 2 sign-map
+
+fourIsnt : Bool
+fourIsnt = member 4 sign-map
+
+maybe-three : Maybe ℕ
+maybe-three = lookup sign-map 3
+
+maybe-two : Maybe ℕ
+maybe-two = lookup sign-map 2
+
+
+
+
+
+{-
+StringsTree = Tree (MkValue (Vec String) (subst (Vec String)))
 
 ------------------------------------------------------------------------
 -- Construction of trees
@@ -36,10 +69,10 @@ v₂  = "apa" ∷ "bepa" ∷ []
 
 -- Empty and singleton trees.
 
-t₀ : Tree
+t₀ : StringsTree
 t₀ = empty
 
-t₁ : Tree
+t₁ : StringsTree
 t₁ = singleton 2 v₂
 
 -- Insertion of a key-value pair into a tree.
@@ -59,7 +92,7 @@ t₃ = delete 2 t₂
 
 open import Data.List.Base using (_∷_; [])
 
-t₄ : Tree
+t₄ : StringsTree
 t₄ = fromList ((2 , v₂) ∷ (1 , v₁) ∷ [])
 
 ------------------------------------------------------------------------
@@ -128,9 +161,7 @@ v₉ = refl
 
 open import Data.Nat
 
--- StringTree = Tree′ (MkValue ℕ (subst String))
--- StringTree = Tree′ (MkValue (Vec String) (subst (Vec String)))
-StringTree = Tree′ (MkValue (Vec ℕ) (subst (Vec ℕ))) -- why Vec? Why same?
+StringTree = Tree (MkValue (Vec ℕ) (subst (Vec ℕ))) -- why Vec? Why same?
 
 record Yo : Set where
   constructor MkYo
@@ -142,17 +173,9 @@ open Yo
 
 yo1 = MkYo 5 "five"
 
-  
+import Data.Tree.AVL.Map
+open Data.Tree.AVL.Map <-strictTotalOrder
 
-------------------------------------------------------------------------
--- Further reading
-
--- Variations of the AVL tree module are available:
-
--- • Finite maps with indexed keys and values.
-
-import Data.Tree.AVL.IndexedMap
-
--- • Finite sets.
-
-import Data.Tree.AVL.Sets
+empty-string-map : Map String
+empty-string-map = Data.Tree.AVL.empty
+-}
