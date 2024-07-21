@@ -14,15 +14,19 @@ import Data.Tree.AVL.Map as M
 
 open import Data.Nat.Properties using (<-strictTotalOrder)
 open import Data.Bool.Base using (Bool)
-open import Data.Product.Base as Prod using (_,_; _,′_)
+open import Data.Product.Base as Prod using (_,_; _,′_; _×_)
 open import Data.Maybe.Base as Maybe using (Maybe)
 open import Data.String.Base using (String)
 open import Data.Vec.Base using (Vec; _∷_; [])
+open import Data.List.Base using (List)
 open import Relation.Binary.PropositionalEquality
 open import Data.Nat using (ℕ; zero; suc; _+_; _*_; _∸_; _^_)
 
 -- open Data.Tree.AVL <-strictTotalOrder 
 open M <-strictTotalOrder
+
+-----------------------------------
+--- Nat values and keys
 
 empty-sign-map : Map ℕ
 empty-sign-map = empty
@@ -50,6 +54,31 @@ maybe-three = lookup sign-map 3
 
 maybe-two : Maybe ℕ
 maybe-two = lookup sign-map 2
+
+sign-list : List (ℕ × ℕ)
+sign-list = toList sign-map
+
+next-sign-list : List (ℕ × ℕ)
+next-sign-list = (4 , 0) List.∷ (5 , 1) List.∷ List.[]
+
+next-sign-map : Map ℕ
+next-sign-map = fromList next-sign-list
+
+more-sign-map : Map ℕ
+more-sign-map = union sign-map next-sign-map
+
+maybe-two' : Maybe ℕ
+maybe-two' = lookup more-sign-map 2
+
+maybe-four : Maybe ℕ
+maybe-four = lookup more-sign-map 4
+
+
+--------------------------------
+-- String values, Nat keys
+
+empty-string-map : Map String
+empty-string-map = empty
 
 
 
