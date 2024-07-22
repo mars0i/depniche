@@ -25,8 +25,10 @@ Nats.  Not sure whether that's the way to go.
 -}
 
 -- open import Agda.Builtin.Sigma
-open import Agda.Builtin.Maybe
+-- open import Agda.Builtin.Maybe
+open import Data.Maybe.Base as Maybe using (Maybe; nothing; just)
 open import Agda.Builtin.Nat
+open import Data.Nat using (ℕ; zero; suc; _+_; _*_; _∸_; _^_)
 open import Function.Base
 open import Data.Bool
 open import Data.List as L using (List; _∷_; []; [_]; iterate; _++_; map; concat; concatMap; zipWith; _[_]%=_; _[_]∷=_)
@@ -340,9 +342,38 @@ e-evolve [] = []
 e-evolve (env ∷ envs) = (niche-construct env) ∷ e-evolve envs
 
 -----------------------------------------------------------------------------
--- experiment.  See CatMap, which is based on
+-- Experiments with mapping from locs to envs.  See CatMap.agda, 
 -- https://agda.github.io/agda-stdlib/v2.0/README.Data.Tree.AVL.html
 
+import Data.Tree.AVL.Map as M  -- wait to open it
+
+open import Data.Nat.Properties using (<-strictTotalOrder)
+open import Data.Bool.Base using (Bool)
+-- open import Data.Product.Base as Prod using (_,_; _,′_; _×_)
+open import Data.Maybe.Base as Maybe using (Maybe)
+open import Data.String.Base using (String)
+open import Relation.Binary.PropositionalEquality
+
+open M <-strictTotalOrder
+
+empty-env-map : Map Env
+empty-env-map = empty
+
+two-env-map : Map Env
+two-env-map = fromList ((2 , undisturbed 2 []) ∷ (1 , well-disturbed 1 []) ∷ [])
+
+two-env-list = toList two-env-map
+
+pair-from-env : Env → (ℕ × Env)
+pair-from-env env = (env-loc env , env)
+
+env-pair-list = L.map pair-from-env all-envs
+
+all-envs-map : Map Env
+all-envs-map = fromList env-pair-list
+
+
+{-
 open import Data.Nat.Properties using (<-strictTotalOrder)
 import Data.Tree.AVL
 open Data.Tree.AVL <-strictTotalOrder
@@ -386,3 +417,4 @@ env-pairs = L.map (λ e → (env-loc e) , e) all-envs
 
 env-map : EnvMap
 env-map = fromList {!!} -- Data.Tree.AVL.fromList env-pairs
+-}
