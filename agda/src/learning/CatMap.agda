@@ -77,134 +77,24 @@ maybe-four = lookup more-sign-map 4
 --------------------------------
 -- String values, Nat keys
 
-empty-string-map : Map String
-empty-string-map = empty
+empty-natstring-map : Map String
+empty-natstring-map = empty
+
+natstring-map : Map String
+natstring-map = fromList ((0 , "Zero")List.∷
+                          (1 , "One") List.∷
+                          (5 , "Five") List.∷
+                          (3 , "Three") List.∷
+                          List.[])
+
+natstring-list = toList natstring-map
+
+just-five = lookup natstring-map 5
+nothing-four = lookup natstring-map 4
 
 
 
 
 
-{-
-StringsTree = Tree (MkValue (Vec String) (subst (Vec String)))
 
-------------------------------------------------------------------------
--- Construction of trees
 
--- Some values.
-
-v₁  = "cepa" ∷ []
-v₁′ = "depa" ∷ []
-v₂  = "apa" ∷ "bepa" ∷ []
-
--- Empty and singleton trees.
-
-t₀ : StringsTree
-t₀ = empty
-
-t₁ : StringsTree
-t₁ = singleton 2 v₂
-
--- Insertion of a key-value pair into a tree.
-
-t₂ = insert 1 v₁ t₁
-
--- If you insert a key-value pair and the key already exists in the
--- tree, then the old value is thrown away.
-
-t₂′ = insert 1 v₁′ t₂
-
--- Deletion of the mapping for a certain key.
-
-t₃ = delete 2 t₂
-
--- Conversion of a list of key-value mappings to a tree.
-
-open import Data.List.Base using (_∷_; [])
-
-t₄ : StringsTree
-t₄ = fromList ((2 , v₂) ∷ (1 , v₁) ∷ [])
-
-------------------------------------------------------------------------
--- Queries
-
--- Let us formulate queries as unit tests.
-
-open import Relation.Binary.PropositionalEquality using (_≡_; refl)
-
--- Searching for a key.
-
-open import Data.Bool.Base using (true; false)
-open import Data.Maybe.Base as Maybe using (just; nothing)
-
-q₀ : lookup t₂ 2 ≡ just v₂
-q₀ = refl
-
--- Marshall's addition
-q2val : Maybe.Maybe (Vec String 2)
-q2val = lookup t₂ 2
-
-q₁ : lookup t₃ 2 ≡ nothing
-q₁ = refl
-
-q₂ : (3 ∈? t₂) ≡ false
-q₂ = refl
-
-q₃ : (1 ∈? t₄) ≡ true
-q₃ = refl
-
--- Turning a tree into a sorted list of key-value pairs.
-
-q₄ : toList t₁ ≡ (2 , v₂) ∷ []
-q₄ = refl
-
-q₅ : toList t₂ ≡ (1 , v₁) ∷ (2 , v₂) ∷ []
-q₅ = refl
-
-q₅′ : toList t₂′ ≡ (1 , v₁′) ∷ (2 , v₂) ∷ []
-q₅′ = refl
-
-------------------------------------------------------------------------
--- Views
-
--- Partitioning a tree into the smallest element plus the rest, or the
--- largest element plus the rest.
-
-open import Function.Base using (id)
-
-v₆ : headTail t₀ ≡ nothing
-v₆ = refl
-
-v₇ : Maybe.map (Prod.map₂ toList) (headTail t₂) ≡
-     just ((1 , v₁) , ((2 , v₂) ∷ []))
-v₇ = refl
-
-v₈ : initLast t₀ ≡ nothing
-v₈ = refl
-
-v₉ : Maybe.map (Prod.map₁ toList) (initLast t₄) ≡
-     just (((1 , v₁) ∷ []) ,′ (2 , v₂))
-v₉ = refl
-
-------------------------------------------------------------------------
--- Marshall experiments
-
-open import Data.Nat
-
-StringTree = Tree (MkValue (Vec ℕ) (subst (Vec ℕ))) -- why Vec? Why same?
-
-record Yo : Set where
-  constructor MkYo
-  field
-    this : ℕ
-    that : String
-
-open Yo
-
-yo1 = MkYo 5 "five"
-
-import Data.Tree.AVL.Map
-open Data.Tree.AVL.Map <-strictTotalOrder
-
-empty-string-map : Map String
-empty-string-map = Data.Tree.AVL.empty
--}
