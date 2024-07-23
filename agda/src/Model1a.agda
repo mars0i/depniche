@@ -39,9 +39,9 @@ open import Data.Product.Base -- using (_×_; _,′_) -- Needs stdlib 2.0
 -- open import Relation.Binary.PropositionalEquality using (_≡_; refl)
 
 open import Data.Nat.Properties using (<-strictTotalOrder)
-import Data.Tree.AVL
-open Data.Tree.AVL <-strictTotalOrder
-open import Relation.Binary.PropositionalEquality -- for subst, at least
+import Data.Tree.AVL as AVL using (Tree; MkValue; empty; singleton; insert; delete; lookup; size; toList)
+open AVL <-strictTotalOrder
+open import Relation.Binary.PropositionalEquality using (subst) -- _≡_; refl
 
 open import Niche
 open import Kludges
@@ -193,37 +193,30 @@ new-duns-at-loc max-id loc (constr ∷ constrs) =
   in (constr new-id loc) ∷ (new-duns-at-loc new-id loc constrs)
 
 config-system : (max-id : ℕ) → SysConfigInfo → EnvMap → EnvMap
-config-system _ [] _ = empty
-config-system max-id (row ∷ more-rows) env-map =
-  let (loc , env-constr , dun-constrs) = row
+config-system _ [] env-map = env-map
+config-system max-id (env-spec ∷ env-specs) env-map =
+  let (loc , env-constr , dun-constrs) = env-spec
       duns = new-duns-at-loc init-max-id loc dun-constrs
       new-max-id = max-id + L.length duns
       new-env = env-constr duns loc
-  in config-system new-max-id more-rows (insert loc new-env env-map)
+  in config-system new-max-id env-specs (insert loc new-env env-map)
 
--- Why is this generating empty?
 all-envs : EnvMap
 all-envs = config-system init-max-id system-config-info empty
--- check:
+-- Checks:
+maybe-env : Maybe (Env 1)
+maybe-env = lookup all-envs 1
 all-envs-list = toList all-envs
-
-yo = new-duns-at-loc 0 1 (short-beak ∷ short-beak ∷ [])
-lenyo = L.length yo
-yo-env = mildly-disturbed yo 1
-yo-map : EnvMap
-yo-map = insert 1 yo-env empty
-yo-map-size = size yo-map
-yo-envs-list = toList yo-map
-
-
-{-
-dun-env-assocs =
-((3 ∷ 4 ∷ [] , short-beak ∷ short-beak ∷ []) , (1 , mildly-disturbed)) ∷
-(([ 1 ] , [ short-beak ]) , (2 , undisturbed)) ∷
-(([ 2 ] , [ long-beak ]) , (3 , mildly-disturbed)) ∷
-(([ 5 ] , [ long-beak ]) , (4 , well-disturbed)) ∷
-[]
+{- all-envs-list should be:
+    (1 Data.Tree.AVL.Value.,
+     mildly-disturbed (short-beak 2 1 ∷ short-beak 3 1 ∷ []) 1)
+    ∷
+    (2 Data.Tree.AVL.Value., undisturbed (short-beak 2 2 ∷ []) 2) ∷
+    (3 Data.Tree.AVL.Value., mildly-disturbed (long-beak 2 3 ∷ []) 3) ∷
+    (4 Data.Tree.AVL.Value., well-disturbed (long-beak 2 4 ∷ []) 4) ∷
+    []
 -}
+
 
 -----------------------------
 -- Configuring an entire system
@@ -425,27 +418,3 @@ e-evolve : List Env → List Env
 e-evolve [] = []
 e-evolve (env ∷ envs) = (niche-construct env) ∷ e-evolve envs
 -}
-
------------------------------------------------------------------------------
--- Experiments with mapping from locs to envs.  See CatMap.agda, 
--- https://agda.github.io/agda-stdlib/v2.0/README.Data.Tree.AVL.html
-
-empty-env-map : EnvMap
-empty-env-map = empty
-
-singleton-env-map : EnvMap
-singleton-env-map = singleton 1 (undisturbed [] 1)
--- size singleton-env-map
-just-env1 = lookup singleton-env-map 1
-nada = lookup singleton-env-map 42
-
--- Overwrites old element 1:
-doubleton-env-map : EnvMap
-doubleton-env-map = insert 2 (mildly-disturbed [] 2) singleton-env-map
-just-env1again = lookup doubleton-env-map 1
-just-env2 = lookup doubleton-env-map 2
-nada-again = lookup doubleton-env-map 42
-double-size = size doubleton-env-map
-
-smaller-map : EnvMap
-smaller-map = delete 1 doubleton-env-map
