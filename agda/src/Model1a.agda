@@ -204,9 +204,16 @@ config-system max-id (row ∷ more-rows) env-map =
 -- Why is this generating empty?
 all-envs : EnvMap
 all-envs = config-system init-max-id system-config-info empty
-
 -- check:
 all-envs-list = toList all-envs
+
+yo = new-duns-at-loc 0 1 (short-beak ∷ short-beak ∷ [])
+lenyo = L.length yo
+yo-env = mildly-disturbed yo 1
+yo-map : EnvMap
+yo-map = insert 1 yo-env empty
+yo-map-size = size yo-map
+yo-envs-list = toList yo-map
 
 
 {-
