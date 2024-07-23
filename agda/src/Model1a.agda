@@ -158,6 +158,7 @@ DunEnvAssocs = List ((List ℕ × List DunConstr) × (ℕ × EnvConstr))
 ---------
 -- Create the environments from a DunEnvAssocs list.
 
+{-
 -- Creates a list of environment Sigma-pairs from the assocs.
 assocs-to-envs : DunEnvAssocs → List Env
 assocs-to-envs [] = []
@@ -414,7 +415,7 @@ just-env-three = lookup all-envs-map 3
 nothing-env-five = lookup all-envs-map 5
 -}
 
-
+-}
 
 -- ATTEMPT TO USE Data.Tree.AVL
 
@@ -423,44 +424,26 @@ import Data.Tree.AVL
 open Data.Tree.AVL <-strictTotalOrder
 open import Relation.Binary.PropositionalEquality -- for subst, at least
 
--- Define my map type.  I think using Vec, from the the AVL Readme,
--- is just a way to have a data type with a missing last arg that
--- can function as a key.  Not sure.
-EnvMap = Tree (MkValue (Vec Env) (subst (Vec Env)))
+
+-- This works because I made Env indexed by loc
+EnvMap = Tree (MkValue Env (subst Env)) -- I still don't get this syntax/semantics
 
 empty-env-map : EnvMap
 empty-env-map = empty
 
 singleton-env-map : EnvMap
-singleton-env-map = singleton 1 ((undisturbed 1 []) ∷ [])
+singleton-env-map = singleton 1 (undisturbed [] 1)
 -- size singleton-env-map
 just-env1 = lookup singleton-env-map 1
 nada = lookup singleton-env-map 42
 
 -- Overwrites old element 1:
-singleton-env-map2 : EnvMap
-singleton-env-map2 = insert 1 ((mildly-disturbed 2 []) ∷ []) singleton-env-map
-just-env2 = lookup singleton-env-map2 1
--- size singleton-env-map2
+doubleton-env-map : EnvMap
+doubleton-env-map = insert 2 (mildly-disturbed [] 2) singleton-env-map
+just-env1again = lookup doubleton-env-map 1
+just-env2 = lookup doubleton-env-map 2
+nada-again = lookup doubleton-env-map 42
+double-size = size doubleton-env-map
 
--- Why is this complaining that the nil does not have size 2?
--- Isn't the second arg a key?
--- (And I still don't know why I have to wrap the vals in a Vec.)
-{-
-two-envs-map : EnvMap
-two-envs-map = insert 2 ((well-disturbed 3 []) ∷ []) empty
--}
--- Well note that in the AVL README, the singleton avl t₁ is created with a
--- vector of length 2, and the first arg to the singleton is 2.
--- Look also at the fromList example further down.  The keys correspond
--- to the lengths of the vectors.  It may be relevant that the keys
--- are parameters of the vectors.
--- Maybe it's that (subst (Vec String)) means substitute the next arg
--- of Vec, i.e. the Nat or Fin.  So can I do that with Env locs?
-
-env-pairs : List (ℕ × Env)
-env-pairs = L.map (λ e → (env-loc e) , e) all-envs
-
-env-map : EnvMap
-env-map = {!!} -- Data.Tree.AVL.fromList env-pairs
-
+smaller-map : EnvMap
+smaller-map = delete 1 doubleton-env-map
