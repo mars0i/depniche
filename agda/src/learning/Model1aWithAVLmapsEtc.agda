@@ -36,12 +36,7 @@ open import Data.List as L using (List; _∷_; []; [_]; iterate; _++_; map; conc
 open import Data.Vec as V using (Vec; _∷_; [])
 open import Data.Nat using (ℕ; zero; suc; _+_; _*_; _∸_; _^_)
 open import Data.Product.Base -- using (_×_; _,′_) -- Needs stdlib 2.0
--- open import Relation.Binary.PropositionalEquality using (_≡_; refl)
-
-open import Data.Nat.Properties using (<-strictTotalOrder)
-import Data.Tree.AVL
-open Data.Tree.AVL <-strictTotalOrder
-open import Relation.Binary.PropositionalEquality -- for subst, at least
+open import Relation.Binary.PropositionalEquality using (_≡_; refl)
 
 open import Niche
 open import Kludges
@@ -87,22 +82,21 @@ data Dun : Set where
 DunConstr : Set 
 DunConstr = (i : ℕ) → (e : ℕ) → Dun
 
-init-max-id : ℕ
-init-max-id = 1
+-- Urgh.  To generate new ids in the natural way (incrementing the last
+-- one stored in a global), dunlin creation would have to be done in a
+-- state monad or something like that.
 
 -- Make a new dunlin using the provided constructor, creating a new id by
 -- incrementing the previous max id that should be passed in.  The new id
 -- can be extracted from the new dunlin as the new max id.
-new-dun : DunConstr → (max-id : ℕ) → (env-id : ℕ) → Dun
-new-dun constr max-id env-id = constr (suc max-id) env-id
+new-dun : DunConstr → (env-id : ℕ) → (max-id : ℕ) → Dun
+new-dun constr env-id max-id = constr (suc max-id) env-id
 
-{-
 -- For use inside List.iterate and similar functions to generate a
 -- sequence of dunlins with consequitive (presumably new) ids.
 next-dun : Dun → Dun
 next-dun (short-beak id loc) = short-beak (suc id) loc
 next-dun (long-beak id loc) = long-beak (suc id) loc
--}
 
 -- projection operators
 dun-params : Dun → (ℕ × ℕ)
@@ -159,48 +153,6 @@ env-constructor : {loc : ℕ} → Env loc → EnvConstr
 env-constructor (undisturbed _ _) = undisturbed
 env-constructor (mildly-disturbed _ _) = mildly-disturbed
 env-constructor (well-disturbed _ _) = well-disturbed
-
------------------------------
--- Create structure that stores envs, allows lookup by location,
--- enforces uniqueness wrt location.
-
--- This works because Env is indexed by loc.
-EnvMap = Tree (MkValue Env (subst Env))
-
--- I still don't understand what's going on in MkValue, but it appears
--- that the first arg and the arg to subst should be an indexed datatype
--- (or a function?) where indexes are keys. i.e. this provides a map
--- from keys to values in which the keys are indexes of the value type.
--- (Data.Tree.AVL.IndexedMap provides a way to do somethng similar,
--- but I don't understand how to use it. To allow values to be
--- independent of keys use Data.Tree.AVL.Map.)
-
-SysConfigInfo : Set
-SysConfigInfo = List (ℕ × EnvConstr × List DunConstr)
-
-system-config-info : SysConfigInfo
-system-config-info =
-  (1 , mildly-disturbed , (short-beak ∷ short-beak ∷ [])) ∷
-  (2 , undisturbed , (short-beak ∷ [])) ∷ 
-  (3 , mildly-disturbed , (long-beak ∷ [])) ∷
-  (4 , well-disturbed , (long-beak ∷ [])) ∷
-  []
-
-config-system : SysConfigInfo → EnvMap
-config-system = {!!}
-
-all-envs : EnvMap
-all-envs = {!!}
-
-
-{-
-dun-env-assocs =
-((3 ∷ 4 ∷ [] , short-beak ∷ short-beak ∷ []) , (1 , mildly-disturbed)) ∷
-(([ 1 ] , [ short-beak ]) , (2 , undisturbed)) ∷
-(([ 2 ] , [ long-beak ]) , (3 , mildly-disturbed)) ∷
-(([ 5 ] , [ long-beak ]) , (4 , well-disturbed)) ∷
-[]
--}
 
 -----------------------------
 -- Configuring an entire system
@@ -401,11 +353,56 @@ niche-construct env = {!!}  -- extract dunlins, look up their effect, and constr
 e-evolve : List Env → List Env
 e-evolve [] = []
 e-evolve (env ∷ envs) = (niche-construct env) ∷ e-evolve envs
--}
 
 -----------------------------------------------------------------------------
 -- Experiments with mapping from locs to envs.  See CatMap.agda, 
 -- https://agda.github.io/agda-stdlib/v2.0/README.Data.Tree.AVL.html
+
+{-
+-- ATTEMPT TO USE Data.Tree.AVL.IndexedMap
+
+import Data.Tree.AVL.IndexedMap as IM  -- wait to open it
+
+open import Data.Nat.Properties using (<-strictTotalOrder)
+open import Data.Bool.Base using (Bool)
+-- open import Data.Product.Base as Prod using (_,_; _,′_; _×_)
+open import Data.Maybe.Base as Maybe using (Maybe)
+open import Data.String.Base using (String)
+open import Relation.Binary.PropositionalEquality
+
+nat-id : ℕ → ℕ
+nat-id = id
+
+-- Indexed Nat wrapper:
+data MyNat : ℕ → Set where
+  mynat : (n : ℕ) → MyNat n
+
+-- Wrap Env so that it's indexed (or rewrite Env):
+data LocatedEnv : ℕ → Set where
+  located-env : (env : Env) → LocatedEnv (env-loc env)
+
+-- Doesn't work:
+-- open IM MyNat LocatedEnv Data.Nat._<_ <-strictTotalOrder
+-}
+
+
+
+-}
+
+open import Data.Nat.Properties using (<-strictTotalOrder)
+import Data.Tree.AVL
+open Data.Tree.AVL <-strictTotalOrder
+open import Relation.Binary.PropositionalEquality -- for subst, at least
+
+-- This works because Env is indexed by loc.
+EnvMap = Tree (MkValue Env (subst Env))
+-- I still don't understand what's going on in MkValue, but it appears
+-- that the first arg and the arg to subst should be an indexed datatype
+-- (or a function?) where indexes are keys. i.e. this provides a map
+-- from keys to values in which the keys are indexes of the value type.
+-- (Data.Tree.AVL.IndexedMap provides a way to do somethng similar,
+-- but I don't understand how to use it. To allow values to be
+-- independent of keys use Data.Tree.AVL.Map.)
 
 empty-env-map : EnvMap
 empty-env-map = empty
