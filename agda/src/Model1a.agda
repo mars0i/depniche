@@ -85,7 +85,7 @@ data Dun : Set where
 
 -- An abbreviation for the type of the Dun constructors will be useful later.
 DunConstr : Set 
-DunConstr = (i : ℕ) → (e : ℕ) → Dun
+DunConstr = (id : ℕ) → (loc : ℕ) → Dun
 
 init-max-id : ℕ
 init-max-id = 1
@@ -186,11 +186,27 @@ system-config-info =
   (4 , well-disturbed , (long-beak ∷ [])) ∷
   []
 
-config-system : SysConfigInfo → EnvMap
-config-system = {!!}
+new-duns-at-loc : (max-id : ℕ) → (loc : ℕ) → List DunConstr → List Dun
+new-duns-at-loc _ _ [] = []
+new-duns-at-loc max-id loc (constr ∷ constrs) =
+  let new-id = suc max-id
+  in (constr new-id loc) ∷ (new-duns-at-loc new-id loc constrs)
 
+config-system : (max-id : ℕ) → SysConfigInfo → EnvMap → EnvMap
+config-system _ [] _ = empty
+config-system max-id (row ∷ more-rows) env-map =
+  let (loc , env-constr , dun-constrs) = row
+      duns = new-duns-at-loc init-max-id loc dun-constrs
+      new-max-id = max-id + L.length duns
+      new-env = env-constr duns loc
+  in config-system new-max-id more-rows (insert loc new-env env-map)
+
+-- Why is this generating empty?
 all-envs : EnvMap
-all-envs = {!!}
+all-envs = config-system init-max-id system-config-info empty
+
+-- check:
+all-envs-list = toList all-envs
 
 
 {-
