@@ -1,5 +1,5 @@
-module Model1 where
--- Version in which neither Env nor Dun are indexed
+module Model1a where
+-- Like Model1 on 7/22/2024, but with Env indexed by locations.
 -- See docs/DunlinStory1.md for rationale for names, data, etc.
 
 {- General notes on code
@@ -107,11 +107,11 @@ dun-constructor (long-beak _ _) = long-beak
 -- which environments are adjacent (e.g. env 5 is next to envs 4 and 6).
 -- Environments also contain zero or more dunlins. Here we construct actual
 -- dunlins rather than storing their ids.
-data Env : Set where
-  undisturbed      : (loc : ℕ) → (dunlins : List Dun) → Env
-  mildly-disturbed : (loc : ℕ) → (dunlins : List Dun) → Env
-  well-disturbed   : (loc : ℕ) → (dunlins : List Dun) → Env
--- In a future version, perhaps the level of disturbed-ness should captured by an
+data Env : ℕ → Set where
+  undisturbed      : (dunlins : List Dun) → (loc : ℕ) → Env loc
+  mildly-disturbed : (dunlins : List Dun) → (loc : ℕ) → Env loc
+  well-disturbed   : (dunlins : List Dun) → (loc : ℕ) → Env loc
+-- In a future version, perhaps the level of disturbed-ness should captured by an loc
 -- parameter rather than different constructors.  If it's an index, that captures
 -- the idea that it's a different type, and it might require using lists or
 -- vectors over sigma pairs (Σ ℕ (Env ℕ)) instead of Envs.  (See
@@ -120,26 +120,28 @@ data Env : Set where
 
 -- An abbreviation for the type of the Env constructors will be useful later.
 EnvConstr : Set
-EnvConstr = (i : ℕ) → (ds : List Dun) → Env
+EnvConstr = (ds : List Dun) → (loc : ℕ) → Env loc
 
+{-
 -- projection operators
-env-params : Env → (ℕ × List Dun)
-env-params (undisturbed loc dunlins) = (loc , dunlins)
-env-params (mildly-disturbed loc dunlins) = (loc , dunlins)
-env-params (well-disturbed loc dunlins) = (loc , dunlins)
+env-params : (ℕ × List Dun)
+env-params (undisturbed dunlins) = (loc , dunlins)
+env-params (mildly-disturbed dunlins) = (loc , dunlins)
+env-params (well-disturbed dunlins) = (loc , dunlins)
+-}
 
-env-loc : Env → ℕ
-env-loc (undisturbed loc _) = loc
-env-loc (mildly-disturbed loc _) = loc
-env-loc (well-disturbed loc _) = loc
+env-loc : {loc : ℕ} → Env loc → ℕ
+env-loc (undisturbed _ loc) = loc
+env-loc (mildly-disturbed _ loc) = loc
+env-loc (well-disturbed _ loc) = loc
 
-env-duns : Env → List Dun
-env-duns (undisturbed _ dunlins) = dunlins
-env-duns (mildly-disturbed _ dunlins) = dunlins
-env-duns (well-disturbed _ dunlins) = dunlins
+env-duns : {loc : ℕ} → Env loc → List Dun
+env-duns (undisturbed dunlins _) = dunlins
+env-duns (mildly-disturbed dunlins _) = dunlins
+env-duns (well-disturbed dunlins _) = dunlins
 
 -- Is this non-idiomatic?
-env-constructor : Env → EnvConstr
+env-constructor : {loc : ℕ} → Env loc → EnvConstr
 env-constructor (undisturbed _ _) = undisturbed
 env-constructor (mildly-disturbed _ _) = mildly-disturbed
 env-constructor (well-disturbed _ _) = well-disturbed
@@ -283,7 +285,8 @@ add-duns-by-loc dloc offspring (env ∷ envs) = let (eloc , eduns) = env-params 
 -- Or create a lookup structure.
 add-dun : Dun → List Env → List Env
 add-dun dun [] = [] -- no envs!
-add-dun dun (env ∷ envs) = let (env-loc , env-duns) = env-params env
+add-dun dun (env ∷ envs) = let env-loc = env-loc env
+                               dunlins = env-duns env
                                env-constr = env-constructor env
                            in if (dun-loc dun) == env-loc
                               then (env-constr env-loc (dun ∷ env-duns)) ∷ envs
