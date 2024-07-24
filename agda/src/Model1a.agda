@@ -220,7 +220,8 @@ config-system max-id (env-spec ∷ env-specs) env-map =
 
 all-envs : EnvMap
 all-envs = config-system init-max-id config-info empty
--- Checks:
+
+-- Checks (convert to equality proofs?):
 maybe-env : Maybe (Env 1)
 maybe-env = lookup all-envs 1
 all-envs-list = toList all-envs
