@@ -1,11 +1,7 @@
--- Most of this is copied from
--- https://agda.github.io/agda-stdlib/v2.0/README.Data.Tree.AVL.html
-
 {-# OPTIONS --cubical-compatible --safe #-}
 
 module learning/CatMap where
 
--- import Data.Tree.AVL
 import Data.Tree.AVL.Map as M
 
 -- This module is parametrised by keys, which have to form a (strict)
