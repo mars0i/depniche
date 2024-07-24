@@ -39,7 +39,7 @@ open import Data.Product.Base -- using (_×_; _,′_) -- Needs stdlib 2.0
 -- open import Relation.Binary.PropositionalEquality using (_≡_; refl)
 
 open import Data.Nat.Properties using (<-strictTotalOrder)
-import Data.Tree.AVL as AVL using (Tree; MkValue; empty; singleton; insert; delete; lookup; size; toList)
+import Data.Tree.AVL as AVL using (Tree; MkValue; empty; singleton; insert; delete; lookup; map; size; toList)
 open AVL <-strictTotalOrder
 open import Relation.Binary.PropositionalEquality using (subst) -- _≡_; refl
 
@@ -116,6 +116,13 @@ new-duns-at-loc _ _ [] = []
 new-duns-at-loc max-id loc (constr ∷ constrs) =
   let new-id = suc max-id
   in (constr new-id loc) ∷ (new-duns-at-loc new-id loc constrs)
+
+-- For use inside List.iterate and similar functions to generate a
+-- sequence of dunlins with consequitive ids.
+next-dun : Dun → Dun
+next-dun (short-beak id loc) = short-beak (suc id) loc
+next-dun (long-beak id loc) = long-beak (suc id) loc
+
 
 -- projection operators
 dun-params : Dun → (DunID × Loc)
@@ -290,20 +297,13 @@ Fitness : Set
 Fitness = ℕ
 
 -- See docs/DunlinStory1.md for rationale, constraints
-fitness : Dun → Env → Fitness
+fitness : {loc : Loc} → Dun → Env loc → Fitness
 fitness (short-beak _ _) (undisturbed _ _)      = 0
 fitness (short-beak _ _) (mildly-disturbed _ _) = 1
 fitness (short-beak _ _) (well-disturbed _ _)   = 2
 fitness (long-beak _ _)  (undisturbed _ _)      = 2
 fitness (long-beak _ _)  (mildly-disturbed _ _) = 1
 fitness (long-beak _ _)  (well-disturbed _ _)   = 0
-
-
-lookup-env-by-loc : List Env → (loc : Loc) → Maybe Env
-lookup-env-by-loc [] _ = nothing
-lookup-env-by-loc (env ∷ envs) loc = if loc == (env-loc env)
-                                     then just env
-                                     else lookup-env-by-loc envs loc
 
 -- Should new envs be introduced here?  Maybe better to put in a separate step.
 -- choose-kid-loc is some function from each dunlin to a new location. This can take
@@ -318,11 +318,12 @@ reproduce max-id (suc n) choose-loc (long-beak _ loc)  = iterate next-dun (long-
 -- Calculates number of kids from fitness of dun relative to env, and calls reproduce.
 -- Probably SHOULD BE MAYBE-IZED.  At present it returns an empty list when an env
 -- can't be found.  This can't be distinguished from the zero fitness case.
-reproduce-per-fit : (max-id : ℕ) → (envs : List Env) → (choose-loc : Dun → ℕ) →
+reproduce-per-fit : (max-id : ℕ) → (envs : EnvMap) → (choose-loc : Dun → ℕ) →
                     (parent : Dun) → List Dun
-reproduce-per-fit _ [] _ _ = []  -- No envs, shouldn't happen.
+reproduce-per-fit _ empty _ _ = []  -- No envs, shouldn't happen.
+-- WHY DOES AGDA THINK THIS IS UNREACHABLE?:
 reproduce-per-fit max-id envs choose-loc parent with dun-loc parent
-...                                                | loc with lookup-env-by-loc envs loc
+...                                                | loc with lookup envs loc
 ...                                                         | nothing = [] -- can't find that env, shouldn't happen
 ...                                                         | just env = let fit = fitness parent env
                                                                          in if fit == 0
@@ -346,9 +347,17 @@ add-duns-by-loc dloc offspring (env ∷ envs) = let (eloc , eduns) = env-params 
                                                  else env ∷ (add-duns-by-loc dloc offspring envs)
 -}
 
--- Assumes that env locations are unique.  (Maybe should be proven elsewhere?)
--- Inefficient.  Maybe new dunlins should be sorted by loc.
--- Or create a lookup structure.
+add-dun : Dun → EnvMap → EnvMap
+add-dun dun envs = let loc = dun-loc dun
+                       maybe-old-env = lookup envs loc
+                       -- IF nothing then return envs unchanged
+                       -- IF just old-env then do the rest
+                       -- duns = env-duns old-env
+                       -- env-constr = env-constructor old-env
+                       -- new-env = env-constr (dun ∷ duns) loc
+                   in ? -- insert loc new-env envs -- overwrites old env entry
+
+{-
 add-dun : Dun → List Env → List Env
 add-dun dun [] = [] -- no envs!
 add-dun dun (env ∷ envs) = let env-loc = env-loc env
@@ -357,9 +366,9 @@ add-dun dun (env ∷ envs) = let env-loc = env-loc env
                            in if (dun-loc dun) == env-loc
                               then (env-constr env-loc (dun ∷ env-duns)) ∷ envs
                               else env ∷ (add-dun dun envs)
+-}
                                                  
--- Must be a better way than this ...
-add-duns : List Dun → List Env → List Env
+add-duns : List Dun → EnvMap → EnvMap
 add-duns [] envs = envs
 add-duns (dun ∷ duns) envs = add-dun dun (add-duns duns envs)
 
@@ -381,8 +390,8 @@ add-duns (dun ∷ duns) envs = add-dun dun (add-duns duns envs)
 -- which will increment it.
 --
 -- TODO: -- Add removal of dead dunlins based on some criterion.
-d-evolve : (max-id : ℕ) → List Env → (choose-loc : Dun → ℕ) → List Env
-d-evolve max-id [] _ = []
+d-evolve : (max-id : ℕ) → EnvMap → (choose-loc : Dun → ℕ) → EnvMap
+d-evolve max-id empty _ = empty
 d-evolve max-id envs choose-loc =
     let old-dunlins = L.concatMap env-duns envs
         new-dunlins = L.concatMap (reproduce-per-fit max-id envs choose-loc) old-dunlins -- make baby dunlins
