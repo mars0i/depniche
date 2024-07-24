@@ -74,46 +74,59 @@ open import Kludges
 -- to evolution in a population.
 
 -----------------------------------
+
+-- Environments have locations which determine which environments
+-- are adjacent.  Currently locations are nats, implying that each
+-- environment is adjacent to no more than two others (perhaps along
+-- the shoreline).  An alternative is to allow pairs of nats or integers
+-- to represent environments arrayed in 2D space, or triples for 3D
+-- coordinates, e.g. for fish in a body of water.
+Loc : Set
+Loc = ℕ
+
+-- Dunlins have IDs:
+DunID : Set
+DunID = ℕ
+
+-----------------------------------
 -- Dunlins
 
 -- Each dunlin should have a unique id, and a location loc, which is an id
 -- for the dunlin's current environment.  (It could be the env itself, but
 -- I couldn't figure out how to do this kind of mutual recursion.)
 data Dun : Set where
-  short-beak   : (id : ℕ) → (loc : ℕ) → Dun
-  long-beak  : (id : ℕ) → (loc : ℕ) → Dun
+  short-beak   : (id : DunID) → (loc : Loc) → Dun
+  long-beak  : (id : DunID) → (loc : Loc) → Dun
 
 -- An abbreviation for the type of the Dun constructors will be useful later.
 DunConstr : Set 
-DunConstr = (id : ℕ) → (loc : ℕ) → Dun
+DunConstr = (id : DunID) → (loc : Loc) → Dun
 
-init-max-id : ℕ
+init-max-id : DunID
 init-max-id = 1
 
 -- Make a new dunlin using the provided constructor, creating a new id by
 -- incrementing the previous max id that should be passed in.  The new id
 -- can be extracted from the new dunlin as the new max id.
-new-dun : DunConstr → (max-id : ℕ) → (env-id : ℕ) → Dun
-new-dun constr max-id env-id = constr (suc max-id) env-id
+new-dun : DunConstr → (max-id : DunID) → (loc : Loc) → Dun
+new-dun constr max-id loc = constr (suc max-id) loc
 
-{-
--- For use inside List.iterate and similar functions to generate a
--- sequence of dunlins with consequitive (presumably new) ids.
-next-dun : Dun → Dun
-next-dun (short-beak id loc) = short-beak (suc id) loc
-next-dun (long-beak id loc) = long-beak (suc id) loc
--}
+new-duns-at-loc : (max-id : DunID) → (loc : Loc) → List DunConstr → List Dun
+new-duns-at-loc _ _ [] = []
+new-duns-at-loc max-id loc (constr ∷ constrs) =
+  let new-id = suc max-id
+  in (constr new-id loc) ∷ (new-duns-at-loc new-id loc constrs)
 
 -- projection operators
-dun-params : Dun → (ℕ × ℕ)
+dun-params : Dun → (DunID × Loc)
 dun-params (short-beak id loc) = (id , loc)
 dun-params (long-beak id loc) = (id , loc)
 
-dun-id : Dun → ℕ
+dun-id : Dun → DunID
 dun-id (short-beak id _) = id 
 dun-id (long-beak id _) = id
 
-dun-loc : Dun → ℕ
+dun-loc : Dun → Loc
 dun-loc (short-beak _ loc) = loc 
 dun-loc (long-beak _ loc) = loc
 
@@ -129,10 +142,10 @@ dun-constructor (long-beak _ _) = long-beak
 -- which environments are adjacent (e.g. env 5 is next to envs 4 and 6).
 -- Environments also contain zero or more dunlins. Here we construct actual
 -- dunlins rather than storing their ids.
-data Env : ℕ → Set where
-  undisturbed      : (dunlins : List Dun) → (loc : ℕ) → Env loc
-  mildly-disturbed : (dunlins : List Dun) → (loc : ℕ) → Env loc
-  well-disturbed   : (dunlins : List Dun) → (loc : ℕ) → Env loc
+data Env : Loc → Set where
+  undisturbed      : (dunlins : List Dun) → (loc : Loc) → Env loc
+  mildly-disturbed : (dunlins : List Dun) → (loc : Loc) → Env loc
+  well-disturbed   : (dunlins : List Dun) → (loc : Loc) → Env loc
 -- In a future version, perhaps the level of disturbed-ness should captured by an loc
 -- parameter rather than different constructors.  If it's an index, that captures
 -- the idea that it's a different type, and it might require using lists or
@@ -142,20 +155,20 @@ data Env : ℕ → Set where
 
 -- An abbreviation for the type of the Env constructors will be useful later.
 EnvConstr : Set
-EnvConstr = (ds : List Dun) → (loc : ℕ) → Env loc
+EnvConstr = (duns : List Dun) → (loc : Loc) → Env loc
 
-env-loc : {loc : ℕ} → Env loc → ℕ
+env-loc : {loc : Loc} → Env loc → Loc
 env-loc (undisturbed _ loc) = loc
 env-loc (mildly-disturbed _ loc) = loc
 env-loc (well-disturbed _ loc) = loc
 
-env-duns : {loc : ℕ} → Env loc → List Dun
+env-duns : {loc : Loc} → Env loc → List Dun
 env-duns (undisturbed dunlins _) = dunlins
 env-duns (mildly-disturbed dunlins _) = dunlins
 env-duns (well-disturbed dunlins _) = dunlins
 
 -- Is this non-idiomatic?
-env-constructor : {loc : ℕ} → Env loc → EnvConstr
+env-constructor : {loc : Loc} → Env loc → EnvConstr
 env-constructor (undisturbed _ _) = undisturbed
 env-constructor (mildly-disturbed _ _) = mildly-disturbed
 env-constructor (well-disturbed _ _) = well-disturbed
@@ -175,24 +188,21 @@ EnvMap = Tree (MkValue Env (subst Env))
 -- but I don't understand how to use it. To allow values to be
 -- independent of keys use Data.Tree.AVL.Map.)
 
-SysConfigInfo : Set
-SysConfigInfo = List (ℕ × EnvConstr × List DunConstr)
+ConfigInfo : Set
+ConfigInfo = List (ℕ × EnvConstr × List DunConstr)
 
-system-config-info : SysConfigInfo
-system-config-info =
+config-info : ConfigInfo
+config-info =
   (1 , mildly-disturbed , (short-beak ∷ short-beak ∷ [])) ∷
   (2 , undisturbed , (short-beak ∷ [])) ∷ 
   (3 , mildly-disturbed , (long-beak ∷ [])) ∷
   (4 , well-disturbed , (long-beak ∷ [])) ∷
   []
 
-new-duns-at-loc : (max-id : ℕ) → (loc : ℕ) → List DunConstr → List Dun
-new-duns-at-loc _ _ [] = []
-new-duns-at-loc max-id loc (constr ∷ constrs) =
-  let new-id = suc max-id
-  in (constr new-id loc) ∷ (new-duns-at-loc new-id loc constrs)
-
-config-system : (max-id : ℕ) → SysConfigInfo → EnvMap → EnvMap
+-- This is doing roughly what mkSys does in Niche.agda, and they
+-- should probably be harmonized and merged, or this could provide
+-- a component of mkSys.
+config-system : (max-id : ℕ) → ConfigInfo → EnvMap → EnvMap
 config-system _ [] env-map = env-map
 config-system max-id (env-spec ∷ env-specs) env-map =
   let (loc , env-constr , dun-constrs) = env-spec
@@ -202,7 +212,7 @@ config-system max-id (env-spec ∷ env-specs) env-map =
   in config-system new-max-id env-specs (insert loc new-env env-map)
 
 all-envs : EnvMap
-all-envs = config-system init-max-id system-config-info empty
+all-envs = config-system init-max-id config-info empty
 -- Checks:
 maybe-env : Maybe (Env 1)
 maybe-env = lookup all-envs 1
@@ -218,25 +228,7 @@ all-envs-list = toList all-envs
 -}
 
 
------------------------------
--- Configuring an entire system
--- I guess anothger way to do it would be to pair the dunlin ids and constructors
-
--- in a single embedded list.
-DunEnvAssocs : Set
-DunEnvAssocs = List ((List ℕ × List DunConstr) × (ℕ × EnvConstr)) 
---                    dun ids                     loc
-
----------
--- Create the environments from a DunEnvAssocs list.
-
 {-
--- Creates a list of environment Sigma-pairs from the assocs.
-assocs-to-envs : DunEnvAssocs → List Env
-assocs-to-envs [] = []
-assocs-to-envs (x ∷ xs) = let ((dun-ids , dun-constrs) , (loc , env-constr)) = x
-                              duns = zipWith (λ id constr → (constr id loc)) dun-ids dun-constrs
-                          in (env-constr loc duns) ∷ assocs-to-envs xs
 
 ---------
 -- Create the dunlins from a DunEnvAssocs list.
@@ -284,6 +276,7 @@ of characters is the same as Haskell/OCaml/Idris/Lean. It's still harder to read
 -- make the next set of envs and dunlins.
 all-envs = assocs-to-envs dun-env-assocs
 all-duns = assocs-to-duns dun-env-assocs
+-}
 
 -----------------
 -- Fitness and niche construction
@@ -306,7 +299,7 @@ fitness (long-beak _ _)  (mildly-disturbed _ _) = 1
 fitness (long-beak _ _)  (well-disturbed _ _)   = 0
 
 
-lookup-env-by-loc : List Env → (loc : ℕ) → Maybe Env
+lookup-env-by-loc : List Env → (loc : Loc) → Maybe Env
 lookup-env-by-loc [] _ = nothing
 lookup-env-by-loc (env ∷ envs) loc = if loc == (env-loc env)
                                      then just env
@@ -417,4 +410,3 @@ niche-construct env = {!!}  -- extract dunlins, look up their effect, and constr
 e-evolve : List Env → List Env
 e-evolve [] = []
 e-evolve (env ∷ envs) = (niche-construct env) ∷ e-evolve envs
--}
