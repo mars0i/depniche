@@ -356,7 +356,7 @@ add-dun dun envs = let loc = dun-loc dun
                        -- duns = env-duns old-env
                        -- env-constr = env-constructor old-env
                        -- new-env = env-constr (dun ∷ duns) loc
-                   in ? -- insert loc new-env envs -- overwrites old env entry
+                   in {!!} -- insert loc new-env envs -- overwrites old env entry
 
 {-
 add-dun : Dun → List Env → List Env
@@ -372,6 +372,12 @@ add-dun dun (env ∷ envs) = let env-loc = env-loc env
 add-duns : List Dun → EnvMap → EnvMap
 add-duns [] envs = envs
 add-duns (dun ∷ duns) envs = add-dun dun (add-duns duns envs)
+
+-- Should the result be a Vec or an AVL map?
+collect-all-duns : EnvMap → List Dun
+collect-all-duns envs = let env-list = toList envs
+                            all-duns = concatMap (env-duns ∘ proj₂) env-list
+                        in {!!}
 
 -- Original example in Niche.agda also had a timestep parameter, but 
 -- the transition rules can be the same at every time.
@@ -391,13 +397,19 @@ add-duns (dun ∷ duns) envs = add-dun dun (add-duns duns envs)
 -- which will increment it.
 --
 -- TODO: -- Add removal of dead dunlins based on some criterion.
+
+-- choose-loc is a function such as baby-loc-same that determines the new
+-- location of offspring of a parent dunlin.  (In a future version, this
+-- might be a set of locations or a probability distribution over locations.)
 d-evolve : (max-id : ℕ) → EnvMap → (choose-loc : Dun → ℕ) → EnvMap
-d-evolve max-id empty _ = empty
-d-evolve max-id envs choose-loc =
+d-evolve max-id empty _ = empty  -- no environments!?
+d-evolve max-id envs choose-loc = {!!}
+{-
     let old-dunlins = L.concatMap env-duns envs
         new-dunlins = L.concatMap (reproduce-per-fit max-id envs choose-loc) old-dunlins -- make baby dunlins
         new-max-id = max-id + (L.length new-dunlins) -- should be a better way
     in add-duns new-dunlins envs
+-}
 
 {-
 -- THIS WORKS (or type checks) but seems unnecessarily complicated
@@ -411,6 +423,10 @@ d-evolve max-id (env ∷ envs) choose-loc =
                           envs choose-loc)                  --  to envs.
 -}
 
+
+{-
+FIXME:
+
 niche-construct : Env → Env
 niche-construct env = {!!}  -- extract dunlins, look up their effect, and construct new env
 
@@ -420,3 +436,5 @@ niche-construct env = {!!}  -- extract dunlins, look up their effect, and constr
 e-evolve : List Env → List Env
 e-evolve [] = []
 e-evolve (env ∷ envs) = (niche-construct env) ∷ e-evolve envs
+
+-}
