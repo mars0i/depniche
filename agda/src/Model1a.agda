@@ -1,5 +1,6 @@
 module Model1a where
 -- Like Model1 on 7/22/2024, but with Env indexed by locations.
+
 -- See docs/DunlinStory1.md for rationale for names, data, etc.
 
 {- General notes on code
@@ -34,14 +35,15 @@ open import Function.Base
 open import Data.Bool
 open import Data.List as L using (List; _∷_; []; [_]; iterate; _++_; map; concat; concatMap; zipWith; _[_]%=_; _[_]∷=_)
 open import Data.Vec as V using (Vec; _∷_; [])
-open import Data.Nat using (ℕ; zero; suc; _+_; _*_; _∸_; _^_)
-open import Data.Product.Base -- using (_×_; _,′_) -- Needs stdlib 2.0
+open import Data.Product.Base using (_×_; _,_; proj₁; proj₂; _,′_) -- Needs stdlib 2.0
 -- open import Relation.Binary.PropositionalEquality using (_≡_; refl)
 
 open import Data.Nat.Properties using (<-strictTotalOrder)
-import Data.Tree.AVL as AVL using (Tree; MkValue; empty; singleton; insert; delete; lookup; map; size; toList)
+import Data.Tree.AVL as AVL using (Tree; MkValue; empty; singleton; insert; delete; lookup; map; size; toList; toPair) -- K&_; 
 open AVL <-strictTotalOrder
 open import Relation.Binary.PropositionalEquality using (subst) -- _≡_; refl
+
+import Data.Tree.AVL.Value as Value
 
 open import Niche
 open import Kludges
@@ -225,7 +227,9 @@ all-envs = config-system init-max-id config-info empty
 maybe-env : Maybe (Env 1)
 maybe-env = lookup all-envs 1
 all-envs-list = toList all-envs
-{- all-envs-list should be:
+{-
+all-envs-list should be:
+
     (1 Data.Tree.AVL.Value.,
      mildly-disturbed (short-beak 2 1 ∷ short-beak 3 1 ∷ []) 1)
     ∷
@@ -233,6 +237,12 @@ all-envs-list = toList all-envs
     (3 Data.Tree.AVL.Value., mildly-disturbed (long-beak 2 3 ∷ []) 3) ∷
     (4 Data.Tree.AVL.Value., well-disturbed (long-beak 2 4 ∷ []) 4) ∷
     []
+
+Note that "Data.Tree.AVL.Value." qualifies ",".  i.e. this is the comma
+from Data.Tree.AVL.Value (via Data.Tree.AVL.Indexed), which is *not* the
+Σ-pair constructor; it's the K& constructor.  (There are however functions
+toPair and fromPair in AVL.Value that convert to/from the Σ-pair.)
+
 -}
 
 
@@ -321,8 +331,6 @@ reproduce max-id (suc n) choose-loc (long-beak _ loc)  = iterate next-dun (long-
 -- can't be found.  This can't be distinguished from the zero fitness case.
 reproduce-per-fit : (max-id : ℕ) → (envs : EnvMap) → (choose-loc : Dun → ℕ) →
                     (parent : Dun) → List Dun
-reproduce-per-fit _ empty _ _ = []  -- No envs, shouldn't happen.
--- WHY DOES AGDA THINK THIS IS UNREACHABLE?:
 reproduce-per-fit max-id envs choose-loc parent with dun-loc parent
 ...                                                | loc with lookup envs loc
 ...                                                         | nothing = [] -- can't find that env, shouldn't happen
@@ -373,11 +381,14 @@ add-duns : List Dun → EnvMap → EnvMap
 add-duns [] envs = envs
 add-duns (dun ∷ duns) envs = add-dun dun (add-duns duns envs)
 
+
+
 -- Should the result be a Vec or an AVL map?
 collect-all-duns : EnvMap → List Dun
-collect-all-duns envs = let env-list = toList envs
-                            all-duns = concatMap (env-duns ∘ proj₂) env-list
-                        in {!!}
+collect-all-duns envs = concatMap (env-duns ∘ Value.K&_.value) $ toList envs
+-- toList produces a list of AVL.Value.K& pairs, not Σ-pairs. (Don't be fooled by
+-- commas in the result of toList; they're constructors for Data.Tree.AVL.Value.K& .)
+-- Check: all-duns = collect-all-duns all-envs
 
 -- Original example in Niche.agda also had a timestep parameter, but 
 -- the transition rules can be the same at every time.
@@ -401,15 +412,12 @@ collect-all-duns envs = let env-list = toList envs
 -- choose-loc is a function such as baby-loc-same that determines the new
 -- location of offspring of a parent dunlin.  (In a future version, this
 -- might be a set of locations or a probability distribution over locations.)
-d-evolve : (max-id : ℕ) → EnvMap → (choose-loc : Dun → ℕ) → EnvMap
-d-evolve max-id empty _ = empty  -- no environments!?
-d-evolve max-id envs choose-loc = {!!}
-{-
-    let old-dunlins = L.concatMap env-duns envs
-        new-dunlins = L.concatMap (reproduce-per-fit max-id envs choose-loc) old-dunlins -- make baby dunlins
-        new-max-id = max-id + (L.length new-dunlins) -- should be a better way
-    in add-duns new-dunlins envs
--}
+d-evolve : (max-id : ℕ) → EnvMap → (choose-loc : Dun → ℕ) → (ℕ × EnvMap)
+d-evolve max-id envs choose-loc =
+  let old-dunlins = collect-all-duns envs
+      new-dunlins = L.concatMap (reproduce-per-fit max-id envs choose-loc) old-dunlins -- make baby dunlins
+      new-max-id = max-id + (L.length new-dunlins) -- should be a better way
+  in (new-max-id , add-duns new-dunlins envs)
 
 {-
 -- THIS WORKS (or type checks) but seems unnecessarily complicated
