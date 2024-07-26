@@ -24,14 +24,19 @@ Also, there is a configuration structure, DunEnvAssocs, that the
 code  uses initialize a system.  This is just some collections of
 Nats.  Not sure whether that's the way to go.
 
+Original example in Niche.agda also had a timestep parameter, but 
+the transition rules can be the same at every time.
+Since each env contains a list of dunlins in it, an option might be
+to iterate through the env list, and ignore the dunlin list.
+
 -}
 
 -- open import Agda.Builtin.Sigma
 -- open import Agda.Builtin.Maybe
-open import Data.Maybe.Base as Maybe using (Maybe; nothing; just)
 open import Agda.Builtin.Nat
+open import Data.Maybe.Base as Maybe using (Maybe; nothing; just)
 open import Data.Nat using (ℕ; zero; suc; _+_; _*_; _∸_; _^_; _<_)
-open import Function.Base
+open import Function.Base using (_∘_; _$_; case_of_; case_returning_of_)
 open import Data.Bool
 open import Data.List as L using (List; _∷_; []; [_]; iterate; _++_; map; concat; concatMap; zipWith; _[_]%=_; _[_]∷=_)
 open import Data.Vec as V using (Vec; _∷_; [])
@@ -356,44 +361,25 @@ add-duns-by-loc dloc offspring (env ∷ envs) = let (eloc , eduns) = env-params 
                                                  else env ∷ (add-duns-by-loc dloc offspring envs)
 -}
 
+-- Is there an easy way to remove the redundancy in the with-results?
 add-dun : Dun → EnvMap → EnvMap
-add-dun dun envs = let loc = dun-loc dun
-                       maybe-old-env = lookup envs loc
-                       -- IF nothing then return envs unchanged
-                       -- IF just old-env then do the rest
-                       -- duns = env-duns old-env
-                       -- env-constr = env-constructor old-env
-                       -- new-env = env-constr (dun ∷ duns) loc
-                   in {!!} -- insert loc new-env envs -- overwrites old env entry
+add-dun dun envs with lookup envs (dun-loc dun)
+...              | just (undisturbed dunlins loc) = insert loc (undisturbed (dun ∷ dunlins) loc) envs
+...              | just (mildly-disturbed dunlins loc) = insert loc (mildly-disturbed (dun ∷ dunlins) loc) envs
+...              | just (well-disturbed dunlins loc) = insert loc (well-disturbed (dun ∷ dunlins) loc) envs
+...              | nothing = envs
 
-{-
-add-dun : Dun → List Env → List Env
-add-dun dun [] = [] -- no envs!
-add-dun dun (env ∷ envs) = let env-loc = env-loc env
-                               dunlins = env-duns env
-                               env-constr = env-constructor env
-                           in if (dun-loc dun) == env-loc
-                              then (env-constr env-loc (dun ∷ env-duns)) ∷ envs
-                              else env ∷ (add-dun dun envs)
--}
-                                                 
+-- Does unnecessary work when multiple dunlins are added to the same environment;
+-- they could all be added at once instead of calling add-dun repeatedly.
 add-duns : List Dun → EnvMap → EnvMap
 add-duns [] envs = envs
 add-duns (dun ∷ duns) envs = add-dun dun (add-duns duns envs)
 
-
-
--- Should the result be a Vec or an AVL map?
+-- Should the result be a Vec or an AVL map instead of a list?
 collect-all-duns : EnvMap → List Dun
 collect-all-duns envs = concatMap (env-duns ∘ Value.K&_.value) $ toList envs
--- toList produces a list of AVL.Value.K& pairs, not Σ-pairs. (Don't be fooled by
--- commas in the result of toList; they're constructors for Data.Tree.AVL.Value.K& .)
--- Check: all-duns = collect-all-duns all-envs
-
--- Original example in Niche.agda also had a timestep parameter, but 
--- the transition rules can be the same at every time.
--- Since each env contains a list of dunlins in it, an option might be
--- to iterate through the env list, and ignore the dunlin list.
+-- Tip: toList produces a list of AVL.Value.K& pairs, not Σ-pairs.
+-- (Commas in the result of toList are for Data.Tree.AVL.Value.K&, not Σ .)
 
 -- Since this model stores dunlins inside environments, we can update the dunlins
 -- by iterating through the envs.  There are several things might occur:
@@ -416,7 +402,7 @@ d-evolve : (max-id : ℕ) → EnvMap → (choose-loc : Dun → ℕ) → (ℕ × 
 d-evolve max-id envs choose-loc =
   let old-dunlins = collect-all-duns envs
       new-dunlins = L.concatMap (reproduce-per-fit max-id envs choose-loc) old-dunlins -- make baby dunlins
-      new-max-id = max-id + (L.length new-dunlins) -- should be a better way
+      new-max-id = max-id + (L.length new-dunlins) -- Is there be a better way?
   in (new-max-id , add-duns new-dunlins envs)
 
 {-
