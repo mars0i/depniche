@@ -30,31 +30,23 @@ to iterate through the env list, and ignore the dunlin list.
 
 -}
 
--- open import Agda.Builtin.Sigma
--- open import Agda.Builtin.Maybe
-open import Agda.Builtin.Nat
-open import Data.Maybe.Base as Maybe using (Maybe; nothing; just)
-open import Data.Nat using (ℕ; zero; suc; _+_; _*_; _∸_; _^_; _<_)
 open import Function.Base using (_∘_; _$_; case_of_; case_returning_of_)
-open import Data.Bool
-open import Data.List as L using (List; _∷_; []; [_]; iterate; _++_; map; concat; concatMap; zipWith; _[_]%=_; _[_]∷=_)
-open import Data.Vec as V using (Vec; _∷_; [])
+open import Agda.Builtin.Nat using (_==_)
+open import Data.Nat using (ℕ; zero; suc; _+_; _*_; _∸_; _^_; _<_)
+open import Data.Nat.Properties using (<-strictTotalOrder) -- for AVL modules
+open import Data.Maybe.Base as Maybe using (Maybe; nothing; just)
 open import Data.Product.Base using (_×_; _,_; proj₁; proj₂; _,′_) -- Needs stdlib 2.0
--- open import Relation.Binary.PropositionalEquality using (_≡_; refl)
+open import Data.Bool using (if_then_else_) -- add case_of_ , etc?
+open import Data.List as L using (List; _∷_; []; [_]; iterate; _++_; map; concat; concatMap; zipWith; _[_]%=_; _[_]∷=_)
+-- open import Data.Vec as V using (Vec; _∷_; [])
 
-open import Data.Nat.Properties using (<-strictTotalOrder)
 import Data.Tree.AVL as AVL using (Tree; MkValue; empty; singleton; insert; delete; lookup; map; size; toList; toPair) -- K&_; 
+import Data.Tree.AVL.Value as Value ---? I don't know how to import K&.value separately
 open AVL <-strictTotalOrder
 open import Relation.Binary.PropositionalEquality using (subst) -- _≡_; refl
 
-import Data.Tree.AVL.Value as Value
-
 open import Niche
-open import Kludges
-
--- for primForce
--- open import Agda.Builtin.Strict
-
+-- open import Kludges
 
 ----------------------------------------------------------
 -- Dun and Env types
