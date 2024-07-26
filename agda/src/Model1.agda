@@ -5,9 +5,9 @@ module Model1 where
 {- General notes on code
 
 After looking at the Example module in Niche.agda, I wanted to do
-something slightly more involved  with the dunlin and enviorment
+something slightly more involved  with the dunlin and environment
 types in order to implement the transition rules Dstep and Estep.
-I wasn't sure how to fill in the holes you left in the e-evolve
+I wasn't sure how to fill in the holes left in the e-evolve
 function; I needed a story to motivate the rules, and that meant
 changing the dunlin and environment types.
 
@@ -40,7 +40,7 @@ open import Data.Bool using (if_then_else_) -- add case_of_ , etc?
 open import Data.List as L using (List; _∷_; []; [_]; iterate; _++_; map; concat; concatMap; zipWith; _[_]%=_; _[_]∷=_)
 -- open import Data.Vec as V using (Vec; _∷_; [])
 
-import Data.Tree.AVL as AVL using (Tree; MkValue; empty; singleton; insert; delete; lookup; map; size; toList; toPair) -- K&_; 
+import Data.Tree.AVL as AVL using (Tree; MkValue; empty; singleton; insert; insertWith; delete; lookup; map; size; toList; toPair) -- K&_; 
 import Data.Tree.AVL.Value as Value ---? I don't know how to import K&.value separately
 open AVL <-strictTotalOrder
 open import Relation.Binary.PropositionalEquality using (subst) -- _≡_; refl
@@ -51,29 +51,39 @@ open import Niche
 ----------------------------------------------------------
 -- Dun and Env types
 -- These correspond to the D and E defs in Niche.Example.
+-- See docs/DunlinStory1.md for rationale for names, data, etc.
 
--- Overview of some choices:
+{- Overview of choices made:
+ 
+Duns in an environment can be found from the Env they're in
+because those Duns will be stored in a List (or Vec) in the Env. 
+(There may be ways to store the Envs in the Duns as well, but the
+obvious ways lead to nontermination, and I don't think it's the
+trouble.)
 
--- Duns in an environment can be found from the Env they're in because
--- those Duns will be stored in a List (or Vec) in the Env.  (There may be
--- ways to store the Envs in the Duns as well, but the obvious ways lead
--- to nontermination, and I don't think it's the trouble.)
+There is a fixed number of locations, while dunlins are born and
+die.
 
--- Duns have ids, but these are not indexes, to make it easier to store Duns
--- in a List in an Env.
+Dunlins have ids, but these are not indexes, to make it easier to
+store Duns in a List in an Env.  The ids aren't needed to evolve
+the population, but they're likely to be useful for tracking a
+dunlin over time as it changes state (i.e. as it is replaced by a
+new Dun with the same id).
 
--- Env ids are locations, and they are indexes.  This makes it esy
--- all Envs in a map in the form of an AVL tree, allowing lookup by location
--- from a Dun, and forcing envs at locations to be unique.
+Env ids are locations, and they are indexes.  This makes it esy
+all Envs in a map in the form of an AVL tree, allowing lookup by
+location from a Dun, and forcing envs at locations to be unique.
 
--- Dun ids should be unique as well--maybe it would be better to provide a
--- a lookup map for them too--but only to allow tracking of the states of
--- a dunlin over time.  This can be useful, even though it's not relevant
--- to evolution in a population.
+Dun ids should be unique as well--maybe it would be better to
+provide a a lookup map for dunlins too--but only to allow tracking
+of the states of a dunlin over time.  This can be useful, even
+though it's not relevant to evolution in a population.
+
+-}
 
 -----------------------------------
 
--- Environments have locations which determine which environments
+-- Environments have locations that determine which environments
 -- are adjacent.  Currently locations are nats, implying that each
 -- environment is adjacent to no more than two others (perhaps along
 -- the shoreline).  An alternative is to allow pairs of nats or integers
@@ -85,6 +95,7 @@ Loc = ℕ
 -- Dunlins have IDs:
 DunID : Set
 DunID = ℕ
+
 
 -----------------------------------
 -- Dunlins
@@ -116,11 +127,20 @@ new-duns-at-loc max-id loc (constr ∷ constrs) =
   in (constr new-id loc) ∷ (new-duns-at-loc new-id loc constrs)
 
 -- For use inside List.iterate and similar functions to generate a
--- sequence of dunlins with consequitive ids.
+-- sequence of dunlins with consecutive ids.
 next-dun : Dun → Dun
 next-dun (short-beak id loc) = short-beak (suc id) loc
 next-dun (long-beak id loc) = long-beak (suc id) loc
 
+{-
+move-north : Dun → Dun
+move-north (short-beak id loc) = short-beak id (1 + loc)
+move-north (long-beak id loc) = long-beak id (1 + loc)
+
+move-south : Dun → Dun
+move-south (short-beak id loc) = short-beak id (loc - 1)
+move-south (long-beak id loc) = long-beak id (loc - 1)
+-}
 
 -- projection operators
 dun-params : Dun → (DunID × Loc)
@@ -177,6 +197,7 @@ env-constructor : {loc : Loc} → Env loc → EnvConstr
 env-constructor (undisturbed _ _) = undisturbed
 env-constructor (mildly-disturbed _ _) = mildly-disturbed
 env-constructor (well-disturbed _ _) = well-disturbed
+
 
 -----------------------------
 -- Create structure that stores envs, allows lookup by location,
@@ -242,55 +263,41 @@ toPair and fromPair in AVL.Value that convert to/from the Σ-pair.)
 -}
 
 
-{-
+-----------------------------
+-- Modifying dunlin-environment relationships
 
----------
--- Create the dunlins from a DunEnvAssocs list.
+remove-dun-from-list : (dun : Dun) → (duns : List Dun) → List Dun
+remove-dun-from-list dun [] = []
+remove-dun-from-list dun (x ∷ duns) = if (dun-id dun) == (dun-id x)
+                                      then duns
+                                      else remove-dun-from-list dun duns
 
--- Helper function for assocs-to-dunlists. Assumes the two arg lists are same length.
--- Strictly speaking ought to be Maybe-ed, or use vectors or add a length proof. (TODO?)
-duns-for-env : ℕ → List ℕ → List DunConstr → List Dun
-duns-for-env loc [] [] = []
-duns-for-env loc (id ∷ dun-ids) (constr ∷ dun-constrs) =
-    let dun-pair = constr id loc
-    in dun-pair ∷ duns-for-env loc dun-ids dun-constrs
-duns-for-env _ _ _ = [] -- This shouldn't happen, but if it does, it's a bug.
-                    
--- Helper for assocs-to-duns, which flattens this list list.
-assocs-to-dunlists : DunEnvAssocs → List (List Dun)
-assocs-to-dunlists [] = []
-assocs-to-dunlists (x ∷ xs) =
-    let ((dun-ids , dun-constrs) , (loc , _)) = x
-    in (duns-for-env loc dun-ids dun-constrs) ∷ assocs-to-dunlists xs
+remove-dun-from-env : {loc : Loc} → (dun : Dun) → (env : Env loc) → Env loc
+remove-dun-from-env dun (undisturbed duns loc) =
+   undisturbed (remove-dun-from-list dun duns) loc
+remove-dun-from-env dun (mildly-disturbed duns loc) =
+   mildly-disturbed (remove-dun-from-list dun duns) loc
+remove-dun-from-env dun (well-disturbed duns loc) =
+   well-disturbed (remove-dun-from-list dun duns) loc
 
--- Creates a list of dunlin Sigma-pairs from the assocs.
-assocs-to-duns : DunEnvAssocs → List Dun
-assocs-to-duns assocs = concat (assocs-to-dunlists assocs)
+-- Trying to use AVL.insertWith
+-- Needs to produce function from maybe to env for use in insertWith.
+-- How is this supposed to work?  What do do with nothing??
+remove-dun-from-maybe-env : {loc : Loc} → (dun : Dun) → (envs : EnvMap) → (maybe-env : Maybe (Env loc)) → Env loc
+remove-dun-from-maybe-env dun envs (just env) = remove-dun-from-env dun env
+remove-dun-from-maybe-env dun envs nothing = {!!}
 
+remove-dun-from-envs : (dun : Dun) → (envs : EnvMap) → Maybe EnvMap
+remove-dun-from-envs (short-beak id loc) envs = {!!}
+remove-dun-from-envs (long-beak id loc) envs = {!!}
 
--- Example:
+add-dun-to-envs : (dun : Dun) → (envs : EnvMap) → Maybe EnvMap
+add-dun-to-envs dun envs = {!!}
 
--- TEMPORARY KLUDGE: ENV 0 DOESN'T EXIST; IT INDICATES ERROR.  SO DON'T USE IT.
--- Note that without the type sig, the commas have to be comma-ticks;
--- with the sig, commas are OK.
-dun-env-assocs : DunEnvAssocs
-dun-env-assocs = ((3 ∷ 4 ∷ [] , short-beak ∷ short-beak ∷ []) , (1 , mildly-disturbed)) ∷
-                 (([ 1 ] , [ short-beak ]) , (2 , undisturbed)) ∷
-                 (([ 2 ] , [ long-beak ]) , (3 , mildly-disturbed)) ∷
-                 (([ 5 ] , [ long-beak ]) , (4 , well-disturbed)) ∷
-                 []
+move-to-env : (mover : Dun) → (new-loc : Loc) → (envs : EnvMap) → EnvMap
+move-to-env (short-beak id loc) new-loc envs = {!!}
+move-to-env (long-beak id loc) new-loc envs = {!!}
 
-{- (I wish Agda had a normal list and vector syntax.  I don't care if the number
-of characters is the same as Haskell/OCaml/Idris/Lean. It's still harder to read.) -}
-
-
--- The first element of each top level pairs in these lists is just there
--- to allow different types to live in the same list.  When processing
--- the envs or dunlins, it can be ignored (but might need to be recreated to
--- make the next set of envs and dunlins.
-all-envs = assocs-to-envs dun-env-assocs
-all-duns = assocs-to-duns dun-env-assocs
--}
 
 -----------------
 -- Fitness and niche construction
@@ -318,8 +325,10 @@ fitness (long-beak _ _)  (well-disturbed _ _)   = 0
 -- of the dunlin.  (This should be in field built into the Dun datatype instead, OO-style?)
 reproduce : (max-id : ℕ) → (num-kids : ℕ) → (choose-kid-loc : Dun  → ℕ) → (parent : Dun) → List Dun
 reproduce _ 0 _ _ = []
-reproduce max-id (suc n) choose-loc (short-beak _ loc) = iterate next-dun (short-beak (suc max-id) loc) (suc n)
-reproduce max-id (suc n) choose-loc (long-beak _ loc)  = iterate next-dun (long-beak  (suc max-id) loc) (suc n)
+reproduce max-id (suc n) choose-loc (short-beak _ loc) =
+   iterate next-dun (short-beak (suc max-id) loc) (suc n)
+reproduce max-id (suc n) choose-loc (long-beak _ loc) =
+   iterate next-dun (long-beak  (suc max-id) loc) (suc n)
 -- CHECK: Is max-id is getting incremented properly?
 
 -- Calculates number of kids from fitness of dun relative to env, and calls reproduce.
@@ -334,7 +343,7 @@ reproduce-per-fit max-id envs choose-loc parent with dun-loc parent
                                                                          in if fit == 0
                                                                             then []
                                                                             else reproduce max-id fit choose-loc parent
--- (Lines are too long. Not sure what my indentation options are here.)
+---? (Lines are too long. Not sure what indentation options are using `with`.)
 
 
 -- This location-chooser puts offspring in the same env as parent:
