@@ -19,14 +19,14 @@ might have made poor choices within a good path. So I have no
 problem with this being revised or completely rethought and
 rewritten from scratch.
 
-Also, there is a configuration structure, DunEnvAssocs, that the
-code  uses initialize a system.  This is just some collections of
-Nats.  Not sure whether that's the way to go.
-
-Original example in Niche.agda also had a timestep parameter, but 
+The original example in Niche.agda also had a timestep parameter, but 
 the transition rules can be the same at every time.
 Since each env contains a list of dunlins in it, an option might be
 to iterate through the env list, and ignore the dunlin list.
+
+Another change is that updating the system now passs along a maximum
+dunlin id, so that each new dunlin can get a unique id that can be used
+to track the identity over time of functionally updated dunlins.
 
 -}
 
