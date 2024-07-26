@@ -1,6 +1,5 @@
-module Model1a where
--- Like Model1 on 7/22/2024, but with Env indexed by locations.
-
+module Model1 where
+-- Version in which neither Env nor Dun are indexed
 -- See docs/DunlinStory1.md for rationale for names, data, etc.
 
 {- General notes on code
@@ -24,31 +23,20 @@ Also, there is a configuration structure, DunEnvAssocs, that the
 code  uses initialize a system.  This is just some collections of
 Nats.  Not sure whether that's the way to go.
 
-Original example in Niche.agda also had a timestep parameter, but 
-the transition rules can be the same at every time.
-Since each env contains a list of dunlins in it, an option might be
-to iterate through the env list, and ignore the dunlin list.
-
 -}
 
 -- open import Agda.Builtin.Sigma
 -- open import Agda.Builtin.Maybe
-open import Agda.Builtin.Nat
 open import Data.Maybe.Base as Maybe using (Maybe; nothing; just)
+open import Agda.Builtin.Nat
 open import Data.Nat using (ℕ; zero; suc; _+_; _*_; _∸_; _^_; _<_)
-open import Function.Base using (_∘_; _$_; case_of_; case_returning_of_)
+open import Function.Base
 open import Data.Bool
 open import Data.List as L using (List; _∷_; []; [_]; iterate; _++_; map; concat; concatMap; zipWith; _[_]%=_; _[_]∷=_)
 open import Data.Vec as V using (Vec; _∷_; [])
-open import Data.Product.Base using (_×_; _,_; proj₁; proj₂; _,′_) -- Needs stdlib 2.0
--- open import Relation.Binary.PropositionalEquality using (_≡_; refl)
-
-open import Data.Nat.Properties using (<-strictTotalOrder)
-import Data.Tree.AVL as AVL using (Tree; MkValue; empty; singleton; insert; delete; lookup; map; size; toList; toPair) -- K&_; 
-open AVL <-strictTotalOrder
-open import Relation.Binary.PropositionalEquality using (subst) -- _≡_; refl
-
-import Data.Tree.AVL.Value as Value
+open import Data.Nat using (ℕ; zero; suc; _+_; _*_; _∸_; _^_)
+open import Data.Product.Base -- using (_×_; _,′_) -- Needs stdlib 2.0
+open import Relation.Binary.PropositionalEquality using (_≡_; refl)
 
 open import Niche
 open import Kludges
@@ -61,40 +49,6 @@ open import Kludges
 -- Dun and Env types
 -- These correspond to the D and E defs in Niche.Example.
 
--- Overview of some choices:
-
--- Duns in an environment can be found from the Env they're in because
--- those Duns will be stored in a List (or Vec) in the Env.  (There may be
--- ways to store the Envs in the Duns as well, but the obvious ways lead
--- to nontermination, and I don't think it's the trouble.)
-
--- Duns have ids, but these are not indexes, to make it easier to store Duns
--- in a List in an Env.
-
--- Env ids are locations, and they are indexes.  This makes it esy
--- all Envs in a map in the form of an AVL tree, allowing lookup by location
--- from a Dun, and forcing envs at locations to be unique.
-
--- Dun ids should be unique as well--maybe it would be better to provide a
--- a lookup map for them too--but only to allow tracking of the states of
--- a dunlin over time.  This can be useful, even though it's not relevant
--- to evolution in a population.
-
------------------------------------
-
--- Environments have locations which determine which environments
--- are adjacent.  Currently locations are nats, implying that each
--- environment is adjacent to no more than two others (perhaps along
--- the shoreline).  An alternative is to allow pairs of nats or integers
--- to represent environments arrayed in 2D space, or triples for 3D
--- coordinates, e.g. for fish in a body of water.
-Loc : Set
-Loc = ℕ
-
--- Dunlins have IDs:
-DunID : Set
-DunID = ℕ
-
 -----------------------------------
 -- Dunlins
 
@@ -102,45 +56,41 @@ DunID = ℕ
 -- for the dunlin's current environment.  (It could be the env itself, but
 -- I couldn't figure out how to do this kind of mutual recursion.)
 data Dun : Set where
-  short-beak   : (id : DunID) → (loc : Loc) → Dun
-  long-beak  : (id : DunID) → (loc : Loc) → Dun
+  short-beak   : (id : ℕ) → (loc : ℕ) → Dun
+  long-beak  : (id : ℕ) → (loc : ℕ) → Dun
 
 -- An abbreviation for the type of the Dun constructors will be useful later.
 DunConstr : Set 
-DunConstr = (id : DunID) → (loc : Loc) → Dun
+DunConstr = (i : ℕ) → (e : ℕ) → Dun
 
-init-max-id : DunID
-init-max-id = 1
+-- Urgh.  To generate new ids in the natural way (incrementing the last
+-- one stored in a global), dunlin creation would have to be done in a
+-- state monad or something like that.
 
 -- Make a new dunlin using the provided constructor, creating a new id by
 -- incrementing the previous max id that should be passed in.  The new id
 -- can be extracted from the new dunlin as the new max id.
-new-dun : DunConstr → (max-id : DunID) → (loc : Loc) → Dun
-new-dun constr max-id loc = constr (suc max-id) loc
-
-new-duns-at-loc : (max-id : DunID) → (loc : Loc) → List DunConstr → List Dun
-new-duns-at-loc _ _ [] = []
-new-duns-at-loc max-id loc (constr ∷ constrs) =
-  let new-id = suc max-id
-  in (constr new-id loc) ∷ (new-duns-at-loc new-id loc constrs)
+new-dun : DunConstr → (env-id : ℕ) → (max-id : ℕ) → Dun
+new-dun constr env-id max-id = constr (suc max-id) env-id
 
 -- For use inside List.iterate and similar functions to generate a
--- sequence of dunlins with consequitive ids.
+-- sequence of dunlins with consequitive (presumably new) ids.
 next-dun : Dun → Dun
 next-dun (short-beak id loc) = short-beak (suc id) loc
 next-dun (long-beak id loc) = long-beak (suc id) loc
 
+-- projection operators
 
 -- projection operators
-dun-params : Dun → (DunID × Loc)
+dun-params : Dun → (ℕ × ℕ)
 dun-params (short-beak id loc) = (id , loc)
 dun-params (long-beak id loc) = (id , loc)
 
-dun-id : Dun → DunID
+dun-id : Dun → ℕ
 dun-id (short-beak id _) = id 
 dun-id (long-beak id _) = id
 
-dun-loc : Dun → Loc
+dun-loc : Dun → ℕ
 dun-loc (short-beak _ loc) = loc 
 dun-loc (long-beak _ loc) = loc
 
@@ -149,6 +99,7 @@ dun-constructor : Dun → DunConstr
 dun-constructor (short-beak _ _) = short-beak
 dun-constructor (long-beak _ _) = long-beak
 
+
 -----------------------------------
 -- Environments
 
@@ -156,11 +107,11 @@ dun-constructor (long-beak _ _) = long-beak
 -- which environments are adjacent (e.g. env 5 is next to envs 4 and 6).
 -- Environments also contain zero or more dunlins. Here we construct actual
 -- dunlins rather than storing their ids.
-data Env : Loc → Set where
-  undisturbed      : (dunlins : List Dun) → (loc : Loc) → Env loc
-  mildly-disturbed : (dunlins : List Dun) → (loc : Loc) → Env loc
-  well-disturbed   : (dunlins : List Dun) → (loc : Loc) → Env loc
--- In a future version, perhaps the level of disturbed-ness should captured by an loc
+data Env : Set where
+  undisturbed      : (loc : ℕ) → (dunlins : List Dun) → Env
+  mildly-disturbed : (loc : ℕ) → (dunlins : List Dun) → Env
+  well-disturbed   : (loc : ℕ) → (dunlins : List Dun) → Env
+-- In a future version, perhaps the level of disturbed-ness should captured by an
 -- parameter rather than different constructors.  If it's an index, that captures
 -- the idea that it's a different type, and it might require using lists or
 -- vectors over sigma pairs (Σ ℕ (Env ℕ)) instead of Envs.  (See
@@ -169,89 +120,48 @@ data Env : Loc → Set where
 
 -- An abbreviation for the type of the Env constructors will be useful later.
 EnvConstr : Set
-EnvConstr = (duns : List Dun) → (loc : Loc) → Env loc
+EnvConstr = (i : ℕ) → (ds : List Dun) → Env
 
-env-loc : {loc : Loc} → Env loc → Loc
-env-loc (undisturbed _ loc) = loc
-env-loc (mildly-disturbed _ loc) = loc
-env-loc (well-disturbed _ loc) = loc
+-- projection operators
+env-params : Env → (ℕ × List Dun)
+env-params (undisturbed loc dunlins) = (loc , dunlins)
+env-params (mildly-disturbed loc dunlins) = (loc , dunlins)
+env-params (well-disturbed loc dunlins) = (loc , dunlins)
 
-env-duns : {loc : Loc} → Env loc → List Dun
-env-duns (undisturbed dunlins _) = dunlins
-env-duns (mildly-disturbed dunlins _) = dunlins
-env-duns (well-disturbed dunlins _) = dunlins
+env-loc : Env → ℕ
+env-loc (undisturbed loc _) = loc
+env-loc (mildly-disturbed loc _) = loc
+env-loc (well-disturbed loc _) = loc
+
+env-duns : Env → List Dun
+env-duns (undisturbed _ dunlins) = dunlins
+env-duns (mildly-disturbed _ dunlins) = dunlins
+env-duns (well-disturbed _ dunlins) = dunlins
 
 -- Is this non-idiomatic?
-env-constructor : {loc : Loc} → Env loc → EnvConstr
+env-constructor : Env → EnvConstr
 env-constructor (undisturbed _ _) = undisturbed
 env-constructor (mildly-disturbed _ _) = mildly-disturbed
 env-constructor (well-disturbed _ _) = well-disturbed
 
 -----------------------------
--- Create structure that stores envs, allows lookup by location,
--- enforces uniqueness wrt location.
+-- Configuring an entire system
+-- I guess anothger way to do it would be to pair the dunlin ids and constructors
 
--- This works because Env is indexed by loc.
-EnvMap = Tree (MkValue Env (subst Env))
+-- in a single embedded list.
+DunEnvAssocs : Set
+DunEnvAssocs = List ((List ℕ × List DunConstr) × (ℕ × EnvConstr)) 
+--                    dun ids                     loc
 
--- I still don't understand what's going on in MkValue, but it appears
--- that the first arg and the arg to subst should be an indexed datatype
--- (or a function?) where indexes are keys. i.e. this provides a map
--- from keys to values in which the keys are indexes of the value type.
--- (Data.Tree.AVL.IndexedMap provides a way to do somethng similar,
--- but I don't understand how to use it. To allow values to be
--- independent of keys use Data.Tree.AVL.Map.)
+---------
+-- Create the environments from a DunEnvAssocs list.
 
-ConfigInfo : Set
-ConfigInfo = List (ℕ × EnvConstr × List DunConstr)
-
-config-info : ConfigInfo
-config-info =
-  (1 , mildly-disturbed , (short-beak ∷ short-beak ∷ [])) ∷
-  (2 , undisturbed , (short-beak ∷ [])) ∷ 
-  (3 , mildly-disturbed , (long-beak ∷ [])) ∷
-  (4 , well-disturbed , (long-beak ∷ [])) ∷
-  []
-
--- This is doing roughly what mkSys does in Niche.agda, and they
--- should probably be harmonized and merged, or this could provide
--- a component of mkSys.
-config-system : (max-id : ℕ) → ConfigInfo → EnvMap → EnvMap
-config-system _ [] env-map = env-map
-config-system max-id (env-spec ∷ env-specs) env-map =
-  let (loc , env-constr , dun-constrs) = env-spec
-      duns = new-duns-at-loc init-max-id loc dun-constrs
-      new-max-id = max-id + L.length duns
-      new-env = env-constr duns loc
-  in config-system new-max-id env-specs (insert loc new-env env-map)
-
-all-envs : EnvMap
-all-envs = config-system init-max-id config-info empty
-
--- Checks (convert to equality proofs?):
-maybe-env : Maybe (Env 1)
-maybe-env = lookup all-envs 1
-all-envs-list = toList all-envs
-{-
-all-envs-list should be:
-
-    (1 Data.Tree.AVL.Value.,
-     mildly-disturbed (short-beak 2 1 ∷ short-beak 3 1 ∷ []) 1)
-    ∷
-    (2 Data.Tree.AVL.Value., undisturbed (short-beak 2 2 ∷ []) 2) ∷
-    (3 Data.Tree.AVL.Value., mildly-disturbed (long-beak 2 3 ∷ []) 3) ∷
-    (4 Data.Tree.AVL.Value., well-disturbed (long-beak 2 4 ∷ []) 4) ∷
-    []
-
-Note that "Data.Tree.AVL.Value." qualifies ",".  i.e. this is the comma
-from Data.Tree.AVL.Value (via Data.Tree.AVL.Indexed), which is *not* the
-Σ-pair constructor; it's the K& constructor.  (There are however functions
-toPair and fromPair in AVL.Value that convert to/from the Σ-pair.)
-
--}
-
-
-{-
+-- Creates a list of environment Sigma-pairs from the assocs.
+assocs-to-envs : DunEnvAssocs → List Env
+assocs-to-envs [] = []
+assocs-to-envs (x ∷ xs) = let ((dun-ids , dun-constrs) , (loc , env-constr)) = x
+                              duns = zipWith (λ id constr → (constr id loc)) dun-ids dun-constrs
+                          in (env-constr loc duns) ∷ assocs-to-envs xs
 
 ---------
 -- Create the dunlins from a DunEnvAssocs list.
@@ -299,7 +209,6 @@ of characters is the same as Haskell/OCaml/Idris/Lean. It's still harder to read
 -- make the next set of envs and dunlins.
 all-envs = assocs-to-envs dun-env-assocs
 all-duns = assocs-to-duns dun-env-assocs
--}
 
 -----------------
 -- Fitness and niche construction
@@ -313,13 +222,20 @@ Fitness : Set
 Fitness = ℕ
 
 -- See docs/DunlinStory1.md for rationale, constraints
-fitness : {loc : Loc} → Dun → Env loc → Fitness
+fitness : Dun → Env → Fitness
 fitness (short-beak _ _) (undisturbed _ _)      = 0
 fitness (short-beak _ _) (mildly-disturbed _ _) = 1
 fitness (short-beak _ _) (well-disturbed _ _)   = 2
 fitness (long-beak _ _)  (undisturbed _ _)      = 2
 fitness (long-beak _ _)  (mildly-disturbed _ _) = 1
 fitness (long-beak _ _)  (well-disturbed _ _)   = 0
+
+
+lookup-env-by-loc : List Env → (loc : ℕ) → Maybe Env
+lookup-env-by-loc [] _ = nothing
+lookup-env-by-loc (env ∷ envs) loc = if loc == (env-loc env)
+                                     then just env
+                                     else lookup-env-by-loc envs loc
 
 -- Should new envs be introduced here?  Maybe better to put in a separate step.
 -- choose-kid-loc is some function from each dunlin to a new location. This can take
@@ -334,10 +250,11 @@ reproduce max-id (suc n) choose-loc (long-beak _ loc)  = iterate next-dun (long-
 -- Calculates number of kids from fitness of dun relative to env, and calls reproduce.
 -- Probably SHOULD BE MAYBE-IZED.  At present it returns an empty list when an env
 -- can't be found.  This can't be distinguished from the zero fitness case.
-reproduce-per-fit : (max-id : ℕ) → (envs : EnvMap) → (choose-loc : Dun → ℕ) →
+reproduce-per-fit : (max-id : ℕ) → (envs : List Env) → (choose-loc : Dun → ℕ) →
                     (parent : Dun) → List Dun
+reproduce-per-fit _ [] _ _ = []  -- No envs, shouldn't happen.
 reproduce-per-fit max-id envs choose-loc parent with dun-loc parent
-...                                                | loc with lookup envs loc
+...                                                | loc with lookup-env-by-loc envs loc
 ...                                                         | nothing = [] -- can't find that env, shouldn't happen
 ...                                                         | just env = let fit = fitness parent env
                                                                          in if fit == 0
@@ -361,25 +278,26 @@ add-duns-by-loc dloc offspring (env ∷ envs) = let (eloc , eduns) = env-params 
                                                  else env ∷ (add-duns-by-loc dloc offspring envs)
 -}
 
--- Is there an easy way to remove the redundancy in the with-results?
-add-dun : Dun → EnvMap → EnvMap
-add-dun dun envs with lookup envs (dun-loc dun)
-...              | just (undisturbed dunlins loc) = insert loc (undisturbed (dun ∷ dunlins) loc) envs
-...              | just (mildly-disturbed dunlins loc) = insert loc (mildly-disturbed (dun ∷ dunlins) loc) envs
-...              | just (well-disturbed dunlins loc) = insert loc (well-disturbed (dun ∷ dunlins) loc) envs
-...              | nothing = envs
-
--- Does unnecessary work when multiple dunlins are added to the same environment;
--- they could all be added at once instead of calling add-dun repeatedly.
-add-duns : List Dun → EnvMap → EnvMap
+-- Assumes that env locations are unique.  (Maybe should be proven elsewhere?)
+-- Inefficient.  Maybe new dunlins should be sorted by loc.
+-- Or create a lookup structure.
+add-dun : Dun → List Env → List Env
+add-dun dun [] = [] -- no envs!
+add-dun dun (env ∷ envs) = let (env-loc , env-duns) = env-params env
+                               env-constr = env-constructor env
+                           in if (dun-loc dun) == env-loc
+                              then (env-constr env-loc (dun ∷ env-duns)) ∷ envs
+                              else env ∷ (add-dun dun envs)
+                                                 
+-- Must be a better way than this ...
+add-duns : List Dun → List Env → List Env
 add-duns [] envs = envs
 add-duns (dun ∷ duns) envs = add-dun dun (add-duns duns envs)
 
--- Should the result be a Vec or an AVL map instead of a list?
-collect-all-duns : EnvMap → List Dun
-collect-all-duns envs = concatMap (env-duns ∘ Value.K&_.value) $ toList envs
--- Tip: toList produces a list of AVL.Value.K& pairs, not Σ-pairs.
--- (Commas in the result of toList are for Data.Tree.AVL.Value.K&, not Σ .)
+-- Original example in Niche.agda also had a timestep parameter, but 
+-- the transition rules can be the same at every time.
+-- Since each env contains a list of dunlins in it, an option might be
+-- to iterate through the env list, and ignore the dunlin list.
 
 -- Since this model stores dunlins inside environments, we can update the dunlins
 -- by iterating through the envs.  There are several things might occur:
@@ -394,16 +312,13 @@ collect-all-duns envs = concatMap (env-duns ∘ Value.K&_.value) $ toList envs
 -- which will increment it.
 --
 -- TODO: -- Add removal of dead dunlins based on some criterion.
-
--- choose-loc is a function such as baby-loc-same that determines the new
--- location of offspring of a parent dunlin.  (In a future version, this
--- might be a set of locations or a probability distribution over locations.)
-d-evolve : (max-id : ℕ) → EnvMap → (choose-loc : Dun → ℕ) → (ℕ × EnvMap)
+d-evolve : (max-id : ℕ) → List Env → (choose-loc : Dun → ℕ) → List Env
+d-evolve max-id [] _ = []
 d-evolve max-id envs choose-loc =
-  let old-dunlins = collect-all-duns envs
-      new-dunlins = L.concatMap (reproduce-per-fit max-id envs choose-loc) old-dunlins -- make baby dunlins
-      new-max-id = max-id + (L.length new-dunlins) -- Is there be a better way?
-  in (new-max-id , add-duns new-dunlins envs)
+    let old-dunlins = L.concatMap env-duns envs
+        new-dunlins = L.concatMap (reproduce-per-fit max-id envs choose-loc) old-dunlins -- make baby dunlins
+        new-max-id = max-id + (L.length new-dunlins) -- should be a better way
+    in add-duns new-dunlins envs
 
 {-
 -- THIS WORKS (or type checks) but seems unnecessarily complicated
@@ -417,10 +332,6 @@ d-evolve max-id (env ∷ envs) choose-loc =
                           envs choose-loc)                  --  to envs.
 -}
 
-
-{-
-FIXME:
-
 niche-construct : Env → Env
 niche-construct env = {!!}  -- extract dunlins, look up their effect, and construct new env
 
@@ -431,4 +342,122 @@ e-evolve : List Env → List Env
 e-evolve [] = []
 e-evolve (env ∷ envs) = (niche-construct env) ∷ e-evolve envs
 
+-----------------------------------------------------------------------------
+-- Experiments with mapping from locs to envs.  See CatMap.agda, 
+-- https://agda.github.io/agda-stdlib/v2.0/README.Data.Tree.AVL.html
+
+{-
+-- ATTEMPT TO USE Data.Tree.AVL.IndexedMap
+
+import Data.Tree.AVL.IndexedMap as IM  -- wait to open it
+
+open import Data.Nat.Properties using (<-strictTotalOrder)
+open import Data.Bool.Base using (Bool)
+-- open import Data.Product.Base as Prod using (_,_; _,′_; _×_)
+open import Data.Maybe.Base as Maybe using (Maybe)
+open import Data.String.Base using (String)
+open import Relation.Binary.PropositionalEquality
+
+nat-id : ℕ → ℕ
+nat-id = id
+
+-- Indexed Nat wrapper:
+data MyNat : ℕ → Set where
+  mynat : (n : ℕ) → MyNat n
+
+-- Wrap Env so that it's indexed (or rewrite Env):
+data LocatedEnv : ℕ → Set where
+  located-env : (env : Env) → LocatedEnv (env-loc env)
+
+-- Doesn't work:
+-- open IM MyNat LocatedEnv Data.Nat._<_ <-strictTotalOrder
 -}
+
+
+{-
+-- SUCCESSFUL EXPERIMENTS WITH Data.Tree.AVL.Map
+
+import Data.Tree.AVL.Map as M  -- wait to open it
+
+open import Data.Nat.Properties using (<-strictTotalOrder)
+open import Data.Bool.Base using (Bool)
+-- open import Data.Product.Base as Prod using (_,_; _,′_; _×_)
+open import Data.Maybe.Base as Maybe using (Maybe)
+open import Data.String.Base using (String)
+open import Relation.Binary.PropositionalEquality
+
+open M <-strictTotalOrder
+
+empty-env-map : Map Env
+empty-env-map = 
+
+two-env-map : Map Env
+two-env-map = fromList ((2 , undisturbed 2 []) ∷ (1 , well-disturbed 1 []) ∷ [])
+
+two-env-list = toList two-env-map
+
+pair-from-env : Env → (ℕ × Env)
+pair-from-env env = (env-loc env , env)
+
+env-pair-list = L.map pair-from-env all-envs
+
+all-envs-map : Map Env
+all-envs-map = fromList env-pair-list
+
+locenvs-from-map : List (ℕ × Env)
+locenvs-from-map = toList all-envs-map
+
+just-env-three = lookup all-envs-map 3
+nothing-env-five = lookup all-envs-map 5
+-}
+
+
+
+-- ATTEMPT TO USE Data.Tree.AVL
+
+open import Data.Nat.Properties using (<-strictTotalOrder)
+import Data.Tree.AVL
+open Data.Tree.AVL <-strictTotalOrder
+open import Relation.Binary.PropositionalEquality -- for subst, at least
+
+-- Define my map type.  I think using Vec, from the the AVL Readme,
+-- is just a way to have a data type with a missing last arg that
+-- can function as a key.  Not sure.
+EnvMap = Tree (MkValue (Vec Env) (subst (Vec Env)))
+
+empty-env-map : EnvMap
+empty-env-map = empty
+
+singleton-env-map : EnvMap
+singleton-env-map = singleton 1 ((undisturbed 1 []) ∷ [])
+-- size singleton-env-map
+just-env1 = lookup singleton-env-map 1
+nada = lookup singleton-env-map 42
+
+-- Overwrites old element 1:
+singleton-env-map2 : EnvMap
+singleton-env-map2 = insert 1 ((mildly-disturbed 2 []) ∷ []) singleton-env-map
+just-env2 = lookup singleton-env-map2 1
+-- size singleton-env-map2
+
+-- Why is this complaining that the nil does not have size 2?
+-- Isn't the second arg a key?
+-- (And I still don't know why I have to wrap the vals in a Vec.)
+{-
+two-envs-map : EnvMap
+two-envs-map = insert 2 ((well-disturbed 3 []) ∷ []) empty
+-}
+-- Well note that in the AVL README, the singleton avl t₁ is created with a
+-- vector of length 2, and the first arg to the singleton is 2.
+-- Look also at the fromList example further down.  The keys correspond
+-- to the lengths of the vectors.  It may be relevant that the keys
+-- are parameters of the vectors.
+-- Maybe it's that (subst (Vec String)) means substitute the next arg
+-- of Vec, i.e. the Nat or Fin.  So can I do that with Env locs?
+
+env-pairs : List (ℕ × Env)
+env-pairs = L.map (λ e → (env-loc e) , e) all-envs
+
+env-map : EnvMap
+env-map = {!!} -- Data.Tree.AVL.fromList env-pairs
+
