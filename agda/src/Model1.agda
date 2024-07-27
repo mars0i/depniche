@@ -142,6 +142,10 @@ move-south (short-beak id loc) = short-beak id (loc - 1)
 move-south (long-beak id loc) = long-beak id (loc - 1)
 -}
 
+replace-dun-loc : (dun : Dun) → (new-loc : Loc) → Dun
+replace-dun-loc (short-beak id loc) new-loc = short-beak id new-loc
+replace-dun-loc (long-beak id loc) new-loc = long-beak id new-loc
+
 -- projection operators
 dun-params : Dun → (DunID × Loc)
 dun-params (short-beak id loc) = (id , loc)
@@ -280,23 +284,26 @@ remove-dun-from-env dun (mildly-disturbed duns loc) =
 remove-dun-from-env dun (well-disturbed duns loc) =
    well-disturbed (remove-dun-from-list dun duns) loc
 
--- Trying to use AVL.insertWith
--- Needs to produce function from maybe to env for use in insertWith.
--- How is this supposed to work?  What do do with nothing??
-remove-dun-from-maybe-env : {loc : Loc} → (dun : Dun) → (envs : EnvMap) → (maybe-env : Maybe (Env loc)) → Env loc
-remove-dun-from-maybe-env dun envs (just env) = remove-dun-from-env dun env
-remove-dun-from-maybe-env dun envs nothing = {!!}
+remove-dun-from-envs : (dun : Dun) → (envs : EnvMap) → EnvMap
+remove-dun-from-envs dun envs = let loc = dun-loc dun
+                                in case (lookup envs loc) of λ where 
+                                  nothing → envs
+                                  (just env) → insert loc (remove-dun-from-env dun env) envs -- overwrites old value
 
-remove-dun-from-envs : (dun : Dun) → (envs : EnvMap) → Maybe EnvMap
-remove-dun-from-envs (short-beak id loc) envs = {!!}
-remove-dun-from-envs (long-beak id loc) envs = {!!}
+add-dun-to-env : {loc : Loc} → (dun : Dun) → (env : Env loc) → Env loc
+add-dun-to-env dun (undisturbed duns loc) = undisturbed (dun ∷ duns) loc
+add-dun-to-env dun (mildly-disturbed duns loc) = mildly-disturbed (dun ∷ duns) loc
+add-dun-to-env dun (well-disturbed duns loc) = well-disturbed (dun ∷ duns) loc
 
-add-dun-to-envs : (dun : Dun) → (envs : EnvMap) → Maybe EnvMap
-add-dun-to-envs dun envs = {!!}
+add-dun-to-envs : (dun : Dun) → (envs : EnvMap) → EnvMap
+add-dun-to-envs dun envs = let loc = dun-loc dun
+                           in case (lookup envs loc) of λ where
+                             nothing → envs
+                             (just env) → insert loc (add-dun-to-env dun env) envs -- overwrites old value
 
-move-to-env : (mover : Dun) → (new-loc : Loc) → (envs : EnvMap) → EnvMap
-move-to-env (short-beak id loc) new-loc envs = {!!}
-move-to-env (long-beak id loc) new-loc envs = {!!}
+move-to-env : (dun : Dun) → (new-loc : Loc) → (envs : EnvMap) → EnvMap
+move-to-env dun new-loc envs = add-dun-to-envs (replace-dun-loc dun new-loc)
+                                               (remove-dun-from-envs dun envs)
 
 
 -----------------
@@ -361,19 +368,22 @@ add-duns-by-loc dloc offspring (env ∷ envs) = let (eloc , eduns) = env-params 
                                                  else env ∷ (add-duns-by-loc dloc offspring envs)
 -}
 
+{-
 -- Is there an easy way to remove the redundancy in the with-results?
+-- SHOULD I USE ADD-DUN-TO-ENVS HERE?
 add-dun : Dun → EnvMap → EnvMap
 add-dun dun envs with lookup envs (dun-loc dun)
 ...              | just (undisturbed dunlins loc) = insert loc (undisturbed (dun ∷ dunlins) loc) envs
 ...              | just (mildly-disturbed dunlins loc) = insert loc (mildly-disturbed (dun ∷ dunlins) loc) envs
 ...              | just (well-disturbed dunlins loc) = insert loc (well-disturbed (dun ∷ dunlins) loc) envs
 ...              | nothing = envs
+-}
 
 -- Does unnecessary work when multiple dunlins are added to the same environment;
 -- they could all be added at once instead of calling add-dun repeatedly.
 add-duns : List Dun → EnvMap → EnvMap
 add-duns [] envs = envs
-add-duns (dun ∷ duns) envs = add-dun dun (add-duns duns envs)
+add-duns (dun ∷ duns) envs = add-dun-to-envs dun (add-duns duns envs)
 
 -- Should the result be a Vec or an AVL map instead of a list?
 collect-all-duns : EnvMap → List Dun
