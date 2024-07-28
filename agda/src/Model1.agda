@@ -43,6 +43,7 @@ import Data.Tree.AVL as AVL using (Tree; MkValue; empty; singleton; insert; inse
 import Data.Tree.AVL.Value as Value ---? I don't know how to import K&.value separately
 open AVL <-strictTotalOrder
 open import Relation.Binary.PropositionalEquality using (subst) -- _≡_; refl
+-- note subst is actually from Relation.Binary.PropositionalEquality.Core
 
 open import Niche
 -- open import Kludges
