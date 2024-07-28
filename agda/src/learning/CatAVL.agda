@@ -128,7 +128,40 @@ v₉ = refl
 
 open import Data.Nat
 
-StringTree = Tree (MkValue (Vec ℕ) (subst (Vec ℕ))) -- why Vec? Why same?
+NatTree = Tree (MkValue (Vec ℕ) (subst (Vec ℕ)))
+
+data Foo : ℕ → Set where
+  foo : (n : ℕ) → Foo n
+
+-- The first arg to MkValue is a function that returns a type.
+-- See https://agda.zulipchat.com/#narrow/stream/259644-newcomers/topic/Beginner.20questions.20about.20Tree.2EAVL*/near/454365151
+
+-- It can be an indexed data type, which in this context is a function:
+FooTree = Tree (MkValue Foo (subst Foo))
+
+substFoo = subst Foo
+
+substFooProof = substFoo refl
+
+-- Or it can b a normal function that returns a type, like this:
+foobar : ℕ → Set
+foobar n = Foo (suc n)
+
+SucFooTree = Tree (MkValue foobar (subst foobar))
+
+-- Or like this:
+myvec : ℕ → Set
+myvec n = Vec String n
+
+MyVecTree = Tree (MkValue myvec (subst myvec))
+
+substfoobar = subst foobar
+-- moresubstfoobar = subst foobar (2 ≡ 2)
+
+-- yow = substfoobar (2 ≡ (suc 1))
+
+--------------------------------------
+
 
 record Yo : Set where
   constructor MkYo
@@ -138,7 +171,9 @@ record Yo : Set where
 
 open Yo
 
-yo1 = MkYo 5 "------------------------------------------------------------------------
+
+
+------------------------------------------------------------------------
 -- Further reading
 
 -- Variations of the AVL tree module are available:
