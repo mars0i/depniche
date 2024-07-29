@@ -1,5 +1,10 @@
 module Model1 where
-{- General notes on code
+-- First attempt at a relatively simple framework for natural selection with
+-- niche construction.
+
+{-
+
+General notes on code below:
 
 See docs/DunlinStory1.md for rationale for names, data, etc.
 
