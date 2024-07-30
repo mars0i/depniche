@@ -145,8 +145,8 @@ no food? Can it die of old age?
 * Maybe allow environments to influence their neighbors.  For
 example, the rule could be that if $E_1$ is `well-disturbed` and
 the neighboring environment $E_2$ is undisturbed, then in the
-next timestep $E_2$ (and $E_1$?) will become `mildly-disturbed`. 
-This is because the prey that is associated with the
+next timestep $E_2$ (and $E_1$?) will become `mildly-disturbed`.
+This is because the organisms (other than dunlins) in the
 `well-disturbed` state diffuse to neighboring environments.
 Questions:
 
