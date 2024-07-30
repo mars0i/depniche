@@ -25,8 +25,12 @@ rewritten from scratch.
 
 The original example in Niche.agda also had a timestep parameter, but 
 the transition rules can be the same at every time.
-Since each env contains a list of dunlins in it, an option might be
+
+Since now each env contains a list of dunlins in it, an option might be
 to iterate through the env list, and ignore the dunlin list.
+However, it's still useful to separate niche construction, i.e.
+modification of the (non-dunlins) state of environments from
+updating dunlins.
 
 Another change is that updating the system now passs along a maximum
 dunlin id, so that each new dunlin can get a unique id that can be used
@@ -157,16 +161,6 @@ dun-loc (long-beak _ loc) = loc
 dun-constructor : Dun → DunConstr
 dun-constructor (short-beak _ _) = short-beak
 dun-constructor (long-beak _ _) = long-beak
-
-{-
-move-north : Dun → Dun
-move-north (short-beak id loc) = short-beak id (1 + loc)
-move-north (long-beak id loc) = long-beak id (1 + loc)
-
-move-south : Dun → Dun
-move-south (short-beak id loc) = short-beak id (loc - 1)
-move-south (long-beak id loc) = long-beak id (loc - 1)
--}
 
 --=========================================================--
 -- Environments
@@ -303,14 +297,26 @@ add-duns-to-envs [] envs = envs
 add-duns-to-envs (dun ∷ duns) envs = add-dun-to-envs dun (add-duns-to-envs duns envs)
 
 --------------------
--- Moving a dunlin from one env to another means removing it
--- from the first env and then and then adding it to the second.
+-- Dunlin movement between environments
 
 -- Note this doesn't restrict movement to adjacent environments.  That has
 -- to be imposed elsewhere. (It's not necessarily required for birds, anyway.)
 move-to-env : (dun : Dun) → (new-loc : Loc) → (envs : EnvMap) → EnvMap
 move-to-env dun new-loc envs = add-dun-to-envs (replace-dun-loc dun new-loc)
                                                (remove-dun-from-envs dun envs)
+
+-- TODO: Add move-north (increment location) and move-south (decrement location)
+-- functions?
+
+-- QUESTION: What should the policy when dunlin tries to move past the
+-- minimum or maximum environment?
+-- a. Leave dunlin in same environment
+-- b. Make a "toroidal"/"periodic boundary conditions" world, i.e. circular in 1D.
+--    i.e. going beyond the minimum environment places one in the max env, etc.
+-- c. Make it an error, i.e. "Maybe-ize" movement.
+
+--------------------
+-- General-purpose
 
 -- Generate a list of all dunlins in all environments.
 -- Tip: toList produces a list of AVL.Value.K& pairs, not Σ-pairs, and
@@ -319,7 +325,7 @@ collect-all-duns : EnvMap → List Dun
 collect-all-duns envs = concatMap (env-duns ∘ Value.K&_.value) $ toList envs
 
 --==========================================================--
--- Fitness, reproduction, and death.  
+-- Fitness, reproduction, movement, and death.  
 
 -- See docs/DunlinStory1.md for a sketch of possible rules to
 -- use to implement `Dstep and `Estep in Niche.agda.
@@ -362,6 +368,11 @@ reproduce-per-fit max-id envs fitfn choose-loc parent
                                      in if fit == 0
                                         then []
                                         else reproduce max-id fit choose-loc parent
+
+--------------------
+-- Movement of dunlins from one environment to another
+
+-- TODO
 
 --------------------
 -- Death
