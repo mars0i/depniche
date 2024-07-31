@@ -194,7 +194,10 @@ learning/Model1indexedID.agda in commit #3f46335 for
 illustrations.) Perhaps the location id should be a type index as
 well. -}
 
-data Env : Loc → Set where  ---? are the implict and explicit locs the same? I want them to be.
+-- DOES THIS enforce that the dunlins in the embedded list have the same
+-- location as the environment?  I think so.
+---? are the implict and explicit locs the same? I want them to be.
+data Env : Loc → Set where
   undisturbed      : {loc : Loc} → (duns : List (Dun loc)) → (loc : Loc) → Env loc
   mildly-disturbed : {loc : Loc} → (duns : List (Dun loc)) → (loc : Loc) → Env loc
   well-disturbed   : {loc : Loc} → (duns : List (Dun loc)) → (loc : Loc) → Env loc
@@ -305,7 +308,8 @@ remove-dun-from-list dun (x ∷ duns) = if (dun-id dun) == (dun-id x)
 
 -- Has the same silent failure behavior as remove-dun-from-list.
 ---? I do not understand what I've done below with subscripted variables ;
----? it's what Agda guided me to, and seems to work.
+---? it's what Agda guided me to, but it type checks.
+-- DOES IT BEHAVE CORRECTLY?
 remove-dun-from-env : {loc : Loc} → {duns : List (Dun loc)} →
                       (dun : (Dun loc)) → (env : Env loc) → Env loc
 remove-dun-from-env {loc = loc₁} {duns = duns₁} dun (undisturbed duns _) = 
@@ -327,7 +331,7 @@ remove-dun-from-env {duns = duns₂} dun (well-disturbed duns loc) =
 -- Silently returns the same EnvMap if there's a misconfiguration
 -- such that the dunlin's location doesn't appear in envs. (Add proof?)
 remove-dun-from-envs : {loc : Loc} → (dun : Dun loc) → (envs : EnvMap) → EnvMap
-remove-dun-from-envs dun envs = let loc = dun-loc dun
+remove-dun-from-envs {loc = loc₁} dun envs = let loc = dun-loc dun
                                 in case (lookup envs loc) of λ where 
                                   nothing → envs
                                   (just env) →
@@ -336,10 +340,17 @@ remove-dun-from-envs dun envs = let loc = dun-loc dun
 --------------------
 -- Add a dunlin:
 
-add-dun-to-env : {loc : Loc} → (dun : Dun loc) → (env : Env loc) → Env loc
-add-dun-to-env dun (undisturbed duns loc) = undisturbed (dun ∷ {!!}) loc
-add-dun-to-env dun (mildly-disturbed duns loc) = mildly-disturbed (dun ∷ {!!}) loc
-add-dun-to-env dun (well-disturbed duns loc) = well-disturbed (dun ∷ {!!}) loc
+---? I do not understand what I've done below with subscripted variables ;
+---? it's what Agda guided me to, but it type checks.
+-- DOES IT BEHAVE CORRECTLY?
+add-dun-to-env : {loc : Loc} → {duns : List (Dun loc)} →
+                 (dun : Dun loc) → (env : Env loc) → Env loc
+add-dun-to-env {duns = duns₁} dun (undisturbed duns loc) =
+   undisturbed (dun ∷ duns₁) loc
+add-dun-to-env {duns = duns₁} dun (mildly-disturbed duns loc) =
+   mildly-disturbed (dun ∷ duns₁) loc
+add-dun-to-env {duns = duns₁} dun (well-disturbed duns loc) =
+   well-disturbed (dun ∷ duns₁) loc
 
 add-dun-to-envs : {loc : Loc} → (dun : Dun loc) → (envs : EnvMap) → EnvMap
 add-dun-to-envs dun envs = let loc = dun-loc dun
