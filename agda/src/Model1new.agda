@@ -328,14 +328,29 @@ remove-dun-from-env {duns = duns₂} dun (well-disturbed duns loc) =
    well-disturbed (remove-dun-from-list dun duns₂) loc
 -}
 
+f : ℕ → ℕ
+f n = g n
+  where
+  g : ℕ → ℕ
+  g m = m * m
+
+
 -- Silently returns the same EnvMap if there's a misconfiguration
 -- such that the dunlin's location doesn't appear in envs. (Add proof?)
 remove-dun-from-envs : {loc : Loc} → (dun : Dun loc) → (envs : EnvMap) → EnvMap
+remove-dun-from-envs {loc = loc₁} dun envs =
+   let loc = dun-loc dun
+   in remove-if-env-found (lookup envs loc)
+   where remove-if-env-found : {loc : Loc} → Maybe (Env loc) → EnvMap
+         remove-if-env-found nothing = envs
+         remove-if-env-found {loc = loc₁} (just env) = insert loc₁ (remove-dun-from-env {!!} env) envs -- overwrites old value
+{-
 remove-dun-from-envs {loc = loc₁} dun envs = let loc = dun-loc dun
                                 in case (lookup envs loc) of λ where 
                                   nothing → envs
                                   (just env) →
                                     insert loc (remove-dun-from-env {!!} env) envs -- overwrites old value
+-}
 
 --------------------
 -- Add a dunlin:
