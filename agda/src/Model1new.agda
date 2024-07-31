@@ -164,7 +164,7 @@ dun-constructor (short-beak _ _) = short-beak
 dun-constructor (long-beak _ _) = long-beak
 
 ----------------
--- experiment
+-- Experiment
 
 -- Attempt to create lists of dunlins that are required to have the same location:
 {-
@@ -205,8 +205,9 @@ EnvConstr = {loc : Loc} → (duns : List (Dun loc)) → (loc : Loc) → Env loc
 
 ---------------------------------
 ---------------------------------
--- experiment
+-- Experiment
 
+{-
 data EnvList (loc : Loc) : Set where
   ll-nil : EnvList loc
   ll-cons : (env : Env loc) (ls : EnvList loc) → EnvList loc
@@ -219,6 +220,11 @@ oneenv = ll-cons (undisturbed [ (long-beak 6 47) ] 42) noenv
 
 twoenvs : EnvList 42
 twoenvs = ll-cons (mildly-disturbed [ (short-beak 5 47) ] 42) oneenv
+
+-- This should fail, and it does:
+threeenvs? : EnvList 42
+threeenvs? = ll-cons (mildly-disturbed [ (short-beak 7 48) ] 44) twoenvs
+-}
 
 ---------------------------------
 ---------------------------------
@@ -298,13 +304,16 @@ remove-dun-from-list dun (x ∷ duns) = if (dun-id dun) == (dun-id x)
                                       else remove-dun-from-list dun duns
 
 -- Has the same silent failure behavior as remove-dun-from-list.
-remove-dun-from-env : {loc : Loc} → {duns : List (Dun loc)} → (dun : (Dun loc)) → (env : Env loc) → Env loc
-remove-dun-from-env dun (undisturbed duns loc) =
-   undisturbed (remove-dun-from-list dun duns) loc
-remove-dun-from-env dun (mildly-disturbed duns loc) =
-   mildly-disturbed (remove-dun-from-list dun duns) loc
-remove-dun-from-env dun (well-disturbed duns loc) =
-   well-disturbed (remove-dun-from-list dun duns) loc
+---? I do not understand what I've done below with duns₂ ; it's what Agda
+---? guided me to, and seems to work.
+remove-dun-from-env : {loc : Loc} → {duns : List (Dun loc)} →
+                      (dun : (Dun loc)) → (env : Env loc) → Env loc
+remove-dun-from-env {duns = duns₂} dun (undisturbed duns loc) =
+   undisturbed (remove-dun-from-list dun duns₂) loc
+remove-dun-from-env {duns = duns₂} dun (mildly-disturbed duns loc) =
+   mildly-disturbed (remove-dun-from-list dun duns₂) loc
+remove-dun-from-env {duns = duns₂} dun (well-disturbed duns loc) =
+   well-disturbed (remove-dun-from-list dun duns₂) loc
 
 -- Silently returns the same EnvMap if there's a misconfiguration
 -- such that the dunlin's location doesn't appear in envs. (Add proof?)
@@ -313,25 +322,25 @@ remove-dun-from-envs dun envs = let loc = dun-loc dun
                                 in case (lookup envs loc) of λ where 
                                   nothing → envs
                                   (just env) →
-                                    insert loc (remove-dun-from-env dun env) envs -- overwrites old value
+                                    insert loc (remove-dun-from-env {!!} env) envs -- overwrites old value
 
 --------------------
 -- Add a dunlin:
 
-add-dun-to-env : {loc : Loc} → (dun : Dun) → (env : Env loc) → Env loc
-add-dun-to-env dun (undisturbed duns loc) = undisturbed (dun ∷ duns) loc
-add-dun-to-env dun (mildly-disturbed duns loc) = mildly-disturbed (dun ∷ duns) loc
-add-dun-to-env dun (well-disturbed duns loc) = well-disturbed (dun ∷ duns) loc
+add-dun-to-env : {loc : Loc} → (dun : Dun loc) → (env : Env loc) → Env loc
+add-dun-to-env dun (undisturbed duns loc) = undisturbed (dun ∷ {!!}) loc
+add-dun-to-env dun (mildly-disturbed duns loc) = mildly-disturbed (dun ∷ {!!}) loc
+add-dun-to-env dun (well-disturbed duns loc) = well-disturbed (dun ∷ {!!}) loc
 
-add-dun-to-envs : (dun : Dun) → (envs : EnvMap) → EnvMap
+add-dun-to-envs : {loc : Loc} → (dun : Dun loc) → (envs : EnvMap) → EnvMap
 add-dun-to-envs dun envs = let loc = dun-loc dun
                            in case (lookup envs loc) of λ where
                              nothing → envs
-                             (just env) → insert loc (add-dun-to-env dun env) envs -- overwrites old value
+                             (just env) → insert loc (add-dun-to-env {!!} env) envs -- overwrites old value
 
 -- Does unnecessary work when multiple dunlins are added to the same environment;
 -- they could all be added at once instead of calling add-dun repeatedly.
-add-duns-to-envs : List Dun → EnvMap → EnvMap
+add-duns-to-envs : {loc : Loc} → List (Dun loc) → EnvMap → EnvMap
 add-duns-to-envs [] envs = envs
 add-duns-to-envs (dun ∷ duns) envs = add-dun-to-envs dun (add-duns-to-envs duns envs)
 
@@ -340,7 +349,7 @@ add-duns-to-envs (dun ∷ duns) envs = add-dun-to-envs dun (add-duns-to-envs dun
 
 -- Note this doesn't restrict movement to adjacent environments.  That has
 -- to be imposed elsewhere. (It's not necessarily required for birds, anyway.)
-move-to-env : (dun : Dun) → (new-loc : Loc) → (envs : EnvMap) → EnvMap
+move-to-env : {loc : Loc} → (dun : Dun loc) → (new-loc : Loc) → (envs : EnvMap) → EnvMap
 move-to-env dun new-loc envs = add-dun-to-envs (replace-dun-loc dun new-loc)
                                                (remove-dun-from-envs dun envs)
 
@@ -381,7 +390,7 @@ Fitness : Set
 Fitness = ℕ
 
 FitnessFn : Set
-FitnessFn = {loc : Loc} → Dun → Env loc → Fitness
+FitnessFn = {loc : Loc} → Dun loc → Env loc → Fitness
 
 --------------------
 -- Reproduction
@@ -390,7 +399,10 @@ FitnessFn = {loc : Loc} → Dun → Env loc → Fitness
 -- choose-child-loc is some function from each dunlin to a new location. This can take
 -- account the dunlin's current location, the dunlin's id, or other internal state
 -- of the dunlin.  (This should be in field built into the Dun datatype instead, OO-style?)
-reproduce : (max-id : ℕ) → (num-childs : ℕ) → (choose-child-loc : Dun  → ℕ) → (parent : Dun) → List Dun
+-- THE RETURN VALUE SHOULD NOT BE REQUIRED TO BE DUNLINS ALL IN THE SAME LOCATION.
+-- SO RETURN A LIST OF SIGMA PAIRS OR AN AVL TREE, OR ?
+reproduce : {loc : Loc} → (max-id : ℕ) → (num-childs : ℕ) →
+            (choose-child-loc : (Dun loc) → ℕ) → (parent : Dun loc) → List (Dun loc)
 reproduce _ 0 _ _ = []
 reproduce max-id (suc n) choose-loc (short-beak _ loc) =
    iterate next-dun (short-beak (suc max-id) loc) (suc n)
@@ -401,13 +413,15 @@ reproduce max-id (suc n) choose-loc (long-beak _ loc) =
 -- Calculates number of childs from fitness of dun relative to env, and calls reproduce.
 -- Probably SHOULD BE MAYBE-IZED.  At present it returns an empty list when an env
 -- can't be found.  This can't be distinguished from the zero fitness case.
-reproduce-per-fit : (max-id : ℕ) → (envs : EnvMap) → (fitfn : FitnessFn) →
-                    (choose-loc : Dun → ℕ) → (parent : Dun) → List Dun  -- parent is last to use currying
+-- THE RETURN VALUE SHOULD NOT BE REQUIRED TO BE DUNLINS ALL IN THE SAME LOCATION.
+-- SO RETURN A LIST OF SIGMA PAIRS OR AN AVL TREE, OR ?
+reproduce-per-fit : {loc : Loc} → (max-id : ℕ) → (envs : EnvMap) → (fitfn : FitnessFn) →
+                    (choose-loc : (Dun loc) → ℕ) → (parent : Dun loc) → List (Dun loc)  -- parent is last to use currying
 reproduce-per-fit max-id envs fitfn choose-loc parent
                   with dun-loc parent
 ...               | loc with lookup envs loc
 ...                     | nothing = [] -- can't find that env, shouldn't happen
-...                     | just env = let fit = fitfn parent env
+...                     | just env = let fit = fitfn parent {!!} -- env
                                      in if fit == 0
                                         then []
                                         else reproduce max-id fit choose-loc parent
@@ -508,7 +522,7 @@ toPair and fromPair in AVL.Value that convert to/from the Σ-pair.)
 --------------------
 -- Fitness rules--these determine how many offspring a dunlin has in a given
 -- environment. See docs/DunlinStory1.md for rationale, constraints
-fitness : {loc : Loc} → Dun → Env loc → Fitness
+fitness : {loc : Loc} → Dun  loc → Env loc → Fitness
 fitness (short-beak _ _) (undisturbed _ _)      = 0
 fitness (short-beak _ _) (mildly-disturbed _ _) = 1
 fitness (short-beak _ _) (well-disturbed _ _)   = 2
@@ -517,7 +531,7 @@ fitness (long-beak _ _)  (mildly-disturbed _ _) = 1
 fitness (long-beak _ _)  (well-disturbed _ _)   = 0
 
 -- This location-chooser puts offspring in the same env as parent:
-child-loc-same : Dun → ℕ
+child-loc-same : {loc : Loc} → Dun  loc → ℕ
 child-loc-same (short-beak id loc) = loc
 child-loc-same (long-beak id loc) =  loc
 
