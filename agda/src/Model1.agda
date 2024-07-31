@@ -162,18 +162,6 @@ dun-constructor : Dun → DunConstr
 dun-constructor (short-beak _ _) = short-beak
 dun-constructor (long-beak _ _) = long-beak
 
-----------------
--- experiment
-
--- Attempt to create lists of dunlins that are required to have the same location:
-data LocList (loc : Loc) : Set where
-  ll-empty :  LocList loc
-  ll-list : {constr : DunConstr} {id : DunID} → Dun → LocList loc
--- This type checks but doesn't seem to capture what I want.
--- Maybe Dun to be indexed by Loc?
-
-----------------
-
 --=========================================================--
 -- Environments
 
