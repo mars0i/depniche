@@ -304,16 +304,25 @@ remove-dun-from-list dun (x ∷ duns) = if (dun-id dun) == (dun-id x)
                                       else remove-dun-from-list dun duns
 
 -- Has the same silent failure behavior as remove-dun-from-list.
----? I do not understand what I've done below with duns₂ ; it's what Agda
----? guided me to, and seems to work.
+---? I do not understand what I've done below with subscripted variables ;
+---? it's what Agda guided me to, and seems to work.
 remove-dun-from-env : {loc : Loc} → {duns : List (Dun loc)} →
                       (dun : (Dun loc)) → (env : Env loc) → Env loc
+remove-dun-from-env {loc = loc₁} {duns = duns₁} dun (undisturbed duns _) = 
+   undisturbed (remove-dun-from-list dun duns₁) loc₁
+remove-dun-from-env {loc = loc₁} {duns = duns₁} dun (mildly-disturbed duns _) =
+   mildly-disturbed (remove-dun-from-list dun duns₁) loc₁
+remove-dun-from-env {loc = loc₁} {duns = duns₁} dun (well-disturbed duns _) =
+   well-disturbed (remove-dun-from-list dun duns₁) loc₁
+{-
+---? This version works too, and is a little more succinct but even more mysterious.
 remove-dun-from-env {duns = duns₂} dun (undisturbed duns loc) =
    undisturbed (remove-dun-from-list dun duns₂) loc
 remove-dun-from-env {duns = duns₂} dun (mildly-disturbed duns loc) =
    mildly-disturbed (remove-dun-from-list dun duns₂) loc
 remove-dun-from-env {duns = duns₂} dun (well-disturbed duns loc) =
    well-disturbed (remove-dun-from-list dun duns₂) loc
+-}
 
 -- Silently returns the same EnvMap if there's a misconfiguration
 -- such that the dunlin's location doesn't appear in envs. (Add proof?)
