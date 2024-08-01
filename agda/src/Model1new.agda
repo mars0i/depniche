@@ -308,41 +308,27 @@ remove-dun-from-list dun (x ∷ duns) = if (dun-id dun) == (dun-id x)
 
 -- Has the same silent failure behavior as remove-dun-from-list.
 ---? I do not understand what I've done below with subscripted variables ;
----? it's what Agda guided me to, but it type checks.
+---? it's what Agda guided me to, and it type checks.
 -- DOES IT BEHAVE CORRECTLY?
-remove-dun-from-env : {loc : Loc} → {duns : List (Dun loc)} →
-                      (dun : (Dun loc)) → (env : Env loc) → Env loc
-remove-dun-from-env {loc = loc₁} {duns = duns₁} dun (undisturbed duns _) = 
-   undisturbed (remove-dun-from-list dun duns₁) loc₁
-remove-dun-from-env {loc = loc₁} {duns = duns₁} dun (mildly-disturbed duns _) =
-   mildly-disturbed (remove-dun-from-list dun duns₁) loc₁
-remove-dun-from-env {loc = loc₁} {duns = duns₁} dun (well-disturbed duns _) =
-   well-disturbed (remove-dun-from-list dun duns₁) loc₁
-{-
----? This version works too, and is a little more succinct but even more mysterious.
-remove-dun-from-env {duns = duns₂} dun (undisturbed duns loc) =
-   undisturbed (remove-dun-from-list dun duns₂) loc
-remove-dun-from-env {duns = duns₂} dun (mildly-disturbed duns loc) =
-   mildly-disturbed (remove-dun-from-list dun duns₂) loc
-remove-dun-from-env {duns = duns₂} dun (well-disturbed duns loc) =
-   well-disturbed (remove-dun-from-list dun duns₂) loc
--}
-{-
-remove-if-env-found : {loc : Loc} → (dun : Dun loc) → (envs : EnvMap) →
-                      Maybe (Env loc) → EnvMap
-remove-if-env-found dun envs nothing = envs
-remove-if-env-found {loc} dun envs (just env) = 
-    insert loc (remove-dun-from-env dun env) envs -- overwrites old value
--}
+remove-dun-from-env : {loc : Loc} → {duns : List (Dun loc)} → (dun : Dun loc) → (env : Env loc) → Env loc
+remove-dun-from-env {duns = duns₁} dun (undisturbed duns loc) =      undisturbed (remove-dun-from-list dun duns₁) loc
+remove-dun-from-env {duns = duns₁} dun (mildly-disturbed duns loc) = mildly-disturbed (remove-dun-from-list dun duns₁) loc
+remove-dun-from-env {duns = duns₁} dun (well-disturbed duns loc) =   well-disturbed (remove-dun-from-list dun duns₁) loc
 
 -- Silently returns the same EnvMap if there's a misconfiguration
--- such that the dunlin's location doesn't appear in envs. (Add proof?)
+-- that results in the dunlin's location being missing from envs. (Add proof?)
 remove-dun-from-envs : {loc : Loc} → (dun : Dun loc) → (envs : EnvMap) → EnvMap
 remove-dun-from-envs {loc} dun envs = remove-if-env-found (lookup envs loc)
            where remove-if-env-found : {loc : Loc} → Maybe (Env loc) → EnvMap
                  remove-if-env-found nothing = envs
-                 remove-if-env-found {loc = loc₁} (just env) = 
-                    insert loc (remove-dun-from-env dun {!!}) envs -- overwrites old value
+                 remove-if-env-found {loc = loc₁} (just (undisturbed duns .loc₁)) = insert loc (remove-dun-from-env {loc = loc₁} {duns = duns} dun (undisturbed duns loc)) envs
+                 remove-if-env-found {loc = loc₁} (just (mildly-disturbed duns .loc₁)) = insert loc (remove-dun-from-env dun (mildly-disturbed duns loc)) envs
+                 remove-if-env-found {loc = loc₁} (just (well-disturbed duns .loc₁)) = insert loc (remove-dun-from-env dun (well-disturbed duns loc)) envs
+{- About errors like this one:
+      _duns_142 : List (Dun loc)  [ at /Users/marshall/docs/src/depniche/agda/src/Model1new.agda:324,97-116 ]
+   Naïm Camille Favier says (https://agda.zulipchat.com/#narrow/stream/259644-newcomers/topic/Mysterious.20error.20message/near/455722851):
+   "it's an unsolved metavariable. agda should highlight the source of the metavariable with a yellow background
+   the name gives you a hint: it's probably an implicit argument named `duns` to some function call which agda couldn't infer" -}
 
 {-
    where remove-if-env-found : {loc : Loc} → Maybe (Env loc) → EnvMap
