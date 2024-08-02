@@ -1,3 +1,7 @@
+-- Like Model1, but giving Dun a loc (nat) argument.  This idea is to
+-- make the List Dun in an Env into List (Dun loc), so that the Env's
+-- loc is always the loc of each of the Duns in it.
+-- I'm trying to make this work, but it's challenging.
 module Model1new where
 -- First attempt at a relatively simple framework for natural selection with
 -- niche construction.
