@@ -306,7 +306,7 @@ config-system max-id (env-spec ∷ env-specs) env-map =
 -- doesn't apepar in the list. (Add proof?)
 remove-dun-from-list : {loc : Loc} → (dun : Dun loc) → (duns : List (Dun loc)) → List (Dun loc)
 remove-dun-from-list dun [] = []
-remove-dun-from-list dun (x ∷ duns) = if (dun-id dun) == (dun-id x)
+remove-dun-from-list dun (x ∷ duns) = if (dun-id dun) == (dun-id x)   -- IS THIS A PROBLEM?
                                       then duns
                                       else remove-dun-from-list dun duns
 
@@ -319,11 +319,13 @@ remove-dun-from-env {loc = loc₁} {duns = duns₁} dun (undisturbed duns loc₁
 remove-dun-from-env {loc = loc₁} {duns = duns₁} dun (mildly-disturbed duns loc₁) = mildly-disturbed {loc₁} (remove-dun-from-list dun duns₁) loc₁
 remove-dun-from-env {loc = loc₁} {duns = duns₁} dun (well-disturbed duns loc₁) = well-disturbed {loc₁} (remove-dun-from-list dun duns₁) loc₁
 
+{-
 remove-if-env-found : {loc : Loc} → (dun : Dun loc) → (envs : EnvMap) → Maybe (Env loc) → EnvMap
 remove-if-env-found dun envs nothing = envs
 remove-if-env-found {loc} dun envs (just (undisturbed duns loc)) = insert loc (remove-dun-from-env {loc} dun (undisturbed duns loc)) envs
 remove-if-env-found {loc} dun envs (just (mildly-disturbed duns loc)) = insert loc (remove-dun-from-env dun (mildly-disturbed duns loc)) envs
 remove-if-env-found {loc} dun envs (just (well-disturbed duns loc)) = insert loc (remove-dun-from-env dun (well-disturbed duns loc)) envs
+-}
 
 {- About errors like this one:
       _duns_142 : List (Dun loc)  [ at /Users/marshall/docs/src/depniche/agda/src/Model1new.agda:324,97-116 ]
@@ -331,11 +333,24 @@ remove-if-env-found {loc} dun envs (just (well-disturbed duns loc)) = insert loc
    "it's an unsolved metavariable. agda should highlight the source of the metavariable with a yellow background
    the name gives you a hint: it's probably an implicit argument named `duns` to some function call which agda couldn't infer" -}
 
+remove-dun-from-envs : {loc : Loc} → (dun : Dun loc) → (envs : EnvMap) → EnvMap
+remove-dun-from-envs (short-beak id loc) envs
+    with lookup envs loc
+... | nothing = envs
+... | just (undisturbed duns _) = insert loc (remove-dun-from-env (short-beak id loc) (undisturbed duns _)) envs
+... | just (mildly-disturbed duns _) = {!!}
+... | just (well-disturbed duns _) = {!!}
+remove-dun-from-envs (long-beak id loc) envs
+    with lookup envs loc
+... | nothing = envs
+... | just env = insert loc (remove-dun-from-env (long-beak id loc) env) envs
 
+{-
 -- Silently returns the same EnvMap if there's a misconfiguration
 -- that results in the dunlin's location being missing from envs. (Add proof?)
 remove-dun-from-envs : {loc : Loc} → (dun : Dun loc) → (envs : EnvMap) → EnvMap
 remove-dun-from-envs {loc} dun envs = remove-if-env-found dun envs (lookup envs loc)
+-}
 {-
            where remove-if-env-found : {loc : Loc} → Maybe (Env loc) → EnvMap
                  remove-if-env-found nothing = envs
