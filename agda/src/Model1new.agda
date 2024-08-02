@@ -43,8 +43,9 @@ to track the identity over time of functionally updated dunlins.
 -}
 
 open import Function.Base using (_∘_; _$_; case_of_; case_returning_of_)
-open import Agda.Builtin.Nat using (_==_)
+
 open import Data.Nat using (ℕ; zero; suc; _+_; _*_; _∸_; _^_; _<_)
+open import Data.Nat.Base using (_≡ᵇ_) -- _≡ᵇ_ is synonym for Agda.Builtin.Nat._==_
 open import Data.Nat.Properties using (<-strictTotalOrder) -- for AVL modules
 open import Data.Maybe.Base as Maybe using (Maybe; nothing; just)
 open import Data.Product.Base using (_×_; _,_; proj₁; proj₂; _,′_) -- Needs stdlib 2.0
@@ -55,7 +56,7 @@ open import Data.List as L using (List; _∷_; []; [_]; iterate; _++_; map; conc
 import Data.Tree.AVL as AVL using (Tree; MkValue; empty; singleton; insert; insertWith; delete; lookup; map; size; toList; toPair) -- K&_; 
 import Data.Tree.AVL.Value as Value ---? I don't know how to import K&.value separately
 open AVL <-strictTotalOrder
-open import Relation.Binary.PropositionalEquality using (subst) -- _≡_; refl
+open import Relation.Binary.PropositionalEquality using (subst; _≡_; refl)
 -- note subst is actually from Relation.Binary.PropositionalEquality.Core
 
 open import Niche
@@ -302,11 +303,19 @@ config-system max-id (env-spec ∷ env-specs) env-map =
 --------------------
 -- Remove a dunlin:
 
+-- Experiment: alternate def of remove-dun-from-list below.  Adding/removing the proof has no effect.
+remdun : {loc₁ loc₂ : Loc} → (p : loc₁ ≡ loc₂) → (dun : Dun loc₁) → (duns : List (Dun loc₂)) → List (Dun loc₂)
+remdun refl dun [] = []
+remdun refl dun@(short-beak _ _) (long-beak _ _ ∷ duns) =  remdun refl dun duns
+remdun refl dun@(long-beak _ _)  (short-beak _ _ ∷ duns) = remdun refl dun duns
+remdun refl dun@(short-beak id₁ _) (short-beak id₂ _ ∷ duns) = if (id₁ ≡ᵇ id₂) then duns else remdun refl dun duns
+remdun refl dun@(long-beak id₁ _)  (long-beak id₂ _ ∷ duns) =  if (id₁ ≡ᵇ id₂) then duns else remdun refl dun duns
+
 -- Silently returns the same list of dunlins is the dun argument
 -- doesn't apepar in the list. (Add proof?)
 remove-dun-from-list : {loc : Loc} → (dun : Dun loc) → (duns : List (Dun loc)) → List (Dun loc)
 remove-dun-from-list dun [] = []
-remove-dun-from-list dun (x ∷ duns) = if (dun-id dun) == (dun-id x)   -- IS THIS A PROBLEM?
+remove-dun-from-list dun (x ∷ duns) = if (dun-id dun) ≡ᵇ (dun-id x)   -- IS THIS A PROBLEM?
                                       then duns
                                       else remove-dun-from-list dun duns
 
@@ -482,7 +491,7 @@ reproduce-per-fit max-id envs fitfn choose-loc parent
 ...               | loc with lookup envs loc
 ...                     | nothing = [] -- can't find that env, shouldn't happen
 ...                     | just env = let fit = fitfn parent {!!} -- env
-                                     in if fit == 0
+                                     in if fit ≡ᵇ 0
                                         then []
                                         else reproduce max-id fit choose-loc parent
 
