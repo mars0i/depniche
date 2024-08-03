@@ -50,9 +50,12 @@ open import Data.Bool using (if_then_else_) -- add case_of_ , etc?
 open import Data.List as L using (List; _∷_; []; [_]; iterate; _++_; map; concat; concatMap; zipWith; _[_]%=_; _[_]∷=_)
 -- open import Data.Vec as V using (Vec; _∷_; [])
 
-import Data.Tree.AVL as AVL using (Tree; MkValue; empty; singleton; insert; insertWith; delete; lookup; map; size; toList; toPair) -- K&_; 
+import Data.Tree.AVL as AVL using (Tree; MkValue; empty; singleton; insert; insertWith; delete; lookup; map; size; toList; toPair; const) -- K&_; 
 import Data.Tree.AVL.Value as Value ---? I don't know how to import K&.value separately
 open AVL <-strictTotalOrder
+-- import Data.Tree.AVL.Map as Map
+-- open Map <-strictTotalOrder
+
 open import Relation.Binary.PropositionalEquality using (subst; _≡_; refl)
 -- note subst is actually from Relation.Binary.PropositionalEquality.Core
 
@@ -165,6 +168,8 @@ dun-constr : {loc : Loc} → Dun loc → DunConstr
 dun-constr (short-beak _ _) = short-beak
 dun-constr (long-beak _ _) = long-beak
 
+
+
 ----------------
 -- Experiment
 
@@ -205,16 +210,18 @@ data Env : Loc → Set where
   mildly-disturbed : (loc : Loc) → (duns : List (Dun loc)) → Env loc
   well-disturbed   : (loc : Loc) → (duns : List (Dun loc)) → Env loc
 
-{- tests:
-foo1 = undisturbed 5 [ (short-beak 0 5) ]  -- should work
-foo2 = undisturbed 5 ((short-beak 0 5) ∷ (long-beak 1 5) ∷ [])  -- should work
-foo3 = undisturbed 5 [ (short-beak 0 23) ] -- doesn't work, and shouldn't
-foo4 = undisturbed 5 ((short-beak 0 5) ∷ (long-beak 1 23) ∷ []) -- doesn't work and shouldn't
--}
-
 -- Abbreviation for the type of the Env constructors will be useful later.
 EnvConstr : Set
 EnvConstr = (loc : Loc) → (duns : List (Dun loc)) → Env loc
+
+-- EnvMap: A map structure that stores envs, allows lookup by
+-- location, and enforces unique locations within the structure.
+-- (Duns in an Env can be found because the `duns` argument contains
+-- all dunlins in the environment.  In order to find a dunlin's
+-- environment from a Dun, we use the `loc` argument to perform
+-- a lookup on the EnvMap for the system.)
+-- This works because Env is indexed by loc.
+EnvMap = Tree (MkValue Env (subst Env))
 
 ---------------------------------
 ---------------------------------
@@ -239,15 +246,6 @@ env-constr (well-disturbed _ _) = well-disturbed
 
 
 --==========================================================--
--- EnvMap: A map structure that stores envs, allows lookup by
--- location, and enforces unique locations within the structure.
--- (Duns in an Env can be found because the `duns` argument contains
--- all dunlins in the environment.  In order to find a dunlin's
--- environment from a Dun, we use the `loc` argument to perform
--- a lookup on the EnvMap for the system.)
-
--- This works because Env is indexed by loc.
-EnvMap = Tree (MkValue Env (subst Env))
 
 -- It seems convenient to use a list in a special format to initialize
 -- a model, using config-system below.
