@@ -164,9 +164,9 @@ dun-loc (short-beak _ loc) = loc
 dun-loc (long-beak _ loc) = loc
 
 -- Is this non-idiomatic?
-dun-constr : {loc : Loc} → Dun loc → DunConstr
-dun-constr (short-beak _ _) = short-beak
-dun-constr (long-beak _ _) = long-beak
+dun-constructor : {loc : Loc} → Dun loc → DunConstr
+dun-constructor (short-beak _ _) = short-beak
+dun-constructor (long-beak _ _) = long-beak
 
 ----------------
 -- Experiment
@@ -202,41 +202,72 @@ illustrations.) Perhaps the location id should be a type index as
 well. -}
 
 -- DOES THIS enforce that the dunlins in the embedded list have the same
--- location as the environment?  Yes, now that the loc arg comes first.
+-- location as the environment?  I think so.
+---? are the implict and explicit locs the same? I want them to be.
 data Env : Loc → Set where
-  undisturbed      : (loc : Loc) → (duns : List (Dun loc)) → Env loc
-  mildly-disturbed : (loc : Loc) → (duns : List (Dun loc)) → Env loc
-  well-disturbed   : (loc : Loc) → (duns : List (Dun loc)) → Env loc
+  undisturbed      : {loc : Loc} → (duns : List (Dun loc)) → (loc : Loc) → Env loc
+  mildly-disturbed : {loc : Loc} → (duns : List (Dun loc)) → (loc : Loc) → Env loc
+  well-disturbed   : {loc : Loc} → (duns : List (Dun loc)) → (loc : Loc) → Env loc
 
-{- tests:
-foo1 = undisturbed 5 [ (short-beak 0 5) ]  -- should work
-foo2 = undisturbed 5 ((short-beak 0 5) ∷ (long-beak 1 5) ∷ [])  -- should work
-foo3 = undisturbed 5 [ (short-beak 0 23) ] -- doesn't work, and shouldn't
-foo4 = undisturbed 5 ((short-beak 0 5) ∷ (long-beak 1 23) ∷ []) -- doesn't work and shouldn't
--}
+yo = well-disturbed [ (short-beak 0 1) ] 1
+ya = well-disturbed [ (short-beak 0 2) ] 1
+
+data Foo : Loc → Set where
+  foo : (loc : Loc) → (duns : List (Dun loc)) → Foo loc
+  -- foo : {loc₁ : Loc} → {loc₂ : Loc} → (loc₁ ≡ loc₂) → (duns : List (Dun loc₁)) → Foo loc₂
+
+foo1 = foo 2 [ (short-beak 0 1) ]
 
 -- Abbreviation for the type of the Env constructors will be useful later.
 EnvConstr : Set
-EnvConstr = (loc : Loc) → (duns : List (Dun loc)) → Env loc
+EnvConstr = {loc : Loc} → (duns : List (Dun loc)) → (loc : Loc) → Env loc
+
+---------------------------------
+---------------------------------
+-- Experiment
+
+{-
+data EnvList (loc : Loc) : Set where
+  ll-nil : EnvList loc
+  ll-cons : (env : Env loc) (ls : EnvList loc) → EnvList loc
+
+noenv : EnvList 42
+noenv = ll-nil
+
+oneenv : EnvList 42
+oneenv = ll-cons (undisturbed [ (long-beak 6 47) ] 42) noenv
+
+twoenvs : EnvList 42
+twoenvs = ll-cons (mildly-disturbed [ (short-beak 5 47) ] 42) oneenv
+
+-- This should fail, and it does:
+threeenvs? : EnvList 42
+threeenvs? = ll-cons (mildly-disturbed [ (short-beak 7 48) ] 44) twoenvs
+-}
 
 ---------------------------------
 ---------------------------------
 
 -- projection operators
 env-loc : {loc : Loc} → Env loc → Loc
-env-loc (undisturbed loc _) = loc
-env-loc (mildly-disturbed loc _) = loc
-env-loc (well-disturbed loc _) = loc
+env-loc (undisturbed _ loc) = loc
+env-loc (mildly-disturbed _ loc) = loc
+env-loc (well-disturbed _ loc) = loc
 
-env-duns : {loc : Loc} → (Env loc) → List (Dun loc)
-env-duns = ?
+{-
+env-duns : {loc : Loc} {dunsa : List (Dun loc)} →  -- do I need these implicits?
+           Env loc → List (Dun loc)
+env-duns {loc} {duns} (undisturbed duns _) = duns -- how do I do this?
+env-duns (mildly-disturbed duns _) = duns
+env-duns (well-disturbed duns _) = duns
+-}
 
 
 -- Is this non-idiomatic?
-env-constr : {loc : Loc} → Env loc → EnvConstr
-env-constr (undisturbed _ _) = undisturbed
-env-constr (mildly-disturbed _ _) = mildly-disturbed
-env-constr (well-disturbed _ _) = well-disturbed
+env-constructor : {loc : Loc} → Env loc → EnvConstr
+env-constructor (undisturbed _ _) = undisturbed
+env-constructor (mildly-disturbed _ _) = mildly-disturbed
+env-constructor (well-disturbed _ _) = well-disturbed
 
 
 --==========================================================--
@@ -249,6 +280,14 @@ env-constr (well-disturbed _ _) = well-disturbed
 
 -- This works because Env is indexed by loc.
 EnvMap = Tree (MkValue Env (subst Env))
+
+-- I still don't understand what's going on in MkValue, but it appears
+-- that the first arg and the arg to subst should be an indexed datatype
+-- (or a function?) where indexes are keys. i.e. this provides a map
+-- from keys to values in which the keys are indexes of the value type.
+-- (Data.Tree.AVL.IndexedMap provides a way to do somethng similar,
+-- but I don't understand how to use it. To allow values to be
+-- independent of keys use Data.Tree.AVL.Map.)
 
 -- It seems convenient to use a list in a special format to initialize
 -- a model, using config-system below.
@@ -265,7 +304,7 @@ config-system max-id (env-spec ∷ env-specs) env-map =
   let (loc , env-constr , dun-constrs) = env-spec
       duns = new-duns-at-loc init-max-id loc dun-constrs
       new-max-id = max-id + L.length duns
-      new-env = env-constr loc duns
+      new-env = env-constr duns loc
   in config-system new-max-id env-specs (insert loc new-env env-map)
 
 
@@ -295,56 +334,36 @@ remove-dun-from-list dun (x ∷ duns) = if (dun-id dun) ≡ᵇ (dun-id x)   -- I
 ---? I do not understand what I've done below with subscripted variables ;
 ---? it's what Agda guided me to (or I found by trial and erro), and it type checks.
 -- DOES IT BEHAVE CORRECTLY?
-remove-dun-from-env : {loc : Loc} → (duns : List (Dun loc)) → (dun : Dun loc) → (env : Env loc) → Env loc
-remove-dun-from-env = {!!}
-{-
-remove-dun-from-env {loc = loc₁} {duns = duns₁} dun (undisturbed loc₁ duns) =    undisturbed loc₁ (remove-dun-from-list dun duns₁)
-remove-dun-from-env {loc = loc₁} {duns = duns₁} dun (mildly-disturbed loc₁ duns) = mildly-disturbed loc₁ (remove-dun-from-list dun duns₁)
-remove-dun-from-env {loc = loc₁} {duns = duns₁} dun (well-disturbed loc₁ duns) = well-disturbed loc₁ (remove-dun-from-list dun duns₁)
--}
+remove-dun-from-env : {loc : Loc} → {duns : List (Dun loc)} → (dun : Dun loc) → (env : Env loc) → Env loc
+remove-dun-from-env {loc = loc₁} {duns = duns₁} dun (undisturbed duns loc₁) =      undisturbed {loc₁} (remove-dun-from-list dun duns₁) loc₁
+remove-dun-from-env {loc = loc₁} {duns = duns₁} dun (mildly-disturbed duns loc₁) = mildly-disturbed {loc₁} (remove-dun-from-list dun duns₁) loc₁
+remove-dun-from-env {loc = loc₁} {duns = duns₁} dun (well-disturbed duns loc₁) = well-disturbed {loc₁} (remove-dun-from-list dun duns₁) loc₁
 
 {-
 remove-if-env-found : {loc : Loc} → (dun : Dun loc) → (envs : EnvMap) → Maybe (Env loc) → EnvMap
 remove-if-env-found dun envs nothing = envs
-remove-if-env-found {loc} dun envs (just (undisturbed loc duns)) = insert loc (remove-dun-from-env {loc} dun (undisturbed loc duns)) envs
-remove-if-env-found {loc} dun envs (just (mildly-disturbed loc duns)) = insert loc (remove-dun-from-env dun (mildly-disturbed loc duns)) envs
-remove-if-env-found {loc} dun envs (just (well-disturbed loc duns)) = insert loc (remove-dun-from-env dun (well-disturbed loc duns)) envs
+remove-if-env-found {loc} dun envs (just (undisturbed duns loc)) = insert loc (remove-dun-from-env {loc} dun (undisturbed duns loc)) envs
+remove-if-env-found {loc} dun envs (just (mildly-disturbed duns loc)) = insert loc (remove-dun-from-env dun (mildly-disturbed duns loc)) envs
+remove-if-env-found {loc} dun envs (just (well-disturbed duns loc)) = insert loc (remove-dun-from-env dun (well-disturbed duns loc)) envs
 -}
 
 {- About errors like this one:
       _duns_142 : List (Dun loc)  [ at /Users/marshall/docs/src/depniche/agda/src/Model1new.agda:324,97-116 ]
    Naïm Camille Favier says (https://agda.zulipchat.com/#narrow/stream/259644-newcomers/topic/Mysterious.20error.20message/near/455722851):
    "it's an unsolved metavariable. agda should highlight the source of the metavariable with a yellow background
-   the name gives you a hint: it's probably an implicit argument named `duns` to some function call which agda couldn't infer"
--}
+   the name gives you a hint: it's probably an implicit argument named `duns` to some function call which agda couldn't infer" -}
 
--- This works--got rid of funky metavariable errors--but surely there's some way to be less verbose.
 remove-dun-from-envs : {loc : Loc} → (dun : Dun loc) → (envs : EnvMap) → EnvMap
-remove-dun-from-envs dun@(short-beak id loc) envs
+remove-dun-from-envs (short-beak id loc) envs
     with lookup envs loc
 ... | nothing = envs
-... | just (undisturbed loc duns) =      insert loc (undisturbed loc (remove-dun-from-list dun duns)) envs
-... | just (mildly-disturbed loc duns) = insert loc (mildly-disturbed loc (remove-dun-from-list dun duns)) envs
-... | just (well-disturbed loc duns) =   insert loc (well-disturbed loc (remove-dun-from-list dun duns)) envs
-remove-dun-from-envs dun@(long-beak id loc) envs
+... | just (undisturbed duns _) = insert loc (remove-dun-from-env (short-beak id loc) (undisturbed duns _)) envs
+... | just (mildly-disturbed duns _) = {!!}
+... | just (well-disturbed duns _) = {!!}
+remove-dun-from-envs (long-beak id loc) envs
     with lookup envs loc
 ... | nothing = envs
-... | just (undisturbed loc duns) =      insert loc (undisturbed loc (remove-dun-from-list dun duns)) envs
-... | just (mildly-disturbed loc duns) = insert loc (mildly-disturbed loc (remove-dun-from-list dun duns)) envs
-... | just (well-disturbed loc duns) =   insert loc (well-disturbed loc (remove-dun-from-list dun duns)) envs
-
-{- Shorter, but harder to make it work because `dun-loc dun` doesn't inform Agda that dun has that location.
-remove-dun-from-envs : {loc : Loc} → (dun : Dun loc) → (envs : EnvMap) → EnvMap
-remove-dun-from-envs dun envs =
-    let loc = dun-loc dun
-    in case (lookup envs loc) of λ where
-       nothing → envs
-       (just env) → let duns = env-duns env
-                        econstr = env-constr env
-                    in insert loc (econstr loc (remove-dun-from-list dun duns)) envs
--}
-
-
+... | just env = insert loc (remove-dun-from-env (long-beak id loc) env) envs
 
 {-
 -- Silently returns the same EnvMap if there's a misconfiguration
@@ -355,9 +374,9 @@ remove-dun-from-envs {loc} dun envs = remove-if-env-found dun envs (lookup envs 
 {-
            where remove-if-env-found : {loc : Loc} → Maybe (Env loc) → EnvMap
                  remove-if-env-found nothing = envs
-                 remove-if-env-found {loc = loc₁} (just (undisturbed .loc₁ duns)) = insert loc (remove-dun-from-env {loc = loc₁} {duns = duns} dun (undisturbed loc duns)) envs
-                 remove-if-env-found {loc = loc₁} (just (mildly-disturbed .loc₁ duns)) = insert loc (remove-dun-from-env dun (mildly-disturbed loc duns)) envs
-                 remove-if-env-found {loc = loc₁} (just (well-disturbed .loc₁ duns)) = insert loc (remove-dun-from-env dun (well-disturbed loc duns)) envs
+                 remove-if-env-found {loc = loc₁} (just (undisturbed duns .loc₁)) = insert loc (remove-dun-from-env {loc = loc₁} {duns = duns} dun (undisturbed duns loc)) envs
+                 remove-if-env-found {loc = loc₁} (just (mildly-disturbed duns .loc₁)) = insert loc (remove-dun-from-env dun (mildly-disturbed duns loc)) envs
+                 remove-if-env-found {loc = loc₁} (just (well-disturbed duns .loc₁)) = insert loc (remove-dun-from-env dun (well-disturbed duns loc)) envs
 -}
 {- About errors like this one:
       _duns_142 : List (Dun loc)  [ at /Users/marshall/docs/src/depniche/agda/src/Model1new.agda:324,97-116 ]
@@ -386,12 +405,12 @@ remove-dun-from-envs {loc = loc₁} dun envs = let loc = dun-loc dun
 -- DOES IT BEHAVE CORRECTLY?
 add-dun-to-env : {loc : Loc} → {duns : List (Dun loc)} →
                  (dun : Dun loc) → (env : Env loc) → Env loc
-add-dun-to-env {duns = duns₁} dun (undisturbed loc duns) =
-   undisturbed loc (dun ∷ duns₁)
-add-dun-to-env {duns = duns₁} dun (mildly-disturbed loc duns) =
-   mildly-disturbed loc (dun ∷ duns₁)
-add-dun-to-env {duns = duns₁} dun (well-disturbed loc duns) =
-   well-disturbed loc (dun ∷ duns₁)
+add-dun-to-env {duns = duns₁} dun (undisturbed duns loc) =
+   undisturbed (dun ∷ duns₁) loc
+add-dun-to-env {duns = duns₁} dun (mildly-disturbed duns loc) =
+   mildly-disturbed (dun ∷ duns₁) loc
+add-dun-to-env {duns = duns₁} dun (well-disturbed duns loc) =
+   well-disturbed (dun ∷ duns₁) loc
 
 add-dun-to-envs : {loc : Loc} → (dun : Dun loc) → (envs : EnvMap) → EnvMap
 add-dun-to-envs dun envs = let loc = dun-loc dun
@@ -565,11 +584,11 @@ all-envs-list = toList all-envs
 all-envs-list should be:
 
     (1 Data.Tree.AVL.Value.,
-     mildly-disturbed 1 (short-beak 2 1 ∷ short-beak 3 1 ∷ []))
+     mildly-disturbed (short-beak 2 1 ∷ short-beak 3 1 ∷ []) 1)
     ∷
-    (2 Data.Tree.AVL.Value., undisturbed 2 (short-beak 2 2 ∷ [])) ∷
-    (3 Data.Tree.AVL.Value., mildly-disturbed 3 (long-beak 2 3 ∷ [])) ∷
-    (4 Data.Tree.AVL.Value., well-disturbed 4 (long-beak 2 4 ∷ [])) ∷
+    (2 Data.Tree.AVL.Value., undisturbed (short-beak 2 2 ∷ []) 2) ∷
+    (3 Data.Tree.AVL.Value., mildly-disturbed (long-beak 2 3 ∷ []) 3) ∷
+    (4 Data.Tree.AVL.Value., well-disturbed (long-beak 2 4 ∷ []) 4) ∷
     []
 
 Note that "Data.Tree.AVL.Value." qualifies ",".  i.e. this is the comma
