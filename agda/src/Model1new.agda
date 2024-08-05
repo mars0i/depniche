@@ -290,14 +290,6 @@ config-system max-id (env-spec ∷ env-specs) env-map =
 --------------------
 -- Remove a dunlin:
 
--- Experiment: alternate def of remove-dun-from-list below.  Adding/removing the proof has no effect.
-remdun : {loc₁ loc₂ : Loc} → (p : loc₁ ≡ loc₂) → (dun : Dun loc₁) → (duns : List (Dun loc₂)) → List (Dun loc₂)
-remdun refl dun [] = []
-remdun refl dun@(short-beak _ _) (long-beak _ _ ∷ duns) =  remdun refl dun duns
-remdun refl dun@(long-beak _ _)  (short-beak _ _ ∷ duns) = remdun refl dun duns
-remdun refl dun@(short-beak id₁ _) (short-beak id₂ _ ∷ duns) = if (id₁ ≡ᵇ id₂) then duns else remdun refl dun duns
-remdun refl dun@(long-beak id₁ _)  (long-beak id₂ _ ∷ duns) =  if (id₁ ≡ᵇ id₂) then duns else remdun refl dun duns
-
 -- Silently returns the same list of dunlins is the dun argument
 -- doesn't apepar in the list. (Add proof?)
 remove-dun-from-list : {loc : Loc} → (dun : Dun loc) → (duns : List (Dun loc)) → List (Dun loc)
@@ -328,50 +320,6 @@ remove-dun-from-envs dun@(long-beak id loc) envs
 ... | just (mildly-disturbed loc duns) = insert loc (mildly-disturbed loc (remove-dun-from-list dun duns)) envs
 ... | just (well-disturbed loc duns) =   insert loc (well-disturbed loc (remove-dun-from-list dun duns)) envs
 
-{- Shorter, but harder to make it work because `dun-loc dun` doesn't inform Agda that dun has that location.
-remove-dun-from-envs : {loc : Loc} → (dun : Dun loc) → (envs : EnvMap) → EnvMap
-remove-dun-from-envs dun envs =
-    let loc = dun-loc dun
-    in case (lookup envs loc) of λ where
-       nothing → envs
-       (just env) → let duns = env-duns env
-                        econstr = env-constr env
-                    in insert loc (econstr loc (remove-dun-from-list dun duns)) envs
--}
-
-
-
-{-
--- Silently returns the same EnvMap if there's a misconfiguration
--- that results in the dunlin's location being missing from envs. (Add proof?)
-remove-dun-from-envs : {loc : Loc} → (dun : Dun loc) → (envs : EnvMap) → EnvMap
-remove-dun-from-envs {loc} dun envs = remove-if-env-found dun envs (lookup envs loc)
--}
-{-
-           where remove-if-env-found : {loc : Loc} → Maybe (Env loc) → EnvMap
-                 remove-if-env-found nothing = envs
-                 remove-if-env-found {loc = loc₁} (just (undisturbed .loc₁ duns)) = insert loc (remove-dun-from-env {loc = loc₁} {duns = duns} dun (undisturbed loc duns)) envs
-                 remove-if-env-found {loc = loc₁} (just (mildly-disturbed .loc₁ duns)) = insert loc (remove-dun-from-env dun (mildly-disturbed loc duns)) envs
-                 remove-if-env-found {loc = loc₁} (just (well-disturbed .loc₁ duns)) = insert loc (remove-dun-from-env dun (well-disturbed loc duns)) envs
--}
-{- About errors like this one:
-      _duns_142 : List (Dun loc)  [ at /Users/marshall
-   Naïm Camille Favier says (https://agda.zulipchat.com/#narrow/stream/259644-newcomers/topic/Mysterious.20error.20message/near/455722851):
-   "it's an unsolved metavariable. agda should highlight the source of the metavariable with a yellow background
-   the name gives you a hint: it's probably an implicit argument named `duns` to some function call which agda couldn't infer" -}
-
-{-
-   where remove-if-env-found : {loc : Loc} → Maybe (Env loc) → EnvMap
-         remove-if-env-found nothing = envs
-         remove-if-env-found {loc = loc₁} (just env) = insert loc₁ (remove-dun-from-env {!!} env) envs -- overwrites old value
--}
-{-
-remove-dun-from-envs {loc = loc₁} dun envs = let loc = dun-loc dun
-                                in case (lookup envs loc) of λ where 
-                                  nothing → envs
-                                  (just env) →
-                                    insert loc (remove-dun-from-env {!!} env) envs -- overwrites old value
--}
 
 --------------------
 -- Add a dunlin:
@@ -402,14 +350,6 @@ add-dun-to-envs dun@(long-beak id loc) envs
 ... | just (undisturbed loc duns) =      insert loc (undisturbed loc (dun ∷ duns)) envs
 ... | just (mildly-disturbed loc duns) = insert loc (mildly-disturbed loc (dun ∷ duns)) envs
 ... | just (well-disturbed loc duns) =   insert loc (well-disturbed loc (dun ∷ duns)) envs
-
-{- Shorter, but harder to make it work because `dun-loc dun` doesn't inform Agda that dun has that location.
-add-dun-to-envs : {loc : Loc} → (dun : Dun loc) → (envs : EnvMap) → EnvMap
-add-dun-to-envs dun envs = let loc = dun-loc dun
-                           in case (lookup envs loc) of λ where
-                             nothing → envs
-                             (just env) → insert loc (add-dun-to-env {!!} env) envs -- overwrites old value
--}
 
 -- Does unnecessary work when multiple dunlins are added to the same environment;
 -- they could all be added at once instead of calling add-dun repeatedly.
@@ -459,12 +399,8 @@ envpairs-to-dunspairs ((loc , env) ∷ xs) = L.map dun-to-locpair (env-duns env)
 -- in loc , dun Sigma pairs, and returns a list of those pairs.
 collect-all-dunpairs : EnvMap → List DunLocPair
 collect-all-dunpairs envs = L.concat $ envpairs-to-dunspairs $ envmap-to-envpairs envs
--- Broken out:
---    let envpairs = env-map-to-envpairs envs             -- list of loc , env Sigma pairs
---        dunspairs-list = envpairs-to-dunspairs envpairs -- list of lists of loc , dun Sigma pairs
---    in L.concat dunspairs-list                          -- a single list of loc , dun Sigma pairs
 
--- Old version--when dunlins weren't indexed:
+-- Old version, when dunlins weren't indexed:
 -- collect-all-duns envs = L.map dun-to-locpair $ concatMap (env-duns ∘ Value.K&_.value) $ toList envs
 
 --==========================================================--
@@ -501,9 +437,9 @@ reproduce max-id (suc n) choose-loc (long-beak _ loc) =
    iterate next-dun (long-beak  (suc max-id) loc) (suc n)
 -- CHECK: Is max-id is getting incremented properly?
 
--- Calculates number of childs from fitness of dun relative to env, and calls reproduce.
--- As with some remove- defs about, I don't know how to remove the code duplication and
--- still make this check.
+-- Calculates number of children from fitness of dun relative to env, and calls reproduce.
+-- As with some remove- defs above I don't know how to remove the code duplication and
+-- still make this type check.
 -- TODO:
 -- The return value should not be required to be dunlins all in the same location.
 -- so return a list of Sigma pairs or an avl tree, or ?
@@ -511,17 +447,25 @@ reproduce max-id (suc n) choose-loc (long-beak _ loc) =
 -- Probably should be Maybe-ized.  At present it returns an empty list when an env
 -- can't be found.  This can't be distinguished from the zero fitness case.
 reproduce-per-fit : {loc : Loc} → (max-id : ℕ) → (envs : EnvMap) → (fitfn : FitnessFn) →
-                    (choose-loc : (Dun loc) → ℕ) → (parent : Dun loc) → List (Dun loc)  -- parent is last for currying
-reproduce-per-fit max-id envs fitfn choose-loc parent@(short-beak id loc) 
+                    (choose-loc : Dun loc → ℕ) → (parent-pair : DunLocPair) → List (Dun loc)  -- parent is last for currying
+reproduce-per-fit max-id envs fitfn choose-loc (loc , parent@(short-beak id .loc))
+    with lookup envs loc
+... | nothing = [] -- shouldn't happen
+... | just env = let fit = fitfn parent env
+                 in if (fit ≡ᵇ 0) then [] else reproduce max-id fit choose-loc {!!} -- parent
+reproduce-per-fit max-id envs fitfn choose-loc (loc , long-beak id .loc) = {!!}
+{-
+reproduce-per-fit max-id envs fitfn choose-loc (loc , parent@(short-beak id loc))
+    with lookup envs loc
+... | nothing = [] -- shouldn't happen
+... | just env = let fit = fitfn parent env
+                 in if (fit ≡ᵇ 0) then [] else reproduce max-id fit choose-loc parent  -- AGHH!  The loc != loc₁ error rears its head again
+reproduce-per-fit max-id envs fitfn choose-loc (loc , parent)
     with lookup envs loc
 ... | nothing = [] -- shouldn't happen
 ... | just env = let fit = fitfn parent env
                  in if (fit ≡ᵇ 0) then [] else reproduce max-id fit choose-loc parent
-reproduce-per-fit max-id envs fitfn choose-loc parent@(long-beak id loc)
-    with lookup envs loc
-... | nothing = [] -- shouldn't happen
-... | just env = let fit = fitfn parent env
-                 in if (fit ≡ᵇ 0) then [] else reproduce max-id fit choose-loc parent
+-}
 
 --------------------
 -- Movement of dunlins from one environment to another
@@ -561,15 +505,13 @@ reproduce-per-fit max-id envs fitfn choose-loc parent@(long-beak id loc)
 -- location of offspring of a parent dunlin.  (In a future version, this
 -- might be a set of locations or a probability distribution over locations.)
 
-{-  FIXME:
-d-evolve : (max-id : ℕ) → EnvMap → (fitfn : FitnessFn) → (choose-loc : Dun → ℕ) → (ℕ × EnvMap)
+d-evolve : {loc : Loc} → (max-id : ℕ) → EnvMap → (fitfn : FitnessFn) → (choose-loc : Dun loc → ℕ) → (ℕ × EnvMap)
 d-evolve max-id envs fitfn choose-loc =
   -- TODO: collect-all-duns used to return a List Dun, but now Dun is indexed, so that needs to be fixed.
   let old-dunlins = collect-all-dunpairs envs  -- need to revise for indexed dunlins
       new-dunlins = L.concatMap (reproduce-per-fit max-id envs fitfn choose-loc) old-dunlins -- make baby dunlins
       new-max-id = max-id + (L.length new-dunlins) -- Is there be a better way?
   in (new-max-id , add-duns-to-envs new-dunlins envs)
--}
 
 
 --==========================================================--
