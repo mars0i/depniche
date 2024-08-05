@@ -40,12 +40,11 @@ to track the identity over time of functionally updated dunlins.
 -}
 
 open import Function.Base using (_∘_; _$_; case_of_; case_returning_of_)
-
 open import Data.Nat using (ℕ; zero; suc; _+_; _*_; _∸_; _^_; _<_)
 open import Data.Nat.Base using (_≡ᵇ_) -- _≡ᵇ_ is synonym for Agda.Builtin.Nat._==_
 open import Data.Nat.Properties using (<-strictTotalOrder) -- for AVL modules
 open import Data.Maybe.Base as Maybe using (Maybe; nothing; just)
-open import Data.Product.Base using (_×_; _,_; proj₁; proj₂; _,′_) -- Needs stdlib 2.0
+open import Data.Product.Base using (Σ; _×_; _,_; proj₁; proj₂; _,′_)
 open import Data.Bool using (if_then_else_) -- add case_of_ , etc?
 open import Data.List as L using (List; _∷_; []; [_]; iterate; _++_; map; concat; concatMap; zipWith; _[_]%=_; _[_]∷=_)
 -- open import Data.Vec as V using (Vec; _∷_; [])
@@ -124,28 +123,13 @@ data Dun : Loc → Set where
 DunConstr : Set 
 DunConstr = (id : DunID) → (loc : Loc) → Dun loc
 
-open import Data.String.Base using (String)
+-- e.g. for lists containing Duns
+DunLocPair : Set
+DunLocPair = Σ Loc Dun
 
-natstring-map : Map String
-natstring-map = Map.fromList ((0 , "Zero")  List.∷
-                          (1 , "One")   List.∷
-                          (5 , "Five")  List.∷
-                          (3 , "Three") List.∷
-                          List.[])
-
-
-
-{-
-test-dun-map : Map (Dun 5)
-test-dun-map = Map.fromList ((0 , (short-beak 0 5)) ∷
-                         (1 , (long-beak 1 5)) ∷
-                         (5 , (short-beak 5 5)) ∷
-                         (3 , (short-beak 3 5)) ∷
-                         [])
--}
-
-
-
+dun-to-locpair : {loc : Loc} → Dun loc → DunLocPair
+dun-to-locpair dun@(short-beak id loc) = loc , short-beak id loc
+dun-to-locpair dun@(long-beak id loc) =  loc , long-beak id loc
 
 
 -- Dunlins should be assigned unique ids.  This is the first one.
@@ -238,6 +222,15 @@ data Env : Loc → Set where
 -- Abbreviation for the type of the Env constructors will be useful later.
 EnvConstr : Set
 EnvConstr = (loc : Loc) → (duns : List (Dun loc)) → Env loc
+
+-- e.g. for lists containing Envs
+EnvLocPair : Set
+EnvLocPair = Σ Loc Env
+
+env-to-locpair : {loc : Loc} → Env loc → EnvLocPair
+env-to-locpair (undisturbed loc duns) = loc , undisturbed loc duns
+env-to-locpair (mildly-disturbed loc duns) = loc , mildly-disturbed loc duns
+env-to-locpair (well-disturbed loc duns) = loc , well-disturbed loc duns
 
 -- EnvMap: A map structure that stores envs, allows lookup by
 -- location, and enforces unique locations within the structure.
@@ -446,14 +439,33 @@ move-to-env dun new-loc envs = add-dun-to-envs (replace-dun-loc dun new-loc)
 --------------------
 -- General-purpose
 
-{- FIXME:
-   The following isn't possible with indexed dunlins. Probably should use an AVL tree.  Or maybe a list of Sigma pairs.
--- Generate a list of all dunlins in all environments.
--- Tip: toList produces a list of AVL.Value.K& pairs, not Σ-pairs, and
--- commas in the result of toList are for Data.Tree.AVL.Value.K&, not Σ .
-collect-all-duns : EnvMap → List Dun
-collect-all-duns envs = concatMap (env-duns ∘ Value.K&_.value) $ toList envs
--}
+-- From an EnvMap, generate a list of EnvLocPairs.  The idea is to get the Envs
+-- into a list so we can manipulate them using list operations, but since Envs
+-- are indexed, we have to put the Envs into Sigma pairs in order to have a list
+-- with a single element type.
+envmap-to-envpairs : EnvMap → List (EnvLocPair)
+envmap-to-envpairs envs = L.map (env-to-locpair ∘ Value.K&_.value) $ toList envs
+
+-- Given a list of EnvLocPairs, extract the dunlins from the env.  The Duns from
+-- a given Env have the same Loc as the Env, so they can be in a List.  However,
+-- we want to form a comprehensive list of all dunlins--or for now, a list of
+-- lists of dunlins.  That means we need to wrap the dunlins in Sigma-pairs,
+-- so that the inner lists will all have the same type.
+envpairs-to-dunspairs : List (EnvLocPair) → List (List DunLocPair)
+envpairs-to-dunspairs [] = []
+envpairs-to-dunspairs ((loc , env) ∷ xs) = L.map dun-to-locpair (env-duns env) ∷ envpairs-to-dunspairs xs
+
+-- Given an EnvMap, extracts all of the dunlins in all of the envs, wraps them
+-- in loc , dun Sigma pairs, and returns a list of those pairs.
+collect-all-dunpairs : EnvMap → List DunLocPair
+collect-all-dunpairs envs = L.concat $ envpairs-to-dunspairs $ envmap-to-envpairs envs
+-- Broken out:
+--    let envpairs = env-map-to-envpairs envs             -- list of loc , env Sigma pairs
+--        dunspairs-list = envpairs-to-dunspairs envpairs -- list of lists of loc , dun Sigma pairs
+--    in L.concat dunspairs-list                          -- a single list of loc , dun Sigma pairs
+
+-- Old version--when dunlins weren't indexed:
+-- collect-all-duns envs = L.map dun-to-locpair $ concatMap (env-duns ∘ Value.K&_.value) $ toList envs
 
 --==========================================================--
 -- Fitness, reproduction, movement, and death.  
@@ -553,7 +565,7 @@ reproduce-per-fit max-id envs fitfn choose-loc parent@(long-beak id loc)
 d-evolve : (max-id : ℕ) → EnvMap → (fitfn : FitnessFn) → (choose-loc : Dun → ℕ) → (ℕ × EnvMap)
 d-evolve max-id envs fitfn choose-loc =
   -- TODO: collect-all-duns used to return a List Dun, but now Dun is indexed, so that needs to be fixed.
-  let old-dunlins = collect-all-duns envs  -- need to revise for indexed dunlins
+  let old-dunlins = collect-all-dunpairs envs  -- need to revise for indexed dunlins
       new-dunlins = L.concatMap (reproduce-per-fit max-id envs fitfn choose-loc) old-dunlins -- make baby dunlins
       new-max-id = max-id + (L.length new-dunlins) -- Is there be a better way?
   in (new-max-id , add-duns-to-envs new-dunlins envs)
