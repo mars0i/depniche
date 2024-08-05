@@ -50,11 +50,12 @@ open import Data.Bool using (if_then_else_) -- add case_of_ , etc?
 open import Data.List as L using (List; _∷_; []; [_]; iterate; _++_; map; concat; concatMap; zipWith; _[_]%=_; _[_]∷=_)
 -- open import Data.Vec as V using (Vec; _∷_; [])
 
-import Data.Tree.AVL as AVL using (Tree; MkValue; empty; singleton; insert; insertWith; delete; lookup; map; size; toList; toPair; const) -- K&_; 
+import Data.Tree.AVL as AVL using (Tree; MkValue; empty; singleton; insert; insertWith; delete; lookup; map; size; toList; fromList; toPair; const) -- K&_; 
 import Data.Tree.AVL.Value as Value ---? I don't know how to import K&.value separately
-open AVL <-strictTotalOrder
--- import Data.Tree.AVL.Map as Map
--- open Map <-strictTotalOrder
+open AVL <-strictTotalOrder -- Since the arg comes from Data.Nat.Properties, keys are ℕ's.
+import Data.Tree.AVL.Map as Map using (Map; fromList)
+open Map <-strictTotalOrder -- Since the arg comes from Data.Nat.Properties, keys are ℕ's.
+
 
 open import Relation.Binary.PropositionalEquality using (subst; _≡_; refl)
 -- note subst is actually from Relation.Binary.PropositionalEquality.Core
@@ -122,6 +123,30 @@ data Dun : Loc → Set where
 -- Abbreviation for the type of the Dun constructors will be useful later.
 DunConstr : Set 
 DunConstr = (id : DunID) → (loc : Loc) → Dun loc
+
+open import Data.String.Base using (String)
+
+natstring-map : Map String
+natstring-map = Map.fromList ((0 , "Zero")  List.∷
+                          (1 , "One")   List.∷
+                          (5 , "Five")  List.∷
+                          (3 , "Three") List.∷
+                          List.[])
+
+
+
+{-
+test-dun-map : Map (Dun 5)
+test-dun-map = Map.fromList ((0 , (short-beak 0 5)) ∷
+                         (1 , (long-beak 1 5)) ∷
+                         (5 , (short-beak 5 5)) ∷
+                         (3 , (short-beak 3 5)) ∷
+                         [])
+-}
+
+
+
+
 
 -- Dunlins should be assigned unique ids.  This is the first one.
 init-max-id : DunID
