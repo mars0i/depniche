@@ -351,6 +351,7 @@ add-dun-to-envs dun@(long-beak id loc) envs
 ... | just (mildly-disturbed loc duns) = insert loc (mildly-disturbed loc (dun ∷ duns)) envs
 ... | just (well-disturbed loc duns) =   insert loc (well-disturbed loc (dun ∷ duns)) envs
 
+-- Add dunlins to a single environment.  The dunlins must all have the same loc index.
 -- Does unnecessary work when multiple dunlins are added to the same environment;
 -- they could all be added at once instead of calling add-dun repeatedly.
 add-duns-to-envs : {loc : Loc} → List (Dun loc) → EnvMap → EnvMap
@@ -422,14 +423,14 @@ FitnessFn = {loc : Loc} → Dun loc → Env loc → Fitness
 --------------------
 -- Reproduction
 
--- Should new envs be introduced here?  Maybe better to put in a separate step.
--- choose-child-loc is some function from each dunlin to a new location. This can take
+-- TODO: New dunlins shouldn't be required to all land in the same environgment..
+-- Also, consider allowing different dunlins to have different reproductive strategies.
+-- This would require putting a choose-loc field into Dun.
+
+-- choose-child-loc is some function from each dunlin to a new location. This can 
 -- account the dunlin's current location, the dunlin's id, or other internal state
--- of the dunlin.  (This should be in field built into the Dun datatype instead, OO-style?)
--- THE RETURN VALUE SHOULD NOT BE REQUIRED TO BE DUNLINS ALL IN THE SAME LOCATION.
--- SO RETURN A LIST OF SIGMA PAIRS OR AN AVL TREE, OR ?
-reproduce : {loc : Loc} → (max-id : ℕ) → (num-childs : ℕ) →
-            (choose-child-loc : (Dun loc) → ℕ) → (parent : Dun loc) → List (Dun loc)
+-- of the dunlin.
+reproduce : {loc : Loc} → (max-id : ℕ) → (num-childs : ℕ) → (choose-child-loc : (Dun loc) → ℕ) → (parent : Dun loc) → List (Dun loc)
 reproduce _ 0 _ _ = []
 reproduce max-id (suc n) choose-loc (short-beak _ loc) =
    iterate next-dun (short-beak (suc max-id) loc) (suc n)
@@ -438,34 +439,20 @@ reproduce max-id (suc n) choose-loc (long-beak _ loc) =
 -- CHECK: Is max-id is getting incremented properly?
 
 -- Calculates number of children from fitness of dun relative to env, and calls reproduce.
--- As with some remove- defs above I don't know how to remove the code duplication and
--- still make this type check.
--- TODO:
--- The return value should not be required to be dunlins all in the same location.
--- so return a list of Sigma pairs or an avl tree, or ?
--- TODO:
--- Probably should be Maybe-ized.  At present it returns an empty list when an env
--- can't be found.  This can't be distinguished from the zero fitness case.
-reproduce-per-fit : {loc : Loc} → (max-id : ℕ) → (envs : EnvMap) → (fitfn : FitnessFn) →
-                    (choose-loc : Dun loc → ℕ) → (parent-pair : DunLocPair) → List (Dun loc)  -- parent is last for currying
-reproduce-per-fit max-id envs fitfn choose-loc (loc , parent@(short-beak id .loc))
+-- Parent is the last argument for curried application.
+--   TODO: Probably should be Maybe-ized.  At present it returns an empty list when an env can't be found.  This can't be distinguished from the zero fitness case.
+--   NOTE the key to making this work was (a) letting Agda decide how to pattern match on the pairs, and (b) adding {loc = loc₁} so that the final (short/long-beak id loc₁) arg would check.
+reproduce-per-fit : {loc : Loc} → (max-id : ℕ) → (envs : EnvMap) → (fitfn : FitnessFn) → (choose-loc : Dun loc → ℕ) → (parent-pair : DunLocPair) → List (Dun loc)
+reproduce-per-fit {loc = loc₁} max-id envs fitfn choose-loc (loc , parent@(short-beak id .loc))
     with lookup envs loc
-... | nothing = [] -- shouldn't happen
+... | nothing = []
 ... | just env = let fit = fitfn parent env
-                 in if (fit ≡ᵇ 0) then [] else reproduce max-id fit choose-loc {!!} -- parent
-reproduce-per-fit max-id envs fitfn choose-loc (loc , long-beak id .loc) = {!!}
-{-
-reproduce-per-fit max-id envs fitfn choose-loc (loc , parent@(short-beak id loc))
+                 in if (fit ≡ᵇ 0) then [] else reproduce max-id fit choose-loc (short-beak id loc₁)
+reproduce-per-fit {loc = loc₁} max-id envs fitfn choose-loc (loc , parent@(long-beak id .loc))
     with lookup envs loc
-... | nothing = [] -- shouldn't happen
+... | nothing = []
 ... | just env = let fit = fitfn parent env
-                 in if (fit ≡ᵇ 0) then [] else reproduce max-id fit choose-loc parent  -- AGHH!  The loc != loc₁ error rears its head again
-reproduce-per-fit max-id envs fitfn choose-loc (loc , parent)
-    with lookup envs loc
-... | nothing = [] -- shouldn't happen
-... | just env = let fit = fitfn parent env
-                 in if (fit ≡ᵇ 0) then [] else reproduce max-id fit choose-loc parent
--}
+                 in if (fit ≡ᵇ 0) then [] else reproduce max-id fit choose-loc (long-beak id loc₁)
 
 --------------------
 -- Movement of dunlins from one environment to another
@@ -483,6 +470,7 @@ reproduce-per-fit max-id envs fitfn choose-loc (loc , parent)
 -- dunlins in them.
 
 -- TODO
+-- e-evolve 
 
 --==========================================================--
 -- Top-level evolution functions
@@ -507,7 +495,6 @@ reproduce-per-fit max-id envs fitfn choose-loc (loc , parent)
 
 d-evolve : {loc : Loc} → (max-id : ℕ) → EnvMap → (fitfn : FitnessFn) → (choose-loc : Dun loc → ℕ) → (ℕ × EnvMap)
 d-evolve max-id envs fitfn choose-loc =
-  -- TODO: collect-all-duns used to return a List Dun, but now Dun is indexed, so that needs to be fixed.
   let old-dunlins = collect-all-dunpairs envs  -- need to revise for indexed dunlins
       new-dunlins = L.concatMap (reproduce-per-fit max-id envs fitfn choose-loc) old-dunlins -- make baby dunlins
       new-max-id = max-id + (L.length new-dunlins) -- Is there be a better way?
