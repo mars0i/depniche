@@ -39,6 +39,14 @@ to track the identity over time of functionally updated dunlins.
 
 -}
 
+{- There are a number of verbose, repetitious function definitions below.
+   They're written this way in order to expose parameters such as `loc`
+   so as to allow Agda to see that all references to loc are the same.
+
+   Surely this sort of code is not required by Agda, but I couldn't
+   figure out a better way.
+-}
+
 open import Function.Base using (_∘_; _$_; case_of_; case_returning_of_)
 open import Data.Nat using (ℕ; zero; suc; _+_; _*_; _∸_; _^_; _<_)
 open import Data.Nat.Base using (_≡ᵇ_) -- _≡ᵇ_ is synonym for Agda.Builtin.Nat._==_
@@ -374,10 +382,9 @@ envmap-to-envpairs : EnvMap → List (EnvLocPair)
 envmap-to-envpairs envs = L.map (env-to-locpair ∘ Value.K&_.value) $ toList envs
 
 -- Given a list of EnvLocPairs, extract the dunlins from the env.  The Duns from
--- a given Env have the same Loc as the Env, so they can be in a List.  However,
--- we want to form a comprehensive list of all dunlins--or for now, a list of
--- lists of dunlins.  That means we need to wrap the dunlins in Sigma-pairs,
--- so that the inner lists will all have the same type.
+-- a given Env have the same Loc as the Env, so they can be in a List.  But for
+-- a comprehensive list of all dunlins or a list of lists of dunlins, we need to
+-- wrap the dunlins in Sigma-pairs so that elements will all have the same type.
 envpairs-to-dunspairs : List (EnvLocPair) → List (List DunLocPair)
 envpairs-to-dunspairs [] = []
 envpairs-to-dunspairs ((loc , env) ∷ xs) = L.map dun-to-locpair (env-duns env) ∷ envpairs-to-dunspairs xs
@@ -386,9 +393,6 @@ envpairs-to-dunspairs ((loc , env) ∷ xs) = L.map dun-to-locpair (env-duns env)
 -- in loc , dun Sigma pairs, and returns a list of those pairs.
 collect-all-dunpairs : EnvMap → List DunLocPair
 collect-all-dunpairs envs = L.concat $ envpairs-to-dunspairs $ envmap-to-envpairs envs
-
--- Old version, when dunlins weren't indexed:
--- collect-all-duns envs = L.map dun-to-locpair $ concatMap (env-duns ∘ Value.K&_.value) $ toList envs
 
 --==========================================================--
 -- Fitness, reproduction, movement, and death.  
@@ -411,7 +415,7 @@ FitnessFn = {loc : Loc} → Dun loc → Env loc → Fitness
 
 -- TODO: New dunlins shouldn't be required to all land in the same environgment..
 -- Also, consider allowing different dunlins to have different reproductive strategies.
--- This would require putting a choose-loc field into Dun.
+-- This could be implemented by putting a choose-loc field into Dun.
 
 -- choose-child-loc is some function from each dunlin to a new location. This can 
 -- account the dunlin's current location, the dunlin's id, or other internal state
@@ -439,11 +443,6 @@ reproduce-per-fit {loc = loc₁} max-id envs fitfn choose-loc (loc , parent@(lon
 ... | nothing = []
 ... | just env = let fit = fitfn parent env
                  in if (fit ≡ᵇ 0) then [] else reproduce max-id fit choose-loc (long-beak id loc₁)
-
---------------------
--- Movement of dunlins from one environment to another
-
--- TODO
 
 --------------------
 -- Death
