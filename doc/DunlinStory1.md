@@ -135,10 +135,43 @@ their food is being depleted), and little or no fitness in
     environment, does it remember not to go back to the one that was
     as bad on the previous timestep?  (Not in the simplest model, but
     this adding htis would make the model more realistic.)
+
+    * If environments have a maximum carrying capacity, i.e. number of
+    dunlins that can survive there, should a dunlin be allowed to move
+    into an environment that is "full"?
+
+    * See also comments in the "Death" section.
+
+* QUESTION: What should the policy when dunlin tries to move past the
+minimum or maximum environment?
+
+	a. Leave dunlin in same environment
+
+	b. Make a "toroidal"/"periodic boundary conditions" world,
+	i.e. circular in 1D: going beyond the minimum environment
+	places one in the max env, and going beyond the min env
+	places one in the max env.  This is unrealistic, but
+	avoids dunlins clumping up in edge environments.
+
+	c. Make it an error, i.e. "Maybe-ize" movement.
+
+
+##### Death
 	  
 * Need to add death.  When does a dunlin die?  Do we store a
 nutritional state counter? Or does it die the first time it gets
 no food? Can it die of old age?
+
+* Should there be a maximum population size, i.e. carrying
+capacity of the entire system?  If it's exceeded, should dunlins
+be killed randomly, or according to some other criteria? Age,
+nutritional state? (Neither of these are tracked at present.)
+
+* Should there be a maximum carryng capacity *per environment*?
+What happens if it's exceeded?  Can dunlins try to move to avoid
+death, or are they culled immediately?  What if all of the
+neighboring environments are "full"? See also comments in the
+"Movement" section.
 
 ##### Proximity
 
