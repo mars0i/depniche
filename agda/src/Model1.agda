@@ -47,16 +47,14 @@ to track the identity over time of functionally updated dunlins.
    figure out a better way.
 -}
 
-open import Function.Base using (_∘_; _$_; case_of_; case_returning_of_)
-open import Data.Nat using (ℕ; zero; suc; _+_; _*_; _∸_; _^_; _<_)
-open import Data.Nat.Base using (_≡ᵇ_) -- _≡ᵇ_ is synonym for Agda.Builtin.Nat._==_
+open import Function using (_∘_; _$_; case_of_; case_returning_of_)
+open import Data.Nat using (ℕ; zero; suc; _+_; _*_; _∸_; _^_; _<_;_≡ᵇ_) -- _≡ᵇ_ is synonym for Agda.Builtin.Nat._==_
 open import Data.Nat.Properties using (<-strictTotalOrder) -- for AVL modules
-open import Data.Maybe.Base as Maybe using (Maybe; nothing; just)
-open import Data.Product.Base using (Σ; _×_; _,_; proj₁; proj₂; _,′_)
+open import Data.Maybe as Maybe using (Maybe; nothing; just)
+open import Data.Product using (Σ; _×_; _,_; proj₁; proj₂; _,′_)
 open import Data.Bool using (if_then_else_) -- add case_of_ , etc?
 open import Data.List as L using (List; _∷_; []; [_]; iterate; _++_; map; concat; concatMap; zipWith; _[_]%=_; _[_]∷=_)
 -- open import Data.Vec as V using (Vec; _∷_; [])
-
 import Data.Tree.AVL as AVL using (Tree; MkValue; empty; singleton; insert; insertWith; delete; lookup; map; size; toList; fromList; toPair; const) -- K&_; 
 import Data.Tree.AVL.Value as Value ---? I don't know how to import K&.value separately
 open AVL <-strictTotalOrder -- Since the arg comes from Data.Nat.Properties, keys are ℕ's.
