@@ -47,13 +47,17 @@ to track the identity over time of functionally updated dunlins.
    figure out a better way.
 -}
 
-open import Function using (_∘_; _$_; case_of_; case_returning_of_)
-open import Data.Nat using (ℕ; zero; suc; _+_; _*_; _∸_; _^_; _<_;_≡ᵇ_) -- _≡ᵇ_ is synonym for Agda.Builtin.Nat._==_
-open import Data.Nat.Properties using (<-strictTotalOrder) -- for AVL modules
-open import Data.Maybe as Maybe using (Maybe; nothing; just)
-open import Data.Product using (Σ; _×_; _,_; proj₁; proj₂; _,′_)
+open import Function.Base using (_∘_; _$_; case_of_; case_returning_of_)
 open import Data.Bool using (if_then_else_) -- add case_of_ , etc?
+
+-- open import Data.Integer as I using (ℤ)
+open import Data.Nat using (ℕ; zero; suc; _+_; _*_; _∸_; _^_; _<_; _≡ᵇ_)
+open import Data.Nat.Properties using (<-strictTotalOrder) -- for AVL modules
+
 open import Data.List as L using (List; _∷_; []; [_]; iterate; _++_; map; concat; concatMap; zipWith; _[_]%=_; _[_]∷=_)
+open import Data.Maybe.Base as Maybe using (Maybe; nothing; just)
+open import Data.Product.Base using (Σ; _×_; _,_; proj₁; proj₂; _,′_)
+
 -- open import Data.Vec as V using (Vec; _∷_; [])
 import Data.Tree.AVL as AVL using (Tree; MkValue; empty; singleton; insert; insertWith; delete; lookup; map; size; toList; fromList; toPair; const) -- K&_; 
 import Data.Tree.AVL.Value as Value ---? I don't know how to import K&.value separately
@@ -364,10 +368,17 @@ move-to-env dun new-loc envs = add-dun-to-envs (replace-dun-loc dun new-loc)
 
 -- QUESTION: What should the policy when dunlin tries to move past the
 -- minimum or maximum environment?
--- a. Leave dunlin in same environment
+-- a. Leave dunlin in same environment.  This will result in unnatural clumping
+-- near ends unless there are behaviors that counteract it.
+-- b. Dunlins that try to go past the end "bounce" in the other direction.
 -- b. Make a "toroidal"/"periodic boundary conditions" world, i.e. circular in 1D.
 --    i.e. going beyond the minimum environment places one in the max env, etc.
--- c. Make it an error, i.e. "Maybe-ize" movement.
+--    Clearly unnatural, but it's a common way of simulating an infinite space.
+-- c. Make the environments infinite: there is no a boundary.  Replace `ℕ`
+--    locations with integers.  This is unnatural, too.
+-- d. Make it an error, i.e. "Maybe-ize" movement.
+
+-- Options b and c might be easier with `Fin`s rather than `ℕ`s as indexes.
 
 --------------------
 -- General-purpose
