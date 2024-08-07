@@ -147,13 +147,22 @@ minimum or maximum environment?
 
 	a. Leave dunlin in same environment
 
-	b. Make a "toroidal"/"periodic boundary conditions" world,
+	b. Dunlins that try to go past the end "bounce" back in thex
+	other direction.
+
+	c. Make a "toroidal"/"periodic boundary conditions" world,
 	i.e. circular in 1D: going beyond the minimum environment
 	places one in the max env, and going beyond the min env
 	places one in the max env.  This is unrealistic, but
 	avoids dunlins clumping up in edge environments.
 
-	c. Make it an error, i.e. "Maybe-ize" movement.
+	d. Make the environments infinite: there is no a boundary.
+	Replace `ℕ` locations with integers.  This is unnatural, too.
+
+	e. Make it an error, i.e. "Maybe-ize" movement.
+
+Options b and c might be easier with `Fin`s rather than `ℕ`s as indexes.
+
 
 
 ##### Death
