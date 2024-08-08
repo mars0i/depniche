@@ -463,8 +463,20 @@ reproduce-per-fit {loc = loc₁} max-id envs fitfn choose-loc (loc , parent@(lon
 -- Niche construction, i.e. modification of environments due to
 -- dunlins in them.
 
+-- Type for rules that map an Env into a new Env based on what sort
+-- of dunlins it has in it.  (If we also want to allow envs to affect
+-- neighboring envs, that can be done in a separate function.)
+NicheConstrFn : Set
+NicheConstrFn = {loc : Loc} → Env loc → Env loc
+
+
+
 -- TODO
--- e-evolve 
+e-evolve : (max-loc : Loc) → (envs : EnvMap) → (ncfn : NicheConstrFn) → EnvMap
+-- e-evolve max-loc envs ncfn = AVL.foldr ncfn ...
+-- I don't know what kind of function AVL.map wants:
+-- e-evolve envs ncfn = AVL.map ncfn envs
+
 
 --==========================================================--
 -- Top-level evolution functions
@@ -487,6 +499,10 @@ reproduce-per-fit {loc = loc₁} max-id envs fitfn choose-loc (loc , parent@(lon
 -- location of offspring of a parent dunlin.  (In a future version, this
 -- might be a set of locations or a probability distribution over locations.)
 
+-- Is it really necessary to extract all of the dunlins into a list?
+-- Another option would be to iterate through the envs, looking at the
+-- dunlins in each.
+-- Should the dunlin-collecting step be pulled out of this function?
 d-evolve : {loc : Loc} → (max-id : ℕ) → EnvMap → (fitfn : FitnessFn) → (choose-loc : Dun loc → ℕ) → (ℕ × EnvMap)
 d-evolve max-id envs fitfn choose-loc =
   let old-dunlins = collect-all-dunpairs envs  -- need to revise for indexed dunlins
