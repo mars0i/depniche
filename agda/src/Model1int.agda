@@ -50,12 +50,16 @@ to track the identity over time of functionally updated dunlins.
    figure out a better way.
 -}
 
-open import Function.Base using (_∘_; _$_; case_of_; case_returning_of_)
-open import Data.Bool using (if_then_else_) -- add case_of_ , etc?
 
-open import Data.Integer as I using (ℤ; suc)
-open import Data.Nat as N using (ℕ; zero; suc; _+_; _*_; _∸_; _^_; _<_; _≡ᵇ_)
-open import Data.Nat.Properties using (<-strictTotalOrder) -- for AVL modules
+open import Function.Base using (_∘_; _$_; case_of_; case_returning_of_)
+open import Data.Bool using (Bool; if_then_else_) -- add case_of_ , etc?
+
+open import Data.Integer as I -- using (ℤ; 0ℤ; suc; _+_; _*_; _-_; _^_; _<_; +_; |_|) -- +[1+_]
+open import Data.Integer.Properties using (<-strictTotalOrder; _≟_)
+-- open import Data.Nat as N using (ℤ; zero; suc; _+_; _*_; _-_; _^_; _<_; _≡ᵇ_)
+-- open import Data.Nat.Properties using (<-strictTotalOrder) -- for AVL modules
+
+open import Relation.Nullary.Decidable.Core using (Dec; does; proof; yes; no)
 
 open import Data.List as L using (List; _∷_; []; [_]; iterate; _++_; map; concat; concatMap; zipWith; _[_]%=_; _[_]∷=_)
 open import Data.Maybe.Base as Maybe using (Maybe; nothing; just)
@@ -64,9 +68,9 @@ open import Data.Product.Base using (Σ; _×_; _,_; proj₁; proj₂; _,′_)
 -- open import Data.Vec as V using (Vec; _∷_; [])
 import Data.Tree.AVL as AVL using (Tree; MkValue; empty; singleton; insert; insertWith; delete; lookup; map; size; toList; fromList; toPair; const) -- K&_; 
 import Data.Tree.AVL.Value as Value ---? I don't know how to import K&.value separately
-open AVL <-strictTotalOrder -- Since the arg comes from Data.Nat.Properties, keys are ℕ's.
+open AVL <-strictTotalOrder -- Since the arg comes from Data.Nat.Properties, keys are ℤ's.
 import Data.Tree.AVL.Map as Map using (Map; fromList)
-open Map <-strictTotalOrder -- Since the arg comes from Data.Nat.Properties, keys are ℕ's.
+open Map <-strictTotalOrder -- Since the arg comes from Data.Nat.Properties, keys are ℤ's.
 
 
 open import Relation.Binary.PropositionalEquality using (subst; _≡_; refl)
@@ -74,6 +78,16 @@ open import Relation.Binary.PropositionalEquality using (subst; _≡_; refl)
 
 open import Niche
 -- open import Kludges
+
+--==========================================================--
+
+-- https://agda.zulipchat.com/#narrow/stream/259644-newcomers/topic/Where.20is.20equality.20predicate.20for.20Fin.3F/near/457123205
+-- Can't figure whether this exists, or what it's called.
+infix 4 _==ℤ_
+_==ℤ_ : ℤ → ℤ → Bool
+_==ℤ_ x y = does (x Data.Integer.Properties.≟ y)
+
+
 
 --==========================================================--
 -- Dun and Env types
@@ -115,11 +129,11 @@ though it's not relevant to evolution in a population.
 -- to represent environments arrayed in 2D space, or triples for 3D
 -- coordinates, e.g. for fish in a body of water.
 Loc : Set
-Loc = ℕ
+Loc = ℤ
 
 -- Dunlins have IDs as well as locations:
 DunID : Set
-DunID = ℕ
+DunID = ℤ
 
 
 --==========================================================--
@@ -147,13 +161,13 @@ dun-to-locpair dun@(long-beak id loc) =  loc , long-beak id loc
 
 -- Dunlins should be assigned unique ids.  This is the first one.
 init-max-id : DunID
-init-max-id = 0
+init-max-id = 0ℤ
 
 -- Make a new dunlin using the provided constructor, creating a new id by
 -- incrementing the previous max id that should be passed in.  The new id
 -- can be extracted from the new dunlin as the new max id. -}
 new-dun : DunConstr → (max-id : DunID) → (loc : Loc) → Dun loc
-new-dun constr max-id loc = constr (N.suc max-id) loc
+new-dun constr max-id loc = constr (suc max-id) loc
 
 -- a list of dunlines at a location contains only dunlins with that location parameter
 new-duns-at-loc : (max-id : DunID) → (loc : Loc) → List DunConstr → List (Dun loc)
@@ -206,7 +220,7 @@ dun-constr (long-beak _ _) = long-beak
 should captured by a loc parameter rather than different
 constructors.  If it's an index, that captures the idea that it's
 a different type, and it might require using lists or vectors
-over sigma pairs (Σ ℕ (Env ℕ)) instead of Envs.  (See
+over sigma pairs (Σ ℤ (Env ℤ)) instead of Envs.  (See
 learning/Model1indexedID.agda in commit #3f46335 for
 illustrations.) Perhaps the location id should be a type index as
 well. -}
@@ -264,21 +278,22 @@ env-constr (well-disturbed _ _) = well-disturbed
 
 --==========================================================--
 
+
 -- It seems convenient to use a list in a special format to initialize
 -- a model, using config-system below.
 -- See Model Parameters section for an illustration.
 ConfigInfo : Set
-ConfigInfo = List (ℕ × EnvConstr × List DunConstr)
+ConfigInfo = List (ℤ × EnvConstr × List DunConstr)
 
 -- This is doing roughly what mkSys does in Niche.agda, and they
 -- should probably be harmonized and merged, or this could provide
 -- a component of mkSys.
-config-system : (max-id : ℕ) → ConfigInfo → EnvMap → EnvMap
+config-system : (max-id : ℤ) → ConfigInfo → EnvMap → EnvMap
 config-system _ [] env-map = env-map
 config-system max-id (env-spec ∷ env-specs) env-map =
   let (loc , env-constr , dun-constrs) = env-spec
       duns = new-duns-at-loc init-max-id loc dun-constrs
-      new-max-id = max-id + L.length duns
+      new-max-id = max-id + (+ L.length duns) -- Does the unary plus convert from Nat to Integer?
       new-env = env-constr loc duns
   in config-system new-max-id env-specs (insert loc new-env env-map)
 
@@ -293,7 +308,7 @@ config-system max-id (env-spec ∷ env-specs) env-map =
 -- doesn't apepar in the list. (Add proof?)
 remove-dun-from-list : {loc : Loc} → (dun : Dun loc) → (duns : List (Dun loc)) → List (Dun loc)
 remove-dun-from-list dun [] = []
-remove-dun-from-list dun (x ∷ duns) = if (dun-id dun) ≡ᵇ (dun-id x)   -- IS THIS A PROBLEM?
+remove-dun-from-list dun (x ∷ duns) = if (dun-id dun) ==ℤ (dun-id x)   -- IS THIS A PROBLEM?
                                       then duns
                                       else remove-dun-from-list dun duns
 
@@ -377,11 +392,11 @@ move-to-env dun new-loc envs = add-dun-to-envs (replace-dun-loc dun new-loc)
 -- b. Make a "toroidal"/"periodic boundary conditions" world, i.e. circular in 1D.
 --    i.e. going beyond the minimum environment places one in the max env, etc.
 --    Clearly unnatural, but it's a common way of simulating an infinite space.
--- c. Make the environments infinite: there is no a boundary.  Replace `ℕ`
+-- c. Make the environments infinite: there is no a boundary.  Replace `ℤ`
 --    locations with integers.  This is unnatural, too.
 -- d. Make it an error, i.e. "Maybe-ize" movement.
 
--- Options b and c might be easier with `Fin`s rather than `ℕ`s as indexes.
+-- Options b and c might be easier with `Fin`s rather than `ℤ`s as indexes.
 
 --------------------
 -- General-purpose
@@ -417,7 +432,7 @@ collect-all-dunpairs envs = L.concat $ envpairs-to-dunspairs $ envmap-to-envpair
 
 -- number of offspring for next generation
 Fitness : Set
-Fitness = ℕ
+Fitness = ℤ
 
 FitnessFn : Set
 FitnessFn = {loc : Loc} → Dun loc → Env loc → Fitness
@@ -432,29 +447,29 @@ FitnessFn = {loc : Loc} → Dun loc → Env loc → Fitness
 -- choose-child-loc is some function from each dunlin to a new location. This can 
 -- account the dunlin's current location, the dunlin's id, or other internal state
 -- of the dunlin.
-reproduce : {loc : Loc} → (max-id : ℕ) → (num-childs : ℕ) → (choose-child-loc : (Dun loc) → ℕ) → (parent : Dun loc) → List (Dun loc)
-reproduce _ 0 _ _ = []
-reproduce max-id (suc n) choose-loc (short-beak _ loc) =
-   iterate next-dun (short-beak (suc max-id) loc) (suc n)
-reproduce max-id (suc n) choose-loc (long-beak _ loc) =
-   iterate next-dun (long-beak  (suc max-id) loc) (suc n)
+reproduce : {loc : Loc} → (max-id : ℤ) → (num-children : ℤ) → (choose-child-loc : (Dun loc) → ℤ) → (parent : Dun loc) → List (Dun loc)
+reproduce _ 0ℤ _ _ = []
+reproduce max-id num-children choose-loc (short-beak _ loc) =
+   iterate next-dun (short-beak (suc max-id) loc) (| num-children |)
+reproduce max-id num-children choose-loc (long-beak _ loc) =
+   iterate next-dun (long-beak  (suc max-id) loc) num-children
 -- CHECK: Is max-id is getting incremented properly?
 
 -- Calculates number of children from fitness of dun relative to env, and calls reproduce.
 -- Parent is the last argument for curried application.
 --   TODO: Probably should be Maybe-ized.  At present it returns an empty list when an env can't be found.  This can't be distinguished from the zero fitness case.
 --   NOTE the key to making this work was (a) letting Agda decide how to pattern match on the pairs, and (b) adding {loc = loc₁} so that the final (short/long-beak id loc₁) arg would check.
-reproduce-per-fit : {loc : Loc} → (max-id : ℕ) → (envs : EnvMap) → (fitfn : FitnessFn) → (choose-loc : Dun loc → ℕ) → (parent-pair : DunLocPair) → List (Dun loc)
+reproduce-per-fit : {loc : Loc} → (max-id : ℤ) → (envs : EnvMap) → (fitfn : FitnessFn) → (choose-loc : Dun loc → ℤ) → (parent-pair : DunLocPair) → List (Dun loc)
 reproduce-per-fit {loc = loc₁} max-id envs fitfn choose-loc (loc , parent@(short-beak id .loc))
     with lookup envs loc
 ... | nothing = []
 ... | just env = let fit = fitfn parent env
-                 in if (fit ≡ᵇ 0) then [] else reproduce max-id fit choose-loc (short-beak id loc₁)
+                 in if (fit ==ℤ 0) then [] else reproduce max-id fit choose-loc (short-beak id loc₁)
 reproduce-per-fit {loc = loc₁} max-id envs fitfn choose-loc (loc , parent@(long-beak id .loc))
     with lookup envs loc
 ... | nothing = []
 ... | just env = let fit = fitfn parent env
-                 in if (fit ≡ᵇ 0) then [] else reproduce max-id fit choose-loc (long-beak id loc₁)
+                 in if (fit ==ℤ 0) then [] else reproduce max-id fit choose-loc (long-beak id loc₁)
 
 --------------------
 -- Death
@@ -507,7 +522,7 @@ e-evolve = {!!}
 -- Another option would be to iterate through the envs, looking at the
 -- dunlins in each.
 -- Should the dunlin-collecting step be pulled out of this function?
-d-evolve : {loc : Loc} → (max-id : ℕ) → EnvMap → (fitfn : FitnessFn) → (choose-loc : Dun loc → ℕ) → (ℕ × EnvMap)
+d-evolve : {loc : Loc} → (max-id : ℤ) → EnvMap → (fitfn : FitnessFn) → (choose-loc : Dun loc → ℤ) → (ℤ × EnvMap)
 d-evolve max-id envs fitfn choose-loc =
   let old-dunlins = collect-all-dunpairs envs  -- need to revise for indexed dunlins
       new-dunlins = L.concatMap (reproduce-per-fit max-id envs fitfn choose-loc) old-dunlins -- make baby dunlins
@@ -572,7 +587,7 @@ fitness (long-beak _ _)  (mildly-disturbed _ _) = 1
 fitness (long-beak _ _)  (well-disturbed _ _)   = 0
 
 -- This location-chooser puts offspring in the same env as parent:
-child-loc-same : {loc : Loc} → Dun  loc → ℕ
+child-loc-same : {loc : Loc} → Dun  loc → ℤ
 child-loc-same (short-beak id loc) = loc
 child-loc-same (long-beak id loc) =  loc
 
