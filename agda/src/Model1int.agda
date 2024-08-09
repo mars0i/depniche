@@ -1,8 +1,9 @@
 -- Attempt at a relatively simple framework for natural selection with
 -- niche construction.
 
--- This version explores using Integers for locations.
--- It uses Nats for dunlin id numbers.
+-- This version of Model1 explores using Integers for locations.
+-- It also uses integers for dunlin ids in order to keep numbers simple.
+-- Maybe that's a mistake: integers are intrinsically unsimple in Agda.
 
 module Model1int where
 
@@ -54,7 +55,7 @@ to track the identity over time of functionally updated dunlins.
 open import Function.Base using (_∘_; _$_; case_of_; case_returning_of_)
 open import Data.Bool using (Bool; if_then_else_) -- add case_of_ , etc?
 
-open import Data.Integer as I -- using (ℤ; 0ℤ; suc; _+_; _*_; _-_; _^_; _<_; +_; |_|) -- +[1+_]
+open import Data.Integer as Z -- using (ℤ; 0ℤ; suc; _+_; _*_; _-_; _^_; _<_; +_; ∣_∣) -- That's \| not |
 open import Data.Integer.Properties using (<-strictTotalOrder; _≟_)
 -- open import Data.Nat as N using (ℤ; zero; suc; _+_; _*_; _-_; _^_; _<_; _≡ᵇ_)
 -- open import Data.Nat.Properties using (<-strictTotalOrder) -- for AVL modules
@@ -448,12 +449,13 @@ FitnessFn = {loc : Loc} → Dun loc → Env loc → Fitness
 -- account the dunlin's current location, the dunlin's id, or other internal state
 -- of the dunlin.
 reproduce : {loc : Loc} → (max-id : ℤ) → (num-children : ℤ) → (choose-child-loc : (Dun loc) → ℤ) → (parent : Dun loc) → List (Dun loc)
-reproduce _ 0ℤ _ _ = []
-reproduce max-id num-children choose-loc (short-beak _ loc) =
-   iterate next-dun (short-beak (suc max-id) loc) (| num-children |)
-reproduce max-id num-children choose-loc (long-beak _ loc) =
-   iterate next-dun (long-beak  (suc max-id) loc) num-children
+reproduce max-id num-children choose-loc (short-beak _ loc) = iterate next-dun (short-beak (suc max-id) loc) ∣ num-children ∣ -- ∣_∣ (not |_| !) converts ℤ to ℕ
+reproduce max-id num-children choose-loc (long-beak _ loc)  = iterate next-dun (long-beak  (suc max-id) loc) ∣ num-children ∣
 -- CHECK: Is max-id is getting incremented properly?
+-- reproduce _ 0ℤ _ _ = []  -- for integers, Agda thinks this
+-- would makes rest unreachable, but that's OK since iterate _ _ 0 = []
+
+
 
 -- Calculates number of children from fitness of dun relative to env, and calls reproduce.
 -- Parent is the last argument for curried application.
@@ -464,12 +466,12 @@ reproduce-per-fit {loc = loc₁} max-id envs fitfn choose-loc (loc , parent@(sho
     with lookup envs loc
 ... | nothing = []
 ... | just env = let fit = fitfn parent env
-                 in if (fit ==ℤ 0) then [] else reproduce max-id fit choose-loc (short-beak id loc₁)
+                 in if (fit ==ℤ 0ℤ) then [] else reproduce max-id fit choose-loc (short-beak id loc₁)
 reproduce-per-fit {loc = loc₁} max-id envs fitfn choose-loc (loc , parent@(long-beak id .loc))
     with lookup envs loc
 ... | nothing = []
 ... | just env = let fit = fitfn parent env
-                 in if (fit ==ℤ 0) then [] else reproduce max-id fit choose-loc (long-beak id loc₁)
+                 in if (fit ==ℤ 0ℤ) then [] else reproduce max-id fit choose-loc (long-beak id loc₁)
 
 --------------------
 -- Death
@@ -526,7 +528,7 @@ d-evolve : {loc : Loc} → (max-id : ℤ) → EnvMap → (fitfn : FitnessFn) →
 d-evolve max-id envs fitfn choose-loc =
   let old-dunlins = collect-all-dunpairs envs  -- need to revise for indexed dunlins
       new-dunlins = L.concatMap (reproduce-per-fit max-id envs fitfn choose-loc) old-dunlins -- make baby dunlins
-      new-max-id = max-id + (L.length new-dunlins) -- Is there be a better way?
+      new-max-id = max-id + (+ (L.length new-dunlins)) -- Is there be a better way?
   in (new-max-id , add-duns-to-envs new-dunlins envs)
 
 
@@ -542,10 +544,10 @@ d-evolve max-id envs fitfn choose-loc =
 
 config-info : ConfigInfo
 config-info =
-  (1 , mildly-disturbed , (short-beak ∷ short-beak ∷ [])) ∷
-  (2 , undisturbed , (short-beak ∷ [])) ∷ 
-  (3 , mildly-disturbed , (long-beak ∷ [])) ∷
-  (4 , well-disturbed , (long-beak ∷ [])) ∷
+  (Z.+ 1 , mildly-disturbed , (short-beak ∷ short-beak ∷ [])) ∷
+  (Z.+ 2 , undisturbed , (short-beak ∷ [])) ∷ 
+  (Z.+ 3 , mildly-disturbed , (long-beak ∷ [])) ∷
+  (Z.+ 4 , well-disturbed , (long-beak ∷ [])) ∷
   []
 
 all-envs : EnvMap
@@ -579,12 +581,12 @@ toPair and fromPair in AVL.Value that convert to/from the Σ-pair.)
 -- Fitness rules--these determine how many offspring a dunlin has in a given
 -- environment. See docs/DunlinStory1.md for rationale, constraints
 fitness : {loc : Loc} → Dun  loc → Env loc → Fitness
-fitness (short-beak _ _) (undisturbed _ _)      = 0
-fitness (short-beak _ _) (mildly-disturbed _ _) = 1
-fitness (short-beak _ _) (well-disturbed _ _)   = 2
-fitness (long-beak _ _)  (undisturbed _ _)      = 2
-fitness (long-beak _ _)  (mildly-disturbed _ _) = 1
-fitness (long-beak _ _)  (well-disturbed _ _)   = 0
+fitness (short-beak _ _) (undisturbed _ _)      = 0ℤ
+fitness (short-beak _ _) (mildly-disturbed _ _) = Z.+ 1
+fitness (short-beak _ _) (well-disturbed _ _)   = Z.+ 2
+fitness (long-beak _ _)  (undisturbed _ _)      = Z.+ 2
+fitness (long-beak _ _)  (mildly-disturbed _ _) = Z.+ 1
+fitness (long-beak _ _)  (well-disturbed _ _)   = Z.+ 0
 
 -- This location-chooser puts offspring in the same env as parent:
 child-loc-same : {loc : Loc} → Dun  loc → ℤ
